@@ -16,4 +16,7 @@ await server.register(fastifyVite, {
 })
 
 await server.vite.ready()
+server.setNotFoundHandler((req, reply) => {
+  reply.redirect('/404')
+})
 await server.listen({ port: process.env.PORT || 3000 })

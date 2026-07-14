@@ -7,7 +7,9 @@ export default fp(async (fastify) => {
       const { email, password } = req.body || {}
 
       if (!email || !password) {
-        return reply.code(400).send({ error: 'Email and password are required' })
+        return reply
+          .code(400)
+          .send({ error: 'Email and password are required' })
       }
 
       const user = await fastify.auth.login(email, password)
