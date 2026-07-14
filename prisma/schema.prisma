@@ -13,11 +13,31 @@ enum UserRole {
   Consultant
 }
 
+model Company {
+  id              String   @id @default(uuid())
+  name            String   @unique
+  primaryWallet   String?
+  secondaryWallet String?
+  users           User[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  role      UserRole @default(Candidate)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String   @id @default(uuid())
+  email           String   @unique
+  password        String
+  role            UserRole @default(Candidate)
+  companyId       String
+  company         Company  @relation(fields: [companyId], references: [id])
+  nick            String?
+  fullName        String?
+  memberId        String?  @unique
+  parentId        String?
+  parent          User?    @relation("UserParent", fields: [parentId], references: [id])
+  children        User[]   @relation("UserParent")
+  primaryWallet   String?
+  secondaryWallet String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

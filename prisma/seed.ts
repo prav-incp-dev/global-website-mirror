@@ -16,19 +16,32 @@ const prisma = new PrismaClient({ adapter })
 try {
   const passwordHash = await bcrypt.hash('password', passwordHashRounds)
 
+  const company = await prisma.company.upsert({
+    where: { name: 'Our House MLM' },
+    update: {},
+    create: {
+      name: 'Our House MLM',
+    },
+  })
+
   const user = await prisma.user.upsert({
     where: { email: 'admin@example.com' },
     update: {
       password: passwordHash,
       role: 'Admin',
+      companyId: company.id,
     },
     create: {
       email: 'admin@example.com',
       password: passwordHash,
       role: 'Admin',
+      company: {
+        connect: { id: company.id },
+      },
     },
   })
 
+  console.log(`Seeded company: ${company.name}`)
   console.log(`Seeded admin user: ${user.email}`)
 } finally {
   await prisma.$disconnect()
