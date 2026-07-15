@@ -5,6 +5,7 @@ import csrfProtection from '@fastify/csrf-protection'
 
 const SESSION_COOKIE_NAME = 'session'
 const SESSION_MAX_AGE = 7 * 24 * 60 * 60 // 7 days in seconds
+const SECURE_COOKIES = process.env.NODE_ENV === 'production'
 
 export default fp(async (fastify) => {
   await fastify.register(cookie, {
@@ -18,6 +19,7 @@ export default fp(async (fastify) => {
       sameSite: true,
       httpOnly: true,
       signed: true,
+      secure: SECURE_COOKIES,
     },
   })
 
@@ -48,6 +50,7 @@ export default fp(async (fastify) => {
         httpOnly: true,
         sameSite: true,
         signed: true,
+        secure: SECURE_COOKIES,
         maxAge: SESSION_MAX_AGE,
       })
     },
