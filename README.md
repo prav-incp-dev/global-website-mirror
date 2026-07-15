@@ -81,8 +81,56 @@ npm start
 | `npm run build`  | Сборка Vite                                        |
 | `npm start`      | Запуск в продакшен-режиме                          |
 | `npm run seed`   | Сидирование базы данных (компания + администратор) |
+| `npm run db:test:setup` | Создание и сидирование тестовой БД          |
 | `npm run lint`   | Проверка кода ESLint                               |
 | `npm run format` | Форматирование кода Prettier                       |
+| `npm test`       | Запуск Vitest (одиночный прогон)                   |
+| `npm run test:e2e` | E2E тесты Playwright (login flow)                |
+| `npm run test:e2e:headed` | E2E Playwright в headed-режиме          |
+
+## Тестирование
+
+### Первичная настройка
+
+```bash
+npm install
+npx playwright install
+```
+
+### Подготовка тестовой БД
+
+Тесты запускаются против отдельной тестовой базы данных, чтобы не затирать
+девелоперские данные. Строка подключения и тестовый `SESSION_SECRET`
+находятся в файле `.env.test`:
+
+```env
+DATABASE_URL="postgresql://alice@localhost:5432/ourhouse_mlm_test"
+SESSION_SECRET="test-session-secret-not-for-production"
+```
+
+Разовая настройка тестовой БД (создаёт БД, применяет схему, сидирует):
+
+```bash
+npm run db:test:setup
+```
+
+Для E2E используется пользователь из seed:
+
+- email: `admin@example.com`
+- password: `password`
+
+> E2E-тесты (Playwright) автоматически запускают `npm run db:test:setup`
+> перед стартом сервера, поэтому отдельная подготовка не обязательна.
+
+### Запуск тестов
+
+```bash
+# Все Vitest-тесты
+npm test
+
+# E2E login-тесты
+npm run test:e2e
+```
 
 ## Модели данных
 

@@ -4,3 +4,6 @@ dist
 prisma/migrations
 
 /src/generated/prisma
+playwright-report
+test-results
+.playwright
