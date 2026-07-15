@@ -1,5 +1,7 @@
 import { disconnectDatabase } from './db.js'
 
-export default async function globalTeardown() {
+const globalTeardown = async () => {
   await disconnectDatabase()
 }
+
+export default globalTeardown

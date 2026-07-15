@@ -15,7 +15,7 @@ export const getData = async ({ server, req, reply }) => {
   return { csrfToken }
 }
 
-export default function Login() {
+const Login = () => {
   const { data } = useRouteContext()
   const csrfToken = data?.csrfToken ?? ''
 
@@ -30,7 +30,7 @@ export default function Login() {
     defaultValues: { email: '', password: '' },
   })
 
-  async function onSubmit({ email, password }) {
+  const onSubmit = async ({ email, password }) => {
     setError('')
     setLoading(true)
 
@@ -116,3 +116,5 @@ export default function Login() {
     </div>
   )
 }
+
+export default Login

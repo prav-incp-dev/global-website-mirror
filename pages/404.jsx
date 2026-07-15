@@ -1,6 +1,6 @@
 import styles from './404.module.css'
 
-export default function NotFound() {
+const NotFound = () => {
   return (
     <div className={styles.container}>
       <div className={styles.card}>
@@ -13,3 +13,5 @@ export default function NotFound() {
     </div>
   )
 }
+
+export default NotFound

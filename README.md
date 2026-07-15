@@ -25,25 +25,26 @@ npm install
 
 ### 2. Настройка базы данных
 
-Убедитесь, что PostgreSQL запущен и доступен. По умолчанию используется строка подключения:
+Убедитесь, что PostgreSQL запущен и доступен. Скопируйте файл 
+`.env.example` в `.env` и при необходимости измените значения:
+
+```bash
+cp .env.example .env
+```
+
+По умолчанию используется строка подключения:
 
 ```
 postgresql://alice@localhost:5432/ourhouse_mlm
 ```
 
-Вы можете изменить её в файле `.env`:
-
-```env
-DATABASE_URL="postgresql://alice@localhost:5432/ourhouse_mlm"
-```
-
 ### 3. Применение миграций
 
 ```bash
-npx prisma migrate dev
+npm run db:migrate
 ```
 
-Это создаст таблицы в базе данных согласно моделям Prisma.
+Это создаст таблицы в базе данных согласно моделям Prisma и сгенерирует Prisma Client.
 
 ### 4. Сидирование базы данных
 
@@ -81,6 +82,7 @@ npm start
 | `npm run build`  | Сборка Vite                                        |
 | `npm start`      | Запуск в продакшен-режиме                          |
 | `npm run seed`   | Сидирование базы данных (компания + администратор) |
+| `npm run db:migrate` | Миграции БД + генерация Prisma Client          |
 | `npm run db:test:setup` | Создание и сидирование тестовой БД          |
 | `npm run lint`   | Проверка кода ESLint                               |
 | `npm run format` | Форматирование кода Prettier                       |

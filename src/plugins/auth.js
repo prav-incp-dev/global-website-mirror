@@ -24,7 +24,7 @@ export default fp(async (fastify) => {
   })
 
   fastify.decorate('auth', {
-    async login(email, password) {
+    login: async (email, password) => {
       const user = await fastify.db.user.findUnique({
         where: { email },
         include: { company: true },
@@ -44,7 +44,7 @@ export default fp(async (fastify) => {
       return safeUser
     },
 
-    setSession(reply, userId) {
+    setSession: (reply, userId) => {
       reply.setCookie(SESSION_COOKIE_NAME, userId, {
         path: '/',
         httpOnly: true,
@@ -55,11 +55,11 @@ export default fp(async (fastify) => {
       })
     },
 
-    clearSession(reply) {
+    clearSession: (reply) => {
       reply.clearCookie(SESSION_COOKIE_NAME, { path: '/' })
     },
 
-    async getUser(req) {
+    getUser: async (req) => {
       const sessionCookie = req.cookies[SESSION_COOKIE_NAME]
       if (!sessionCookie) {
         return null

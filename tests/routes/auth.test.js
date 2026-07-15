@@ -6,7 +6,7 @@ import authRoutes from '../../src/routes/auth.js'
 
 const TEST_COOKIE_SECRET = 'test-cookie-secret'
 
-function toCookieHeader(setCookieHeader) {
+const toCookieHeader = (setCookieHeader) => {
   if (!setCookieHeader) {
     return ''
   }
@@ -18,7 +18,7 @@ function toCookieHeader(setCookieHeader) {
   return values.map((cookieValue) => cookieValue.split(';')[0]).join('; ')
 }
 
-async function createApp(authOverrides = {}) {
+const createApp = async (authOverrides = {}) => {
   const app = Fastify()
 
   await app.register(cookie, {
@@ -54,7 +54,7 @@ async function createApp(authOverrides = {}) {
   return { app, auth }
 }
 
-async function getCsrfContext(app) {
+const getCsrfContext = async (app) => {
   const csrfRes = await app.inject({
     method: 'GET',
     url: '/test/csrf',
@@ -121,7 +121,10 @@ describe('auth routes', () => {
       },
     })
 
-    expect(auth.login).toHaveBeenCalledWith('admin@example.com', 'wrong-password')
+    expect(auth.login).toHaveBeenCalledWith(
+      'admin@example.com',
+      'wrong-password',
+    )
     expect(response.statusCode).toBe(401)
     expect(response.json()).toEqual({
       error: 'Invalid email or password',

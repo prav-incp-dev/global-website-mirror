@@ -3,7 +3,7 @@ import fp from 'fastify-plugin'
 export default fp(async (fastify) => {
   fastify.post('/api/login', {
     preHandler: fastify.csrfProtection,
-    async handler(req, reply) {
+    handler: async (req, reply) => {
       const { email, password } = req.body || {}
 
       if (!email || !password) {
@@ -29,7 +29,7 @@ export default fp(async (fastify) => {
 
   fastify.post('/api/logout', {
     preHandler: fastify.csrfProtection,
-    async handler(req, reply) {
+    handler: async (req, reply) => {
       fastify.auth.clearSession(reply)
       return reply.send({ success: true, redirect: '/login' })
     },

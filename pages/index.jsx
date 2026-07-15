@@ -25,12 +25,12 @@ export const getData = async ({ server, req, reply }) => {
   }
 }
 
-export default function Index() {
+const Index = () => {
   const { data } = useRouteContext()
   const profile = data?.profile ?? {}
   const csrfToken = data?.csrfToken ?? ''
 
-  async function handleLogout(e) {
+  const handleLogout = async (e) => {
     e.preventDefault()
     const res = await fetch('/api/logout', {
       method: 'POST',
@@ -86,3 +86,5 @@ export default function Index() {
     </div>
   )
 }
+
+export default Index

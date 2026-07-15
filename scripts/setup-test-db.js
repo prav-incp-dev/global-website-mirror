@@ -26,7 +26,7 @@ if (!dbName) {
 const adminUrl = new URL(databaseUrl)
 adminUrl.pathname = '/postgres'
 
-async function ensureDatabase() {
+const ensureDatabase = async () => {
   const client = new Client({ connectionString: adminUrl.toString() })
   await client.connect()
   try {
@@ -44,7 +44,7 @@ async function ensureDatabase() {
   }
 }
 
-async function main() {
+const main = async () => {
   await ensureDatabase()
 
   console.log('Pushing Prisma schema to test database...')

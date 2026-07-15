@@ -25,7 +25,7 @@ const testPasswordHash = bcrypt.hashSync('password', passwordHashRounds)
  * Truncates all tables and re-inserts the seed data so every E2E
  * test starts from the same baseline.
  */
-export async function resetDatabase() {
+export const resetDatabase = async () => {
   // TRUNCATE with RESTART IDENTITY CASCADE handles FK constraints
   // regardless of table order and resets any sequences.
   // Keep this table list in sync with Prisma models used by E2E scenarios.
@@ -53,6 +53,6 @@ export async function resetDatabase() {
 /**
  * Disconnects the Prisma client used by the reset helper.
  */
-export async function disconnectDatabase() {
+export const disconnectDatabase = async () => {
   await prisma.$disconnect()
 }
