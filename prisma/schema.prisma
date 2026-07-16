@@ -14,7 +14,7 @@ enum UserRole {
 }
 
 model Company {
-  id              String   @id @default(uuid())
+  id              Int      @id @default(autoincrement())
   name            String   @unique
   primaryWallet   String?
   secondaryWallet String?
@@ -24,20 +24,22 @@ model Company {
 }
 
 model User {
-  id              String   @id @default(uuid())
+  id               Int      @id @default(autoincrement())
   email           String   @unique
   password        String
   role            UserRole @default(Candidate)
-  companyId       String
+  companyId        Int
   company         Company  @relation(fields: [companyId], references: [id])
   nick            String?
   fullName        String?
+  phone            String
   memberId        String?  @unique
-  parentId        String?
+  parentId         Int?
   parent          User?    @relation("UserParent", fields: [parentId], references: [id])
   children        User[]   @relation("UserParent")
   primaryWallet   String?
   secondaryWallet String?
+  confirmationCode String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

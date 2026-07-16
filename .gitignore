@@ -1,8 +1,8 @@
 node_modules
 .env
 dist
-
 /src/generated/prisma
+last-email.json
 playwright-report
 test-results
 .playwright
