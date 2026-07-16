@@ -327,6 +327,74 @@ describe('auth routes', () => {
     })
   })
 
+  it('POST /api/auth/resend returns 401 when user does not exist', async () => {
+    const { app, auth } = await createApp({
+      verifyPendingAuth: vi.fn().mockReturnValue(1),
+    })
+    apps.push(app)
+    const { csrfToken, cookieHeader } = await getCsrfContext(app)
+
+    // Mock fastify.db.user.findUnique to return null, simulating a non-existent user
+    app.db = {
+      user: {
+        findUnique: vi.fn().mockResolvedValue(null),
+      },
+    }
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/auth/resend',
+      headers: {
+        cookie: cookieHeader,
+        'x-csrf-token': csrfToken,
+      },
+      payload: { token: 'valid-token' },
+    })
+
+    expect(response.statusCode).toBe(401)
+    expect(response.json()).toEqual({
+      error: 'Invalid or expired token',
+    })
+    expect(app.db.user.findUnique).toHaveBeenCalledWith({
+      where: { id: 1 },
+    })
+    expect(auth.createTwoFactorCode).not.toHaveBeenCalled()
+  })
+
+  it('POST /api/auth/resend returns 200 and sends new code when user exists', async () => {
+    const user = { id: 1, email: 'admin@example.com' }
+    const { app, auth } = await createApp({
+      verifyPendingAuth: vi.fn().mockReturnValue(1),
+      createTwoFactorCode: vi.fn().mockResolvedValue('654321'),
+    })
+    apps.push(app)
+    const { csrfToken, cookieHeader } = await getCsrfContext(app)
+
+    // Mock fastify.db.user.findUnique to return a user
+    app.db = {
+      user: {
+        findUnique: vi.fn().mockResolvedValue(user),
+      },
+    }
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/auth/resend',
+      headers: {
+        cookie: cookieHeader,
+        'x-csrf-token': csrfToken,
+      },
+      payload: { token: 'valid-token' },
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual({ success: true })
+    expect(app.db.user.findUnique).toHaveBeenCalledWith({
+      where: { id: 1 },
+    })
+    expect(auth.createTwoFactorCode).toHaveBeenCalledWith(user)
+  })
+
   it('POST /api/auth/logout returns 200 and clears session', async () => {
     const { app, auth } = await createApp()
     apps.push(app)
