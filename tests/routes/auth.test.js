@@ -1,12 +1,7 @@
-import Fastify from 'fastify'
-import cookie from '@fastify/cookie'
-import csrfProtection from '@fastify/csrf-protection'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import authRoutes from '../../src/routes/auth.js'
 import fs from 'fs'
 import path from 'path'
-
-const TEST_COOKIE_SECRET = 'test-cookie-secret'
+import { buildBackendApp } from '../../backend.js'
 
 const toCookieHeader = (setCookieHeader) => {
   if (!setCookieHeader) {
@@ -21,43 +16,27 @@ const toCookieHeader = (setCookieHeader) => {
 }
 
 const createApp = async (authOverrides = {}) => {
-  const app = Fastify()
+  const app = await buildBackendApp({ logger: false })
 
-  await app.register(cookie, {
-    secret: TEST_COOKIE_SECRET,
-  })
-
-  await app.register(csrfProtection, {
-    cookieKey: '_csrf',
-    cookieOpts: {
-      path: '/',
-      sameSite: true,
-      httpOnly: true,
-      signed: true,
-    },
-  })
-
-  const auth = {
-    login: vi.fn(),
-    setSession: vi.fn(),
-    clearSession: vi.fn(),
-    createTwoFactorCode: vi.fn(),
-    verifyTwoFactorCode: vi.fn(),
-    signPendingAuth: vi.fn(),
-    verifyPendingAuth: vi.fn(),
-    ...authOverrides,
+  // Mock auth functions
+  for (const key in app.auth) {
+    if (typeof app.auth[key] === 'function' && !authOverrides[key]) {
+      app.auth[key] = vi.fn(app.auth[key])
+    }
   }
 
-  app.decorate('auth', auth)
+  for (const key in authOverrides) {
+    if (Object.prototype.hasOwnProperty.call(authOverrides, key)) {
+      app.auth[key] = authOverrides[key]
+    }
+  }
 
+  // Add a test route for CSRF token generation
   app.get('/test/csrf', async (_req, reply) => {
     return { csrfToken: reply.generateCsrf() }
   })
 
-  await app.register(authRoutes)
-  await app.ready()
-
-  return { app, auth }
+  return { app: app, auth: app.auth }
 }
 
 const getCsrfContext = async (app) => {

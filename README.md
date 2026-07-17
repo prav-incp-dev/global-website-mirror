@@ -102,8 +102,12 @@ npx playwright install
 ### Подготовка тестовой БД
 
 Тесты запускаются против отдельной тестовой базы данных, чтобы не затирать
-девелоперские данные. Строка подключения и тестовый `SESSION_SECRET`
-находятся в файле `.env.test`:
+девелоперские данные. Строка подключения и тестовый `SESSION_SECRET` должны 
+находиться в файле `.env.test`. Для этого выполните команду:
+
+```bash
+cp .env.example .env.test
+```
 
 ```env
 DATABASE_URL="postgresql://alice@localhost:5432/ourhouse_mlm_test"
