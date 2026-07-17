@@ -34,8 +34,7 @@ try {
       fullName: 'Alice Admin',
       phone: '+10000000001',
       memberId: 'MBR-0001',
-      primaryWallet: '0xABCDEF1234567890',
-      secondaryWallet: '0x0987654321FEDCBA',
+      wallet: '0xABCDEF1234567890',
     },
     create: {
       email: 'admin@example.com',
@@ -45,8 +44,7 @@ try {
       fullName: 'Alice Admin',
       phone: '+10000000001',
       memberId: 'MBR-0001',
-      primaryWallet: '0xABCDEF1234567890',
-      secondaryWallet: '0x0987654321FEDCBA',
+      wallet: '0xABCDEF1234567890',
       company: {
         connect: { id: company.id },
       },

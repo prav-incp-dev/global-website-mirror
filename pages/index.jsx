@@ -18,8 +18,7 @@ export const getData = async ({ server, req, reply }) => {
       email: user.email,
       phone: user.phone,
       memberId: user.memberId,
-      primaryWallet: user.primaryWallet,
-      secondaryWallet: user.secondaryWallet,
+      wallet: user.wallet,
       companyName: user.company?.name ?? null,
     },
     csrfToken,
@@ -28,8 +27,7 @@ export const getData = async ({ server, req, reply }) => {
 
 const Index = () => {
   const { data } = useRouteContext()
-  const profile = data?.profile ?? {}
-  const csrfToken = data?.csrfToken ?? ''
+  const { profile = {}, csrfToken = '' } = data
 
   const handleLogout = async (e) => {
     e.preventDefault()
@@ -76,12 +74,8 @@ const Index = () => {
           <span className={styles.value}>{profile.memberId || '—'}</span>
         </div>
         <div className={styles.row}>
-          <span className={styles.label}>Primary Wallet:</span>
-          <span className={styles.value}>{profile.primaryWallet || '—'}</span>
-        </div>
-        <div className={styles.row}>
-          <span className={styles.label}>Secondary Wallet:</span>
-          <span className={styles.value}>{profile.secondaryWallet || '—'}</span>
+          <span className={styles.label}>Wallet:</span>
+          <span className={styles.value}>{profile.wallet || '—'}</span>
         </div>
         <div className={styles.row}>
           <span className={styles.label}>Company:</span>

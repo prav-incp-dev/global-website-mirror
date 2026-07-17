@@ -7,7 +7,7 @@
     "dev": "tsx server.js --dev",
     "build": "vite build",
     "start": "tsx server.js",
-    "seed": "tsx prisma/seed.ts",
+    "db:seed": "tsx prisma/seed.ts",
     "db:migrate": "prisma migrate dev && prisma generate",
     "db:test:setup": "tsx scripts/setup-test-db.js",
     "lint": "eslint .",
