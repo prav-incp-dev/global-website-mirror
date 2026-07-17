@@ -1,0 +1,45 @@
+.container {
+  max-width: 400px;
+  margin: 60px auto;
+  padding: 20px;
+  font-family: system-ui, sans-serif;
+}
+
+.formField {
+  margin-bottom: 12px;
+}
+
+.formFieldLast {
+  margin-bottom: 16px;
+}
+
+.label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+
+.input {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.fieldError {
+  display: block;
+  margin-top: 4px;
+  color: #721c24;
+  font-size: 13px;
+}
+
+.submitButton {
+  width: 100%;
+  padding: 10px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+}

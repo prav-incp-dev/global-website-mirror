@@ -13,10 +13,13 @@ import { resetDatabase } from './db.js'
  */
 export const test = base.extend({
   // Auto fixture: reset DB before every test while preserving built-in page.
-  dbReset: [async ({}, run) => {
-    await resetDatabase()
-    await run()
-  }, { auto: true }],
+  dbReset: [
+    async ({}, run) => {
+      await resetDatabase()
+      await run()
+    },
+    { auto: true },
+  ],
 })
 
 export { expect }

@@ -5,7 +5,7 @@ export const getData = async ({ server, req, reply }) => {
   // Protect the route — redirect to login if not authenticated
   const user = await server.auth.getUser(req)
   if (!user) {
-    return reply.redirect('/login')
+    return reply.redirect('/auth')
   }
 
   // Generate CSRF token for logout form
@@ -16,6 +16,7 @@ export const getData = async ({ server, req, reply }) => {
       nick: user.nick,
       fullName: user.fullName,
       email: user.email,
+      phone: user.phone,
       memberId: user.memberId,
       primaryWallet: user.primaryWallet,
       secondaryWallet: user.secondaryWallet,
@@ -32,7 +33,7 @@ const Index = () => {
 
   const handleLogout = async (e) => {
     e.preventDefault()
-    const res = await fetch('/api/logout', {
+    const res = await fetch('/api/auth/logout', {
       method: 'POST',
       headers: {
         'x-csrf-token': csrfToken,
@@ -65,6 +66,10 @@ const Index = () => {
         <div className={styles.row}>
           <span className={styles.label}>Email:</span>
           <span className={styles.value}>{profile.email || '—'}</span>
+        </div>
+        <div className={styles.row}>
+          <span className={styles.label}>Phone:</span>
+          <span className={styles.value}>{profile.phone || '—'}</span>
         </div>
         <div className={styles.row}>
           <span className={styles.label}>Member ID:</span>
