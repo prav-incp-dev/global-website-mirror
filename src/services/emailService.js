@@ -11,7 +11,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
  * as JSON instead of actually being sent.
  */
 const createTransport = () => {
-  if (process.env.NODE_ENV === 'test') return nodemailer.createTransport({ jsonTransport: true })
+  if (process.env.NODE_ENV === 'test')
+    return nodemailer.createTransport({ jsonTransport: true })
 
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',

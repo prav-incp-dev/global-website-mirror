@@ -32,7 +32,13 @@ export default fp(async (fastify) => {
       secure: SECURE_COOKIES,
     },
   })
-
+  fastify.addHook('onRequest', (req, reply, next) => {
+    if (['HEAD', 'GET', 'OPTIONS'].includes(req.method)) {
+      next()
+    } else {
+      fastify.csrfProtection(req, reply, next)
+    }
+  })
   fastify.decorate('auth', {
     login: async (email, password) => {
       const user = await fastify.db.user.findUnique({

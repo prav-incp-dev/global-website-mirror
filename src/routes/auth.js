@@ -3,7 +3,6 @@ import { sendTwoFactorCode } from '../services/emailService.js'
 
 export default fp(async (fastify) => {
   fastify.post('/api/auth/login', {
-    preHandler: fastify.csrfProtection,
     handler: async (req, reply) => {
       const { email, password } = req.body || {}
 
@@ -32,7 +31,6 @@ export default fp(async (fastify) => {
   })
 
   fastify.post('/api/auth/confirm', {
-    preHandler: fastify.csrfProtection,
     handler: async (req, reply) => {
       const { token, code } = req.body || {}
 
@@ -57,12 +55,10 @@ export default fp(async (fastify) => {
   })
 
   fastify.post('/api/auth/resend', {
-    preHandler: fastify.csrfProtection,
     handler: async (req, reply) => {
       const { token } = req.body || {}
 
-      if (!token)
-        return reply.code(400).send({ error: 'Token is required' })
+      if (!token) return reply.code(400).send({ error: 'Token is required' })
 
       const userId = fastify.auth.verifyPendingAuth(token)
       if (!userId)
@@ -84,7 +80,6 @@ export default fp(async (fastify) => {
   })
 
   fastify.post('/api/auth/logout', {
-    preHandler: fastify.csrfProtection,
     handler: async (req, reply) => {
       fastify.auth.clearSession(reply)
       return reply.send({ success: true, redirect: '/auth' })
