@@ -10,7 +10,7 @@ const SESSION_MAX_AGE = 7 * 24 * 60 * 60 // 7 days in seconds
 const SECURE_COOKIES = process.env.NODE_ENV === 'production'
 const PENDING_AUTH_MAX_AGE = 10 * 60 // 10 minutes in seconds
 
-const parseUserId = (value) => {
+export const parseUserId = (value) => {
   const userId = Number(value)
   if (!Number.isInteger(userId) || userId <= 0) return null
 
