@@ -80,9 +80,7 @@ describe('auth routes', () => {
     })
 
     expect(response.statusCode).toBe(400)
-    expect(response.json()).toEqual({
-      error: 'Email and password are required',
-    })
+    expect(response.json().message).toContain('required')
     expect(auth.login).not.toHaveBeenCalled()
   })
 
@@ -177,9 +175,7 @@ describe('auth routes', () => {
     })
 
     expect(response.statusCode).toBe(400)
-    expect(response.json()).toEqual({
-      error: 'Token and code are required',
-    })
+    expect(response.json().message).toContain('required')
   })
 
   it('POST /api/auth/confirm returns 401 when token is invalid', async () => {
@@ -278,9 +274,7 @@ describe('auth routes', () => {
     })
 
     expect(response.statusCode).toBe(400)
-    expect(response.json()).toEqual({
-      error: 'Token is required',
-    })
+    expect(response.json().message).toContain('required')
   })
 
   it('POST /api/auth/resend returns 401 when token is invalid', async () => {

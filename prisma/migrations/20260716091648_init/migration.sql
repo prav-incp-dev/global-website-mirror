@@ -52,6 +52,12 @@ CREATE UNIQUE INDEX "Company_name_key" ON "Company"("name");
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "User_nick_key" ON "User"("nick");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_phone_key" ON "User"("phone");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "User_memberId_key" ON "User"("memberId");
 
 -- CreateIndex

@@ -3,13 +3,18 @@ import { sendTwoFactorCode } from '../services/emailService.js'
 
 export default fp(async (fastify) => {
   fastify.post('/api/auth/login', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['email', 'password'],
+        properties: {
+          email: { type: 'string', format: 'email' },
+          password: { type: 'string' },
+        },
+      },
+    },
     handler: async (req, reply) => {
-      const { email, password } = req.body || {}
-
-      if (!email || !password)
-        return reply
-          .code(400)
-          .send({ error: 'Email and password are required' })
+      const { email, password } = req.body
 
       const user = await fastify.auth.login(email, password)
 
@@ -31,11 +36,18 @@ export default fp(async (fastify) => {
   })
 
   fastify.post('/api/auth/confirm', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['token', 'code'],
+        properties: {
+          token: { type: 'string' },
+          code: { type: 'string' },
+        },
+      },
+    },
     handler: async (req, reply) => {
-      const { token, code } = req.body || {}
-
-      if (!token || !code)
-        return reply.code(400).send({ error: 'Token and code are required' })
+      const { token, code } = req.body
 
       const userId = fastify.auth.verifyPendingAuth(token)
       if (!userId)
@@ -55,10 +67,17 @@ export default fp(async (fastify) => {
   })
 
   fastify.post('/api/auth/resend', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['token'],
+        properties: {
+          token: { type: 'string' },
+        },
+      },
+    },
     handler: async (req, reply) => {
-      const { token } = req.body || {}
-
-      if (!token) return reply.code(400).send({ error: 'Token is required' })
+      const { token } = req.body
 
       const userId = fastify.auth.verifyPendingAuth(token)
       if (!userId)

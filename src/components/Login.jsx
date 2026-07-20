@@ -1,7 +1,8 @@
 import { useForm } from 'react-hook-form'
+import { useState } from 'react'
 import styles from './Login.module.css'
 
-const Login = ({ csrfToken, loading, onLoading, onError, onSuccess }) => {
+const Login = ({ csrfToken, onSuccess }) => {
   const {
     register,
     handleSubmit,
@@ -10,8 +11,11 @@ const Login = ({ csrfToken, loading, onLoading, onError, onSuccess }) => {
     defaultValues: { email: '', password: '' },
   })
 
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  
   const onSubmit = async ({ email, password }) => {
-    onLoading(true)
+    setLoading(true)
 
     try {
       const res = await fetch('/api/auth/login', {
@@ -28,16 +32,19 @@ const Login = ({ csrfToken, loading, onLoading, onError, onSuccess }) => {
       if (result.success) {
         onSuccess(result.token)
       } else {
-        onError(result.error || 'Login failed')
+        setError(result.error || 'Login failed')
       }
     } catch {
-      onError('Something went wrong. Please try again.')
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
     <div className={styles.container}>
       <h1>OurHouse MLM — Login</h1>
+      {error && <div className={styles.error}>{error}</div>}
       <form onSubmit={handleSubmit(onSubmit)}>
         <input type="hidden" name="_csrf" value={csrfToken} />
         <div className={styles.formField}>

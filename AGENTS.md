@@ -56,3 +56,7 @@ You are an expert full-stack developer specializing in Fastify and React integra
 
 - Ensure that the state generated on the server seamlessly synchronizes (hydrates) on the client without mismatches.
 - Write valid HTML layout to avoid DOM nesting errors that break hydration (e.g., no `div` inside `span` or `p` inside `p`).
+
+## 5. Working with forms in React
+
+- Use react-hook-form library for building forms

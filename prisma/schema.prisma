@@ -31,9 +31,9 @@ model User {
   role            UserRole @default(Candidate)
   companyId        Int
   company         Company  @relation(fields: [companyId], references: [id])
-  nick            String?
+  nick            String?  @unique
   fullName        String?
-  phone            String
+  phone            String   @unique
   memberId        String?  @unique
   parentId         Int?
   parent          User?    @relation("UserParent", fields: [parentId], references: [id])

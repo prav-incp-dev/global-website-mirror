@@ -1,14 +1,11 @@
 import { useForm } from 'react-hook-form'
+import { useState } from 'react'
 import styles from './Confirm.module.css'
 
 const Confirm = ({
   csrfToken,
   token,
-  loading,
-  onLoading,
-  onError,
   onConfirm,
-  onResend,
 }) => {
   const {
     register,
@@ -18,9 +15,14 @@ const Confirm = ({
     defaultValues: { code: '' },
   })
 
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [info, setInfo] = useState('A 6-digit confirmation code has been sent to your email.')
+
   const onSubmit = async ({ code }) => {
-    onLoading(true)
-    onError('')
+    setLoading(true)
+    setError('')
+    setInfo('')
 
     try {
       const res = await fetch('/api/auth/confirm', {
@@ -35,18 +37,21 @@ const Confirm = ({
       const result = await res.json()
 
       if (result.success) {
-        onConfirm(result)
+        window.location.assign(result.redirect)
       } else {
-        onError(result.error || 'Confirmation failed')
+        setError(result.error || 'Confirmation failed')
       }
     } catch {
-      onError('Something went wrong. Please try again.')
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
   const handleResend = async () => {
-    onLoading(true)
-    onError('')
+    setLoading(true)
+    setError('')
+    setInfo('')
 
     try {
       const res = await fetch('/api/auth/resend', {
@@ -61,18 +66,22 @@ const Confirm = ({
       const result = await res.json()
 
       if (result.success) {
-        onResend('A new confirmation code has been sent to your email.')
+        setInfo('A new confirmation code has been sent to your email.')
       } else {
-        onError(result.error || 'Failed to resend code')
+        setError(result.error || 'Failed to resend code')
       }
     } catch {
-      onError('Something went wrong. Please try again.')
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
     <div className={styles.container}>
       <h1>OurHouse MLM — Confirm</h1>
+      {error && <div className={styles.error}>{error}</div>}
+      {info && <div className={styles.info}>{info}</div>}
       <form onSubmit={handleSubmit(onSubmit)}>
         <input type="hidden" name="_csrf" value={csrfToken} />
         <div className={styles.formField}>
@@ -110,7 +119,7 @@ const Confirm = ({
       </form>
       <button
         type="button"
-        onClick={onResend}
+        onClick={handleResend}
         disabled={loading}
         className={styles.resendButton}
         style={{ cursor: loading ? 'not-allowed' : 'pointer' }}
