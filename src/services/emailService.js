@@ -59,18 +59,18 @@ export const sendTwoFactorCode = async (user, code) => {
   const transport = createTransport()
 
   const info = await transport.sendMail({
-    from: `"OurHouse" <${fromEmail}>`,
+    from: `"Наш Дом" <${fromEmail}>`,
     to: user.email,
-    subject: 'Your confirmation code',
-    text: `Hi ${user.fullName || user.nick || 'there'},
+    subject: 'Код подтверждения для входа в систему',
+    text: `Здравствуйте ${user.fullName || user.nick || 'уважаемый пользователь'},
 
-Here is your 6-digit confirmation code:
+Вот ваш 6-значный код подтверждения:
 
 ${code}
 
-This code expires in 10 minutes. If you didn't request this, you can safely ignore this email.
+Этот код действителен в течение 10 минут. Если вы не запрашивали этот код, просто проигнорируйте это письмо.
 
-— OurHouse`,
+— Наш Дом`,
   })
 
   processMailResult(info, user)

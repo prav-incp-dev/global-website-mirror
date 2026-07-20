@@ -5,6 +5,10 @@
   font-family: system-ui, sans-serif;
 }
 
+.title {
+  text-align: center;
+}
+
 .error {
   color: #721c24;
   background-color: #f8d7da;

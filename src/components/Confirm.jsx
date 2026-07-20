@@ -10,17 +10,15 @@ const Confirm = ({
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: { code: '' },
   })
 
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [info, setInfo] = useState('A 6-digit confirmation code has been sent to your email.')
+  const [info, setInfo] = useState('6-значный код подтверждения отправлен на ваш электронный адрес')
 
   const onSubmit = async ({ code }) => {
-    setLoading(true)
     setError('')
     setInfo('')
 
@@ -39,17 +37,14 @@ const Confirm = ({
       if (result.success) {
         window.location.assign(result.redirect)
       } else {
-        setError(result.error || 'Confirmation failed')
+        setError(result.error || 'Неверный код или время истекло')
       }
     } catch {
-      setError('Something went wrong. Please try again.')
-    } finally {
-      setLoading(false)
+      setError('Что-то пошло не так. Попробуйте еще раз.')
     }
   }
 
   const handleResend = async () => {
-    setLoading(true)
     setError('')
     setInfo('')
 
@@ -66,27 +61,25 @@ const Confirm = ({
       const result = await res.json()
 
       if (result.success) {
-        setInfo('A new confirmation code has been sent to your email.')
+        setInfo('Новый код подтверждения отправлен на ваш электронный адрес')
       } else {
-        setError(result.error || 'Failed to resend code')
+        setError(result.error || 'Ошибка отправки кода')
       }
     } catch {
-      setError('Something went wrong. Please try again.')
-    } finally {
-      setLoading(false)
+      setError('Что-то пошло не так. Попробуйте еще раз.')
     }
   }
 
   return (
     <div className={styles.container}>
-      <h1>OurHouse MLM — Confirm</h1>
+      <h1 className={styles.title}>Подтверждение</h1>
       {error && <div className={styles.error}>{error}</div>}
       {info && <div className={styles.info}>{info}</div>}
       <form onSubmit={handleSubmit(onSubmit)}>
         <input type="hidden" name="_csrf" value={csrfToken} />
         <div className={styles.formField}>
           <label htmlFor="code" className={styles.label}>
-            Confirmation Code
+            Код подтверждения
           </label>
           <input
             id="code"
@@ -95,10 +88,10 @@ const Confirm = ({
             maxLength={6}
             className={styles.input}
             {...register('code', {
-              required: 'Confirmation code is required',
+              required: 'Обязательное поле',
               pattern: {
                 value: /^\d{6}$/,
-                message: 'Enter the 6-digit code',
+                message: 'Введите 6-значный код',
               },
             })}
           />
@@ -109,22 +102,22 @@ const Confirm = ({
         <div className={styles.formFieldLast}>
           <button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className={styles.submitButton}
-            style={{ cursor: loading ? 'not-allowed' : 'pointer' }}
+            style={{ cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
           >
-            {loading ? 'Verifying…' : 'Confirm'}
+            {isSubmitting ? 'Проверка' : 'Подтвердить'}
           </button>
         </div>
       </form>
       <button
         type="button"
         onClick={handleResend}
-        disabled={loading}
+        disabled={isSubmitting}
         className={styles.resendButton}
-        style={{ cursor: loading ? 'not-allowed' : 'pointer' }}
+        style={{ cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
       >
-        Resend code
+        Отправить новый код
       </button>
     </div>
   )

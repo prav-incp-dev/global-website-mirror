@@ -177,7 +177,7 @@ describe('register routes', () => {
 
     expect(response.statusCode).toBe(409)
     expect(response.json()).toEqual({
-      error: 'Email already registered',
+      error: 'Электронная почта уже есть в системе',
     })
     expect(auth.setSession).not.toHaveBeenCalled()
   })
@@ -216,7 +216,7 @@ describe('register routes', () => {
 
     expect(response.statusCode).toBe(409)
     expect(response.json()).toEqual({
-      error: 'Phone Number already registered',
+      error: 'Номер телефона уже есть в системе',
     })
     expect(auth.setSession).not.toHaveBeenCalled()
   })
@@ -255,7 +255,7 @@ describe('register routes', () => {
 
     expect(response.statusCode).toBe(409)
     expect(response.json()).toEqual({
-      error: 'Nick already registered',
+      error: 'Ник в Телеграм уже есть в системе',
     })
     expect(auth.setSession).not.toHaveBeenCalled()
   })
@@ -294,7 +294,7 @@ describe('register routes', () => {
 
     expect(response.statusCode).toBe(409)
     expect(response.json()).toEqual({
-      error: 'Member ID already registered',
+      error: 'Номер пайщика уже есть в системе',
     })
     expect(auth.setSession).not.toHaveBeenCalled()
   })
@@ -324,7 +324,7 @@ describe('register routes', () => {
     })
 
     expect(response.statusCode).toBe(500)
-    expect(response.json()).toEqual({ error: 'Registration failed' })
+    expect(response.json()).toEqual({ error: 'Ошибка регистрации' })
     expect(auth.setSession).not.toHaveBeenCalled()
   })
 
@@ -387,7 +387,7 @@ describe('register routes', () => {
     })
 
     expect(response.statusCode).toBe(200)
-    expect(response.json()).toEqual({ success: true, message: 'Registration went successfully' })
+    expect(response.json()).toEqual({ success: true, message: 'Регистрация прошла успешно' })
     expect(app.createUser).toHaveBeenCalledWith({
       email: payload.email,
       nick: payload.nick,

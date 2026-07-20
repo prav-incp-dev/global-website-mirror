@@ -56,15 +56,15 @@ const Register = () => {
       const result = await response.json()
 
       if (result.success) {
-        setSuccess('Registration went successfully. Redirecting to login page...')
+        setSuccess('Регистрация прошла успешно. Сейчас можно будет войти в систему...')
         setTimeout(() => {
           window.location.assign('/auth')
         }, 5000)
       } else {
-        setError(result.error || 'Registration failed')
+        setError(result.error || 'Ошибка регистрации')
       }
     } catch (err) {
-      setError('An error occurred during registration')
+      setError('Что-то пошло не так. Попробуйте еще раз.')
     }
   }
 
@@ -76,105 +76,105 @@ const Register = () => {
 
   return (
     <div className={styles.container}>
-      <h1>Register</h1>
+      <h1>Регистрация</h1>
       {error && <div className={styles.error}>{error}</div>}
       {success && <div className={styles.success}>{success}</div>}
       <form onSubmit={handleSubmit(handleRegister)}>
         <input type="hidden" name="_csrf" value={csrfToken} />
         <div className={styles.formField}>
-          <label htmlFor="email" className={styles.label}>Email</label>
+          <label htmlFor="email" className={styles.label}>Электронная почта</label>
           <input
             type="email"
             id="email"
             className={styles.input}
             {...register('email', {
-              required: 'Email is required',
+              required: 'Обязательное поле',
               pattern: {
                 value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                message: 'Invalid email format',
+                message: 'Введите корректный адрес',
               },
             })}
           />
           {errors.email && <span className={styles.fieldError}>{errors.email.message}</span>}
         </div>
         <div className={styles.formField}>
-          <label htmlFor="nick" className={styles.label}>Nick</label>
+          <label htmlFor="nick" className={styles.label}>Ник в Телеграм</label>
           <input
             type="text"
             id="nick"
             className={styles.input}
             {...register('nick', {
-              required: 'Nick is required',
+              required: 'Обязательное поле',
             })}
           />
           {errors.nick && <span className={styles.fieldError}>{errors.nick.message}</span>}
         </div>
         <div className={styles.formField}>
-          <label htmlFor="fullName" className={styles.label}>Full Name</label>
+          <label htmlFor="fullName" className={styles.label}>Фамилия и имя</label>
           <input
             type="text"
             id="fullName"
             className={styles.input}
             {...register('fullName', {
-              required: 'Full Name is required',
+              required: 'Обязательное поле',
             })}
           />
           {errors.fullName && <span className={styles.fieldError}>{errors.fullName.message}</span>}
         </div>
         <div className={styles.formField}>
-          <label htmlFor="phone" className={styles.label}>Phone Number</label>
+          <label htmlFor="phone" className={styles.label}>Номер телефона</label>
           <input
             type="tel"
             id="phone"
             className={styles.input}
             {...register('phone', {
-              required: 'Phone Number is required',
+              required: 'Обязательное поле',
               pattern: {
                 value: /^\+?[1-9]\d{1,14}$/,
-                message: 'Invalid phone number format',
+                message: 'Введите корректный номер телефона',
               },
             })}
           />
           {errors.phone && <span className={styles.fieldError}>{errors.phone.message}</span>}
         </div>
         <div className={styles.formField}>
-          <label htmlFor="memberId" className={styles.label}>Member Id</label>
+          <label htmlFor="memberId" className={styles.label}>Номер пайщика</label>
           <input
             type="text"
             id="memberId"
             className={styles.input}
             {...register('memberId', {
-              required: 'Member Id is required',
+              required: 'Обязательное поле',
             })}
           />
           {errors.memberId && <span className={styles.fieldError}>{errors.memberId.message}</span>}
         </div>
         <div className={styles.formField}>
-          <label htmlFor="password" className={styles.label}>Password</label>
+          <label htmlFor="password" className={styles.label}>Пароль</label>
           <input
             type="password"
             id="password"
             className={styles.input}
             {...register('password', {
-              required: 'Password is required',
+              required: 'Обязательное поле',
               minLength: {
                 value: 6,
-                message: 'Password must be at least 6 characters',
+                message: 'Минимум 6 символов',
               },
             })}
           />
           {errors.password && <span className={styles.fieldError}>{errors.password.message}</span>}
         </div>
         <div className={styles.formFieldLast}>
-          <label htmlFor="confirmPassword" className={styles.label}>Confirm Password</label>
+          <label htmlFor="confirmPassword" className={styles.label}>Подтверждение пароля</label>
           <input
             type="password"
             id="confirmPassword"
             className={styles.input}
             {...register('confirmPassword', {
-              required: 'Confirm Password is required',
+              required: 'Обязательное поле',
               validate: (value) =>
-                value === password || 'Passwords do not match',
+                value === password || 'Пароли не совпадают',
             })}
           />
           {errors.confirmPassword && (
@@ -182,7 +182,7 @@ const Register = () => {
           )}
         </div>
         <button type="submit" disabled={isSubmitting} className={styles.submitButton}>
-          {isSubmitting ? 'Registering...' : 'Register'}
+          {isSubmitting ? 'Регистрация...' : 'Зарегистрироваться'}
         </button>
       </form>
     </div>

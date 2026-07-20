@@ -30,25 +30,25 @@ export default fp(async (fastify) => {
         })
 
         if (user) {
-          return reply.send({ success: true, message: 'Registration went successfully' })
+          return reply.send({ success: true, message: 'Регистрация прошла успешно' })
         } else {
-          return reply.code(500).send({ error: 'Registration failed' })
+          return reply.code(500).send({ error: 'Ошибка регистрации' })
         }
       } catch (err) {        
         if (err.code === 'P2002') {
           const uniqFields = {
-            email: 'Email',
-            nick: 'Nick',
-            memberId: 'Member ID',
-            phone: 'Phone Number',
+            email: 'Электронная почта',
+            nick: 'Ник в Телеграм',
+            memberId: 'Номер пайщика',
+            phone: 'Номер телефона',
           }
           const errorMessage = String(err.message || '').toLowerCase()
           const foundKey = Object.keys(uniqFields).find(key => errorMessage.includes(key.toLowerCase()))
           const fieldName = uniqFields[foundKey] || foundKey
-          return reply.code(409).send({ error: `${fieldName} already registered` })
+          return reply.code(409).send({ error: `${fieldName} уже есть в системе` })
         }
 
-        return reply.code(500).send({ error: err.message || 'Registration failed' })
+        return reply.code(500).send({ error: err.message || 'Ошибка регистрации' })
       }
     },
   })

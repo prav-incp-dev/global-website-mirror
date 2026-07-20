@@ -5,6 +5,10 @@
   font-family: system-ui, sans-serif;
 }
 
+.title {
+  text-align: center;
+}
+
 .formField {
   margin-bottom: 12px;
 }

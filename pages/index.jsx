@@ -46,39 +46,39 @@ const Index = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.headerTitle}>Profile</h1>
+        <h1 className={styles.headerTitle}>Профиль</h1>
         <button className={styles.logoutButton} onClick={handleLogout}>
-          Logout
+          Выйти
         </button>
       </div>
 
       <div className={styles.profileCard}>
         <div className={styles.row}>
-          <span className={styles.label}>Nick:</span>
+          <span className={styles.label}>Ник в Телеграм:</span>
           <span className={styles.value}>{profile.nick || '—'}</span>
         </div>
         <div className={styles.row}>
-          <span className={styles.label}>Full Name:</span>
+          <span className={styles.label}>Фамилия и имя:</span>
           <span className={styles.value}>{profile.fullName || '—'}</span>
         </div>
         <div className={styles.row}>
-          <span className={styles.label}>Email:</span>
+          <span className={styles.label}>Почта:</span>
           <span className={styles.value}>{profile.email || '—'}</span>
         </div>
         <div className={styles.row}>
-          <span className={styles.label}>Phone:</span>
+          <span className={styles.label}>Номер телефона:</span>
           <span className={styles.value}>{profile.phone || '—'}</span>
         </div>
         <div className={styles.row}>
-          <span className={styles.label}>Member ID:</span>
+          <span className={styles.label}>Номер пайщика:</span>
           <span className={styles.value}>{profile.memberId || '—'}</span>
         </div>
         <div className={styles.row}>
-          <span className={styles.label}>Wallet:</span>
+          <span className={styles.label}>Кошелек:</span>
           <span className={styles.value}>{profile.wallet || '—'}</span>
         </div>
         <div className={styles.row}>
-          <span className={styles.label}>Company:</span>
+          <span className={styles.label}>Компания:</span>
           <span className={styles.value}>{profile.companyName || '—'}</span>
         </div>
       </div>

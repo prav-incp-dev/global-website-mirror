@@ -13,9 +13,9 @@ test.describe('registration flow', () => {
     await page.locator('#password').fill('password123')
     await page.locator('#confirmPassword').fill('password123')
 
-    await page.getByRole('button', { name: 'Register' }).click()
+    await page.getByRole('button', { name: 'Зарегистрироваться' }).click()
 
-    await expect(page.getByText('Registration went successfully')).toBeVisible()
+    await expect(page.getByText('Регистрация прошла успешно')).toBeVisible()
     await expect(page).toHaveURL('http://127.0.0.1:3101/auth')
   })
 
@@ -31,9 +31,9 @@ test.describe('registration flow', () => {
     await page.locator('#password').fill('password123')
     await page.locator('#confirmPassword').fill('password123')
 
-    await page.getByRole('button', { name: 'Register' }).click()
+    await page.getByRole('button', { name: 'Зарегистрироваться' }).click()
 
-    await expect(page.getByText('Invalid email format')).toBeVisible()
+    await expect(page.getByText('Введите корректный адрес')).toBeVisible()
     await expect(page).toHaveURL('http://127.0.0.1:3101/register')
   })
 
@@ -49,9 +49,9 @@ test.describe('registration flow', () => {
     await page.locator('#password').fill('password123')
     await page.locator('#confirmPassword').fill('different-password')
 
-    await page.getByRole('button', { name: 'Register' }).click()
+    await page.getByRole('button', { name: 'Зарегистрироваться' }).click()
 
-    await expect(page.getByText('Passwords do not match')).toBeVisible()
+    await expect(page.getByText('Пароли не совпадают')).toBeVisible()
     await expect(page).toHaveURL('http://127.0.0.1:3101/register')
   })
 
@@ -67,9 +67,9 @@ test.describe('registration flow', () => {
     await page.locator('#password').fill('password123')
     await page.locator('#confirmPassword').fill('password123')
 
-    await page.getByRole('button', { name: 'Register' }).click()
+    await page.getByRole('button', { name: 'Зарегистрироваться' }).click()
 
-    await expect(page.getByText('Email already registered')).toBeVisible()
+    await expect(page.getByText('Электронная почта уже есть в системе')).toBeVisible()
     await expect(page).toHaveURL('http://127.0.0.1:3101/register')
   })
 })

@@ -6,17 +6,14 @@ const Login = ({ csrfToken, onSuccess }) => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: { email: '', password: '' },
   })
 
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
   
   const onSubmit = async ({ email, password }) => {
-    setLoading(true)
-
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -32,34 +29,32 @@ const Login = ({ csrfToken, onSuccess }) => {
       if (result.success) {
         onSuccess(result.token)
       } else {
-        setError(result.error || 'Login failed')
+        setError(result.error || 'Ошибка входа в систему')
       }
     } catch {
-      setError('Something went wrong. Please try again.')
-    } finally {
-      setLoading(false)
+      setError('Что-то пошло не так. Попробуйте еще раз.')
     }
   }
 
   return (
     <div className={styles.container}>
-      <h1>OurHouse MLM — Login</h1>
+      <h1 className={styles.title}>Вход в систему</h1>
       {error && <div className={styles.error}>{error}</div>}
       <form onSubmit={handleSubmit(onSubmit)}>
         <input type="hidden" name="_csrf" value={csrfToken} />
         <div className={styles.formField}>
           <label htmlFor="email" className={styles.label}>
-            Email
+            Электронная почта
           </label>
           <input
             id="email"
             type="email"
             className={styles.input}
             {...register('email', {
-              required: 'Email is required',
+              required: 'Обязательное поле',
               pattern: {
                 value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                message: 'Enter a valid email address',
+                message: 'Введите корректный адрес',
               },
             })}
           />
@@ -69,17 +64,17 @@ const Login = ({ csrfToken, onSuccess }) => {
         </div>
         <div className={styles.formFieldLast}>
           <label htmlFor="password" className={styles.label}>
-            Password
+            Пароль
           </label>
           <input
             id="password"
             type="password"
             className={styles.input}
             {...register('password', {
-              required: 'Password is required',
+              required: 'Обязательное поле',
               minLength: {
                 value: 6,
-                message: 'Password must be at least 6 characters',
+                message: 'Минимум 6 символов',
               },
             })}
           />
@@ -89,11 +84,11 @@ const Login = ({ csrfToken, onSuccess }) => {
         </div>
         <button
           type="submit"
-          disabled={loading}
+          disabled={isSubmitting}
           className={styles.submitButton}
-          style={{ cursor: loading ? 'not-allowed' : 'pointer' }}
+          style={{ cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
         >
-          {loading ? 'Logging in…' : 'Login'}
+          {isSubmitting ? 'Выполняется вход…' : 'Войти'}
         </button>
       </form>
     </div>
