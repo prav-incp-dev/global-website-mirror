@@ -1,18 +1,23 @@
 import { test as base, expect } from '@playwright/test'
+import crypto from 'crypto'
 import { resetDatabase } from './db.js'
 
-/**
- * Custom Playwright test fixture that automatically resets the
- * test database to its seeded state before every test.
- *
- * Usage in spec files:
- *
- *   import { test, expect } from './fixtures.js'
- *
- *   test('my test', async ({ page }) => { ... })
- */
+const BASE_URL = 'http://127.0.0.1:3101'
+const SESSION_SECRET = process.env.SESSION_SECRET || 'test-session-secret-not-for-production'
+
+const signSessionCookie = (userId) => {
+  const value = String(userId)
+  const signature = crypto
+    .createHmac('sha256', SESSION_SECRET)
+    .update(value)
+    .digest('base64')
+    .replace(/=+$/, '')
+
+  // Fastify @fastify/cookie format: "<value>.<signature>"
+  return `${value}.${signature}`
+}
+
 export const test = base.extend({
-  // Auto fixture: reset DB before every test while preserving built-in page.
   dbReset: [
     async ({}, run) => {
       await resetDatabase()
@@ -20,6 +25,24 @@ export const test = base.extend({
     },
     { auto: true },
   ],
+
+  loginAs: async ({ context, page }, run) => {
+    const login = async (userId) => {
+      await context.addCookies([
+        {
+          name: 'session',
+          value: signSessionCookie(userId),
+          url: BASE_URL, // use url OR domain+path, not both
+          httpOnly: true,
+          sameSite: 'Lax',
+        },
+      ])
+      await page.goto('/')
+      await page.waitForLoadState('networkidle')
+    }
+
+    await run(login)
+  },
 })
 
 export { expect }

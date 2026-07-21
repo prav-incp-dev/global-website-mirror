@@ -48,6 +48,20 @@ export const resetDatabase = async () => {
       companyId: company.id,
     },
   })
+
+  await prisma.user.create({
+    data: {
+      email: 'consultant@example.com',
+      password: testPasswordHash,
+      role: 'Consultant',
+      nick: 'consultant',
+      fullName: 'Consultant User',
+      phone: '+10000000002',
+      memberId: 'MBR-0002',
+      wallet: '0xABCDEF1234567891',
+      companyId: company.id,
+    },
+  })
 }
 
 /**
