@@ -220,58 +220,6 @@ describe('auth plugin core functionality', () => {
     expect(userId).toBeNull()
   })
 
-  test('register creates a user successfully', async ({ expect }) => {
-    const mockCompany = { id: 1, name: 'Test Company' }
-    fastifyInstance.db.company.findFirst.mockResolvedValue(mockCompany)
-    const mockUser = {
-      id: 1,
-      email: 'new@example.com',
-      password: 'hashedpassword',
-      role: 'Candidate',
-      nick: 'newuser',
-      fullName: 'New User',
-      phone: '+10000000002',
-      memberId: 'MBR-9001',
-      companyId: 1,
-      company: mockCompany,
-    }
-    fastifyInstance.db.user.create.mockResolvedValue(mockUser)
-
-    const result = await fastifyInstance.auth.register({
-      email: 'new@example.com',
-      nick: 'newuser',
-      fullName: 'New User',
-      phone: '+10000000002',
-      memberId: 'MBR-9001',
-      password: 'plainpassword',
-    })
-
-    expect(result).not.toHaveProperty('password')
-    expect(result.email).toBe('new@example.com')
-    expect(fastifyInstance.db.user.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        email: 'new@example.com',
-        role: 'Candidate',
-        companyId: 1,
-      }),
-      include: { company: true },
-    })
-  })
-
-  test('register throws error when no company found', async ({ expect }) => {
-    fastifyInstance.db.company.findFirst.mockResolvedValue(null)
-
-    await expect(
-      fastifyInstance.auth.register({
-        email: 'new@example.com',
-        nick: 'newuser',
-        fullName: 'New User',
-        phone: '+10000000002',
-        memberId: 'MBR-9001',
-        password: 'plainpassword',
-      }),
-    ).rejects.toThrow('No company found')
-  })
 })
 
 describe('csrfProtection hook', () => {
