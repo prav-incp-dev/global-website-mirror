@@ -20,7 +20,7 @@ export default fp(async (fastify) => {
       const { email, nick, fullName, phone, memberId, password } = req.body
 
       try {
-        const user = await fastify.createUser({
+        const user = await fastify.registration.createUser({
           email,
           nick,
           fullName,

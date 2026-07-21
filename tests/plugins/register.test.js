@@ -43,7 +43,7 @@ describe('register plugin', () => {
     }
     fastifyInstance.db.user.create.mockResolvedValue(mockCreatedUser)
 
-    const result = await fastifyInstance.createUser({
+    const result = await fastifyInstance.registration.createUser({
       email: 'new@example.com',
       nick: 'newuser',
       fullName: 'New User',
@@ -71,7 +71,7 @@ describe('register plugin', () => {
     fastifyInstance.db.company.findFirst.mockResolvedValue(null)
 
     await expect(
-      fastifyInstance.createUser({
+      fastifyInstance.registration.createUser({
         email: 'new@example.com',
         nick: 'newuser',
         fullName: 'New User',

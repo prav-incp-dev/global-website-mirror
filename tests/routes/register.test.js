@@ -42,7 +42,9 @@ const createApp = async (overrides = {}) => {
     }
   }
 
-  app.createUser = overrides.createUser || vi.fn(app.createUser)
+  app.registration = {
+    createUser: overrides.createUser || vi.fn(app.registration.createUser),
+  }
 
   // Add a test route for CSRF token generation
   app.get('/test/csrf', async (_req, reply) => {
@@ -82,7 +84,7 @@ describe('register routes', () => {
 
     expect(response.statusCode).toBe(400)
     expect(response.json().message).toContain('required')
-    expect(app.createUser).not.toHaveBeenCalled()
+    expect(app.registration.createUser).not.toHaveBeenCalled()
   })
 
   it('POST /api/register returns 400 for invalid email format', async () => {
@@ -109,7 +111,7 @@ describe('register routes', () => {
 
     expect(response.statusCode).toBe(400)
     expect(response.json().message).toContain('format')
-    expect(app.createUser).not.toHaveBeenCalled()
+    expect(app.registration.createUser).not.toHaveBeenCalled()
   })
 
   it('POST /api/register returns 400 for invalid phone number', async () => {
@@ -136,7 +138,7 @@ describe('register routes', () => {
 
     expect(response.statusCode).toBe(400)
     expect(response.json().message).toContain('pattern')
-    expect(app.createUser).not.toHaveBeenCalled()
+    expect(app.registration.createUser).not.toHaveBeenCalled()
   })
 
   it('POST /api/register returns 409 for duplicate email', async () => {
@@ -375,7 +377,7 @@ describe('register routes', () => {
       success: true,
       message: 'Регистрация прошла успешно',
     })
-    expect(app.createUser).toHaveBeenCalledWith({
+    expect(app.registration.createUser).toHaveBeenCalledWith({
       email: payload.email,
       nick: payload.nick,
       fullName: payload.fullName,
