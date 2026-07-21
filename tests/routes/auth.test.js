@@ -80,9 +80,7 @@ describe('auth routes', () => {
     })
 
     expect(response.statusCode).toBe(400)
-    expect(response.json()).toEqual({
-      error: 'Email and password are required',
-    })
+    expect(response.json().message).toContain('required')
     expect(auth.login).not.toHaveBeenCalled()
   })
 
@@ -112,7 +110,7 @@ describe('auth routes', () => {
     )
     expect(response.statusCode).toBe(401)
     expect(response.json()).toEqual({
-      error: 'Invalid email or password',
+      error: 'Неверный адрес или пароль',
     })
     expect(auth.createTwoFactorCode).not.toHaveBeenCalled()
     expect(auth.setSession).not.toHaveBeenCalled()
@@ -156,7 +154,7 @@ describe('auth routes', () => {
 
     // Verify email was sent
     const emailContent = JSON.parse(fs.readFileSync(fixturePath, 'utf-8'))
-    expect(emailContent.subject).toBe('Your confirmation code')
+    expect(emailContent.subject).toBe('Код подтверждения для входа в систему')
     expect(emailContent.to).toBe(user.email)
     expect(emailContent.text).toContain('123456')
   })
@@ -177,9 +175,7 @@ describe('auth routes', () => {
     })
 
     expect(response.statusCode).toBe(400)
-    expect(response.json()).toEqual({
-      error: 'Token and code are required',
-    })
+    expect(response.json().message).toContain('required')
   })
 
   it('POST /api/auth/confirm returns 401 when token is invalid', async () => {
@@ -202,7 +198,7 @@ describe('auth routes', () => {
     expect(auth.verifyPendingAuth).toHaveBeenCalledWith('invalid-token')
     expect(response.statusCode).toBe(401)
     expect(response.json()).toEqual({
-      error: 'Invalid or expired token',
+      error: 'Неверный код или время истекло',
     })
     expect(auth.verifyTwoFactorCode).not.toHaveBeenCalled()
     expect(auth.setSession).not.toHaveBeenCalled()
@@ -229,7 +225,7 @@ describe('auth routes', () => {
     expect(auth.verifyTwoFactorCode).toHaveBeenCalledWith(1, 'wrong-code')
     expect(response.statusCode).toBe(401)
     expect(response.json()).toEqual({
-      error: 'Invalid confirmation code',
+      error: 'Неверный код или время истекло',
     })
     expect(auth.setSession).not.toHaveBeenCalled()
   })
@@ -278,9 +274,7 @@ describe('auth routes', () => {
     })
 
     expect(response.statusCode).toBe(400)
-    expect(response.json()).toEqual({
-      error: 'Token is required',
-    })
+    expect(response.json().message).toContain('required')
   })
 
   it('POST /api/auth/resend returns 401 when token is invalid', async () => {
@@ -302,7 +296,7 @@ describe('auth routes', () => {
 
     expect(response.statusCode).toBe(401)
     expect(response.json()).toEqual({
-      error: 'Invalid or expired token',
+      error: 'Неверный код или время истекло',
     })
   })
 
@@ -332,7 +326,7 @@ describe('auth routes', () => {
 
     expect(response.statusCode).toBe(401)
     expect(response.json()).toEqual({
-      error: 'Invalid or expired token',
+      error: 'Неверный код или время истекло',
     })
     expect(app.db.user.findUnique).toHaveBeenCalledWith({
       where: { id: 1 },

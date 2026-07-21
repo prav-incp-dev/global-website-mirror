@@ -31,12 +31,12 @@ test.describe('login flow with 2FA', () => {
     await passwordInput.fill('password')
     await expect(emailInput).toHaveValue('admin@example.com')
     await expect(passwordInput).toHaveValue('password')
-    await page.getByRole('button', { name: 'Login' }).click()
+    await page.getByRole('button', { name: 'Войти' }).click()
 
     // Wait for the confirmation code step to appear
-    await expect(page.getByRole('heading', { name: 'Confirm' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Подтверждение' })).toBeVisible()
     await expect(
-      page.getByText('confirmation code has been sent'),
+      page.getByText('6-значный код подтверждения отправлен на ваш электронный адрес'),
     ).toBeVisible()
 
     // Read the confirmation code from the email fixture file
@@ -45,10 +45,10 @@ test.describe('login flow with 2FA', () => {
     const codeInput = page.locator('#code')
     await codeInput.fill(code)
     await expect(codeInput).toHaveValue(code)
-    await page.getByRole('button', { name: 'Confirm' }).click()
+    await page.getByRole('button', { name: 'Подтвердить' }).click()
 
     await expect(page).toHaveURL('http://127.0.0.1:3101/')
-    await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Профиль' })).toBeVisible()
     await expect(page.getByText('admin@example.com')).toBeVisible()
   })
 
@@ -63,10 +63,10 @@ test.describe('login flow with 2FA', () => {
     await passwordInput.fill('wrong-password')
     await expect(emailInput).toHaveValue('admin@example.com')
     await expect(passwordInput).toHaveValue('wrong-password')
-    await page.getByRole('button', { name: 'Login' }).click()
+    await page.getByRole('button', { name: 'Войти' }).click()
 
     await expect(page).toHaveURL('http://127.0.0.1:3101/auth')
-    await expect(page.getByText('Invalid email or password')).toBeVisible()
+    await expect(page.getByText('Неверный адрес или пароль')).toBeVisible()
   })
 
   test('shows error on invalid confirmation code', async ({ page }) => {
@@ -78,21 +78,21 @@ test.describe('login flow with 2FA', () => {
 
     await emailInput.fill('admin@example.com')
     await passwordInput.fill('password')
-    await page.getByRole('button', { name: 'Login' }).click()
+    await page.getByRole('button', { name: 'Войти' }).click()
 
     // Wait for the confirmation code step to appear
-    await expect(page.getByRole('heading', { name: 'Confirm' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Подтверждение' })).toBeVisible()
     await expect(
-      page.getByText('confirmation code has been sent'),
+      page.getByText('6-значный код подтверждения отправлен на ваш электронный адрес'),
     ).toBeVisible()
 
     const codeInput = page.locator('#code')
     await codeInput.fill('000000')
-    await page.getByRole('button', { name: 'Confirm' }).click()
+    await page.getByRole('button', { name: 'Подтвердить' }).click()
 
-    await expect(page.getByText('Invalid confirmation code')).toBeVisible()
+    await expect(page.getByText('Неверный код или время истекло')).toBeVisible()
     await expect(
-      page.getByText('confirmation code has been sent'),
+      page.getByText('6-значный код подтверждения отправлен на ваш электронный адрес'),
     ).not.toBeVisible()
   })
 
@@ -105,21 +105,21 @@ test.describe('login flow with 2FA', () => {
 
     await emailInput.fill('admin@example.com')
     await passwordInput.fill('password')
-    await page.getByRole('button', { name: 'Login' }).click()
+    await page.getByRole('button', { name: 'Войти' }).click()
 
     // Wait for the confirmation code step to appear
-    await expect(page.getByRole('heading', { name: 'Confirm' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Подтверждение' })).toBeVisible()
 
     // Get the first generated confirmation code
     const firstCode = await getConfirmationCode()
     expect(firstCode).toBeDefined()
 
     // Click "Resend code" button
-    await page.getByRole('button', { name: 'Resend code' }).click()
+    await page.getByRole('button', { name: 'Отправить новый код' }).click()
 
     // Verify information text banner
     await expect(
-      page.getByText('A new confirmation code has been sent to your email.'),
+      page.getByText('Новый код подтверждения отправлен на ваш электронный адрес'),
     ).toBeVisible()
 
     // Retrieve the newly updated / generated code
@@ -129,11 +129,11 @@ test.describe('login flow with 2FA', () => {
     // Fill in the new Code and click confirm
     const codeInput = page.locator('#code')
     await codeInput.fill(newCode)
-    await page.getByRole('button', { name: 'Confirm' }).click()
+    await page.getByRole('button', { name: 'Подтвердить' }).click()
 
     // Should successfully log in and redirect to profile page
     await expect(page).toHaveURL('http://127.0.0.1:3101/')
-    await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Профиль' })).toBeVisible()
     await expect(page.getByText('admin@example.com')).toBeVisible()
   })
 
@@ -146,21 +146,21 @@ test.describe('login flow with 2FA', () => {
 
     await emailInput.fill('admin@example.com')
     await passwordInput.fill('password')
-    await page.getByRole('button', { name: 'Login' }).click()
+    await page.getByRole('button', { name: 'Войти' }).click()
 
-    await expect(page.getByRole('heading', { name: 'Confirm' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Подтверждение' })).toBeVisible()
 
     const code = await getConfirmationCode()
     const codeInput = page.locator('#code')
     await codeInput.fill(code)
-    await page.getByRole('button', { name: 'Confirm' }).click()
+    await page.getByRole('button', { name: 'Подтвердить' }).click()
 
     // Verify we are logged in
     await expect(page).toHaveURL('http://127.0.0.1:3101/')
-    await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Профиль' })).toBeVisible()
 
     // Click logout
-    await page.getByRole('button', { name: 'Logout' }).click()
+    await page.getByRole('button', { name: 'Выйти' }).click()
 
     // Verify redirect to auth page
     await expect(page).toHaveURL('http://127.0.0.1:3101/auth')

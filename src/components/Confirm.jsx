@@ -1,26 +1,28 @@
 import { useForm } from 'react-hook-form'
+import { useState } from 'react'
 import styles from './Confirm.module.css'
+import ErrorIcon from '../assets/icons/ErrorIcon.svg?react'
+import InfoIcon from '../assets/icons/InfoIcon.svg?react'
 
 const Confirm = ({
   csrfToken,
   token,
-  loading,
-  onLoading,
-  onError,
   onConfirm,
-  onResend,
 }) => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: { code: '' },
   })
 
+  const [error, setError] = useState('')
+  const [info, setInfo] = useState('6-значный код подтверждения отправлен на ваш электронный адрес')
+
   const onSubmit = async ({ code }) => {
-    onLoading(true)
-    onError('')
+    setError('')
+    setInfo('')
 
     try {
       const res = await fetch('/api/auth/confirm', {
@@ -35,18 +37,18 @@ const Confirm = ({
       const result = await res.json()
 
       if (result.success) {
-        onConfirm(result)
+        window.location.assign(result.redirect)
       } else {
-        onError(result.error || 'Confirmation failed')
+        setError(result.error || 'Неверный код или время истекло')
       }
     } catch {
-      onError('Something went wrong. Please try again.')
+      setError('Что-то пошло не так. Попробуйте еще раз.')
     }
   }
 
   const handleResend = async () => {
-    onLoading(true)
-    onError('')
+    setError('')
+    setInfo('')
 
     try {
       const res = await fetch('/api/auth/resend', {
@@ -61,23 +63,35 @@ const Confirm = ({
       const result = await res.json()
 
       if (result.success) {
-        onResend('A new confirmation code has been sent to your email.')
+        setInfo('Новый код подтверждения отправлен на ваш электронный адрес')
       } else {
-        onError(result.error || 'Failed to resend code')
+        setError(result.error || 'Ошибка отправки кода')
       }
     } catch {
-      onError('Something went wrong. Please try again.')
+      setError('Что-то пошло не так. Попробуйте еще раз.')
     }
   }
 
   return (
     <div className={styles.container}>
-      <h1>OurHouse MLM — Confirm</h1>
+      <h1 className={styles.title}>Подтверждение</h1>
+      {error && (
+        <div className={styles.error}>
+          <ErrorIcon className={styles.errorIcon} />
+          <span>{error}</span>
+        </div>
+      )}
+      {info && (
+        <div className={styles.info}>
+          <InfoIcon className={styles.infoIcon} />
+          <span>{info}</span>
+        </div>
+      )}
       <form onSubmit={handleSubmit(onSubmit)}>
         <input type="hidden" name="_csrf" value={csrfToken} />
         <div className={styles.formField}>
           <label htmlFor="code" className={styles.label}>
-            Confirmation Code
+            Код подтверждения
           </label>
           <input
             id="code"
@@ -86,10 +100,10 @@ const Confirm = ({
             maxLength={6}
             className={styles.input}
             {...register('code', {
-              required: 'Confirmation code is required',
+              required: 'Обязательное поле',
               pattern: {
                 value: /^\d{6}$/,
-                message: 'Enter the 6-digit code',
+                message: 'Введите 6-значный код',
               },
             })}
           />
@@ -100,22 +114,22 @@ const Confirm = ({
         <div className={styles.formFieldLast}>
           <button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className={styles.submitButton}
-            style={{ cursor: loading ? 'not-allowed' : 'pointer' }}
+            style={{ cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
           >
-            {loading ? 'Verifying…' : 'Confirm'}
+            {isSubmitting ? 'Проверка' : 'Подтвердить'}
           </button>
         </div>
       </form>
       <button
         type="button"
-        onClick={onResend}
-        disabled={loading}
+        onClick={handleResend}
+        disabled={isSubmitting}
         className={styles.resendButton}
-        style={{ cursor: loading ? 'not-allowed' : 'pointer' }}
+        style={{ cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
       >
-        Resend code
+        Отправить новый код
       </button>
     </div>
   )

@@ -10,7 +10,7 @@ const SESSION_MAX_AGE = 7 * 24 * 60 * 60 // 7 days in seconds
 const SECURE_COOKIES = process.env.NODE_ENV === 'production'
 const PENDING_AUTH_MAX_AGE = 10 * 60 // 10 minutes in seconds
 
-const parseUserId = (value) => {
+export const parseUserId = (value) => {
   const userId = Number(value)
   if (!Number.isInteger(userId) || userId <= 0) return null
 
@@ -40,6 +40,35 @@ export default fp(async (fastify) => {
     }
   })
   fastify.decorate('auth', {
+    register: async ({ email, nick, fullName, phone, memberId, password }) => {
+      const company = await fastify.db.company.findFirst({
+        orderBy: { id: 'asc' },
+      })
+
+      if (!company) {
+        throw new Error('No company found')
+      }
+
+      const passwordHash = await bcrypt.hash(password, 12)
+
+      const user = await fastify.db.user.create({
+        data: {
+          email,
+          password: passwordHash,
+          role: 'Candidate',
+          nick,
+          fullName,
+          phone,
+          memberId,
+          companyId: company.id,
+        },
+        include: { company: true },
+      })
+
+      const { password: _pw, ...safeUser } = user
+      return safeUser
+    },
+
     login: async (email, password) => {
       const user = await fastify.db.user.findUnique({
         where: { email },

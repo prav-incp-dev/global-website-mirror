@@ -55,7 +55,7 @@ const main = async () => {
   })
 
   console.log('Seeding test database...')
-  execSync('npm run seed', {
+  execSync('npm run db:seed', {
     stdio: 'inherit',
     cwd: projectRoot,
     env: process.env,
