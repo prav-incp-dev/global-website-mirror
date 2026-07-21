@@ -12,6 +12,10 @@ You are an expert full-stack developer specializing in Fastify and React integra
 
 - **Use Arrow Functions**: Always prefer arrow functions (`const myFunc = () => {}`) over the traditional `function` keyword for components, hooks, helpers, and handlers.
 
+# Design
+
+- Follows **Luxury mobile dark theme gold** mobile-first design rules
+
 # Key Architecture Rules
 
 ## 1. Routing and File Structure

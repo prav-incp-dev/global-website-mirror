@@ -1,6 +1,8 @@
 import { useForm } from 'react-hook-form'
 import { useState } from 'react'
 import styles from './Confirm.module.css'
+import ErrorIcon from '../assets/icons/ErrorIcon.svg?react'
+import InfoIcon from '../assets/icons/InfoIcon.svg?react'
 
 const Confirm = ({
   csrfToken,
@@ -73,8 +75,18 @@ const Confirm = ({
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Подтверждение</h1>
-      {error && <div className={styles.error}>{error}</div>}
-      {info && <div className={styles.info}>{info}</div>}
+      {error && (
+        <div className={styles.error}>
+          <ErrorIcon className={styles.errorIcon} />
+          <span>{error}</span>
+        </div>
+      )}
+      {info && (
+        <div className={styles.info}>
+          <InfoIcon className={styles.infoIcon} />
+          <span>{info}</span>
+        </div>
+      )}
       <form onSubmit={handleSubmit(onSubmit)}>
         <input type="hidden" name="_csrf" value={csrfToken} />
         <div className={styles.formField}>

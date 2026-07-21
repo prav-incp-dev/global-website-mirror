@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { useState } from 'react'
 import styles from './Login.module.css'
+import ErrorIcon from '../assets/icons/ErrorIcon.svg?react'
 
 const Login = ({ csrfToken, onSuccess }) => {
   const {
@@ -39,7 +40,12 @@ const Login = ({ csrfToken, onSuccess }) => {
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Вход в систему</h1>
-      {error && <div className={styles.error}>{error}</div>}
+      {error && (
+        <div className={styles.error}>
+          <ErrorIcon className={styles.errorIcon} />
+          <span>{error}</span>
+        </div>
+      )}
       <form onSubmit={handleSubmit(onSubmit)}>
         <input type="hidden" name="_csrf" value={csrfToken} />
         <div className={styles.formField}>

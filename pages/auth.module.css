@@ -1,4 +1,9 @@
 .container {
-  font-family: system-ui, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 24px 16px;
+  background: radial-gradient(ellipse at top, #1a1a1a 0%, #0d0d0d 70%);
 }
-
