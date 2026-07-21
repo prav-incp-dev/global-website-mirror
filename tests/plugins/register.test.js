@@ -70,13 +70,15 @@ describe('register plugin', () => {
   test('createUser throws error when no company found', async ({ expect }) => {
     fastifyInstance.db.company.findFirst.mockResolvedValue(null)
 
-    await expect(fastifyInstance.createUser({
-      email: 'new@example.com',
-      nick: 'newuser',
-      fullName: 'New User',
-      phone: '+10000000002',
-      memberId: 'MBR-9001',
-      password: 'plainpassword',
-    })).rejects.toThrow('No company found')
+    await expect(
+      fastifyInstance.createUser({
+        email: 'new@example.com',
+        nick: 'newuser',
+        fullName: 'New User',
+        phone: '+10000000002',
+        memberId: 'MBR-9001',
+        password: 'plainpassword',
+      }),
+    ).rejects.toThrow('No company found')
   })
 })

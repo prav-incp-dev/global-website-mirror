@@ -8,9 +8,7 @@ const toCookieHeader = (setCookieHeader) => {
     return ''
   }
 
-  const values = Array.isArray(setCookieHeader)
-    ? setCookieHeader
-    : [setCookieHeader]
+  const values = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader]
 
   return values.map((cookieValue) => cookieValue.split(';')[0]).join('; ')
 }
@@ -104,10 +102,7 @@ describe('auth routes', () => {
       },
     })
 
-    expect(auth.login).toHaveBeenCalledWith(
-      'admin@example.com',
-      'wrong-password',
-    )
+    expect(auth.login).toHaveBeenCalledWith('admin@example.com', 'wrong-password')
     expect(response.statusCode).toBe(401)
     expect(response.json()).toEqual({
       error: 'Неверный адрес или пароль',
@@ -278,7 +273,7 @@ describe('auth routes', () => {
   })
 
   it('POST /api/auth/resend returns 401 when token is invalid', async () => {
-    const { app, auth } = await createApp({
+    const { app } = await createApp({
       verifyPendingAuth: vi.fn().mockReturnValue(null),
     })
     apps.push(app)

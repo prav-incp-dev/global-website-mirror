@@ -13,7 +13,7 @@ const Login = ({ csrfToken, onSuccess }) => {
   })
 
   const [error, setError] = useState('')
-  
+
   const onSubmit = async ({ email, password }) => {
     try {
       const res = await fetch('/api/auth/login', {
@@ -64,9 +64,7 @@ const Login = ({ csrfToken, onSuccess }) => {
               },
             })}
           />
-          {errors.email && (
-            <span className={styles.fieldError}>{errors.email.message}</span>
-          )}
+          {errors.email && <span className={styles.fieldError}>{errors.email.message}</span>}
         </div>
         <div className={styles.formFieldLast}>
           <label htmlFor="password" className={styles.label}>
@@ -84,9 +82,7 @@ const Login = ({ csrfToken, onSuccess }) => {
               },
             })}
           />
-          {errors.password && (
-            <span className={styles.fieldError}>{errors.password.message}</span>
-          )}
+          {errors.password && <span className={styles.fieldError}>{errors.password.message}</span>}
         </div>
         <button
           type="submit"

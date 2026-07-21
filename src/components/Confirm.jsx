@@ -4,11 +4,7 @@ import styles from './Confirm.module.css'
 import ErrorIcon from '../assets/icons/ErrorIcon.svg?react'
 import InfoIcon from '../assets/icons/InfoIcon.svg?react'
 
-const Confirm = ({
-  csrfToken,
-  token,
-  onConfirm,
-}) => {
+const Confirm = ({ csrfToken, token }) => {
   const {
     register,
     handleSubmit,
@@ -107,9 +103,7 @@ const Confirm = ({
               },
             })}
           />
-          {errors.code && (
-            <span className={styles.fieldError}>{errors.code.message}</span>
-          )}
+          {errors.code && <span className={styles.fieldError}>{errors.code.message}</span>}
         </div>
         <div className={styles.formFieldLast}>
           <button

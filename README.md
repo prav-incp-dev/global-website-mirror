@@ -153,20 +153,20 @@ npm run test:e2e
 
 ### User
 
-| Поле              | Тип                                      | Описание                                     |
-| ----------------- | ---------------------------------------- | -------------------------------------------- |
-| `id`              | UUID (авто)                              | Уникальный идентификатор                     |
-| `email`           | String (уникальный)                      | Email пользователя                           |
-| `password`        | String                                   | Хэш пароля                                   |
-| `role`            | Enum: `Admin`, `Candidate`, `Consultant` | Роль пользователя (по умолчанию `Candidate`) |
-| `companyId`       | String (FK → `Company`)                  | Привязка к компании                          |
-| `nick`            | String?                                  | Никнейм                                      |
-| `fullName`        | String?                                  | Полное имя                                   |
-| `memberId`        | String? (уникальный)                     | Идентификатор участника                      |
-| `parentId`        | String? (FK → `User`)                    | Родительский пользователь (реферал)          |
-| `wallet`   | String?                                  | Кошелёк                       |
-| `createdAt`       | DateTime                                 | Дата создания                                |
-| `updatedAt`       | DateTime                                 | Дата обновления                              |
+| Поле        | Тип                                      | Описание                                     |
+| ----------- | ---------------------------------------- | -------------------------------------------- |
+| `id`        | UUID (авто)                              | Уникальный идентификатор                     |
+| `email`     | String (уникальный)                      | Email пользователя                           |
+| `password`  | String                                   | Хэш пароля                                   |
+| `role`      | Enum: `Admin`, `Candidate`, `Consultant` | Роль пользователя (по умолчанию `Candidate`) |
+| `companyId` | String (FK → `Company`)                  | Привязка к компании                          |
+| `nick`      | String?                                  | Никнейм                                      |
+| `fullName`  | String?                                  | Полное имя                                   |
+| `memberId`  | String? (уникальный)                     | Идентификатор участника                      |
+| `parentId`  | String? (FK → `User`)                    | Родительский пользователь (реферал)          |
+| `wallet`    | String?                                  | Кошелёк                                      |
+| `createdAt` | DateTime                                 | Дата создания                                |
+| `updatedAt` | DateTime                                 | Дата обновления                              |
 
 ## Структура проекта
 

@@ -18,9 +18,7 @@ const getConfirmationCode = async () => {
 }
 
 test.describe('login flow with 2FA', () => {
-  test('logs in with email + password, enters confirmation code, and redirects to profile page', async ({
-    page,
-  }) => {
+  test('logs in with email + password, enters confirmation code, and redirects to profile page', async ({ page }) => {
     await page.goto('/auth')
     await page.waitForLoadState('networkidle')
 
@@ -35,9 +33,7 @@ test.describe('login flow with 2FA', () => {
 
     // Wait for the confirmation code step to appear
     await expect(page.getByRole('heading', { name: 'Подтверждение' })).toBeVisible()
-    await expect(
-      page.getByText('6-значный код подтверждения отправлен на ваш электронный адрес'),
-    ).toBeVisible()
+    await expect(page.getByText('6-значный код подтверждения отправлен на ваш электронный адрес')).toBeVisible()
 
     // Read the confirmation code from the email fixture file
     const code = await getConfirmationCode()
@@ -82,18 +78,14 @@ test.describe('login flow with 2FA', () => {
 
     // Wait for the confirmation code step to appear
     await expect(page.getByRole('heading', { name: 'Подтверждение' })).toBeVisible()
-    await expect(
-      page.getByText('6-значный код подтверждения отправлен на ваш электронный адрес'),
-    ).toBeVisible()
+    await expect(page.getByText('6-значный код подтверждения отправлен на ваш электронный адрес')).toBeVisible()
 
     const codeInput = page.locator('#code')
     await codeInput.fill('000000')
     await page.getByRole('button', { name: 'Подтвердить' }).click()
 
     await expect(page.getByText('Неверный код или время истекло')).toBeVisible()
-    await expect(
-      page.getByText('6-значный код подтверждения отправлен на ваш электронный адрес'),
-    ).not.toBeVisible()
+    await expect(page.getByText('6-значный код подтверждения отправлен на ваш электронный адрес')).not.toBeVisible()
   })
 
   test('resend code logic', async ({ page }) => {
@@ -118,9 +110,7 @@ test.describe('login flow with 2FA', () => {
     await page.getByRole('button', { name: 'Отправить новый код' }).click()
 
     // Verify information text banner
-    await expect(
-      page.getByText('Новый код подтверждения отправлен на ваш электронный адрес'),
-    ).toBeVisible()
+    await expect(page.getByText('Новый код подтверждения отправлен на ваш электронный адрес')).toBeVisible()
 
     // Retrieve the newly updated / generated code
     const newCode = await getConfirmationCode()

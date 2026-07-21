@@ -1,6 +1,4 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import fs from 'fs'
-import path from 'path'
 import { buildBackendApp } from '../../backend.js'
 
 const toCookieHeader = (setCookieHeader) => {
@@ -8,9 +6,7 @@ const toCookieHeader = (setCookieHeader) => {
     return ''
   }
 
-  const values = Array.isArray(setCookieHeader)
-    ? setCookieHeader
-    : [setCookieHeader]
+  const values = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader]
 
   return values.map((cookieValue) => cookieValue.split(';')[0]).join('; ')
 }
@@ -67,7 +63,7 @@ describe('register routes', () => {
   })
 
   it('POST /api/register returns 400 when required fields are missing', async () => {
-    const { app, auth } = await createApp()
+    const { app } = await createApp()
     apps.push(app)
     const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
@@ -90,7 +86,7 @@ describe('register routes', () => {
   })
 
   it('POST /api/register returns 400 for invalid email format', async () => {
-    const { app, auth } = await createApp()
+    const { app } = await createApp()
     apps.push(app)
     const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
@@ -117,7 +113,7 @@ describe('register routes', () => {
   })
 
   it('POST /api/register returns 400 for invalid phone number', async () => {
-    const { app, auth } = await createApp()
+    const { app } = await createApp()
     apps.push(app)
     const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
@@ -144,13 +140,10 @@ describe('register routes', () => {
   })
 
   it('POST /api/register returns 409 for duplicate email', async () => {
-    const duplicateEmailError = Object.assign(
-      new Error('Unique constraint failed on the fields: (`email`)'),
-      {
-        code: 'P2002',
-        meta: { target: ['email'] },
-      },
-    )
+    const duplicateEmailError = Object.assign(new Error('Unique constraint failed on the fields: (`email`)'), {
+      code: 'P2002',
+      meta: { target: ['email'] },
+    })
 
     const { app, auth } = await createApp({
       createUser: vi.fn().mockRejectedValue(duplicateEmailError),
@@ -183,13 +176,10 @@ describe('register routes', () => {
   })
 
   it('POST /api/register returns 409 for duplicate phone number', async () => {
-    const duplicatePhoneError = Object.assign(
-      new Error('Unique constraint failed on the fields: (`phone`)'),
-      {
-        code: 'P2002',
-        meta: { target: ['phone'] },
-      },
-    )
+    const duplicatePhoneError = Object.assign(new Error('Unique constraint failed on the fields: (`phone`)'), {
+      code: 'P2002',
+      meta: { target: ['phone'] },
+    })
 
     const { app, auth } = await createApp({
       createUser: vi.fn().mockRejectedValue(duplicatePhoneError),
@@ -222,13 +212,10 @@ describe('register routes', () => {
   })
 
   it('POST /api/register returns 409 for duplicate nick', async () => {
-    const duplicateNickError = Object.assign(
-      new Error('Unique constraint failed on the fields: (`nick`)'),
-      {
-        code: 'P2002',
-        meta: { target: ['nick'] },
-      },
-    )
+    const duplicateNickError = Object.assign(new Error('Unique constraint failed on the fields: (`nick`)'), {
+      code: 'P2002',
+      meta: { target: ['nick'] },
+    })
 
     const { app, auth } = await createApp({
       createUser: vi.fn().mockRejectedValue(duplicateNickError),
@@ -261,13 +248,10 @@ describe('register routes', () => {
   })
 
   it('POST /api/register returns 409 for duplicate memberId', async () => {
-    const duplicateMemberIdError = Object.assign(
-      new Error('Unique constraint failed on the fields: (`memberId`)'),
-      {
-        code: 'P2002',
-        meta: { target: ['memberId'] },
-      },
-    )
+    const duplicateMemberIdError = Object.assign(new Error('Unique constraint failed on the fields: (`memberId`)'), {
+      code: 'P2002',
+      meta: { target: ['memberId'] },
+    })
 
     const { app, auth } = await createApp({
       createUser: vi.fn().mockRejectedValue(duplicateMemberIdError),
@@ -387,7 +371,10 @@ describe('register routes', () => {
     })
 
     expect(response.statusCode).toBe(200)
-    expect(response.json()).toEqual({ success: true, message: 'Регистрация прошла успешно' })
+    expect(response.json()).toEqual({
+      success: true,
+      message: 'Регистрация прошла успешно',
+    })
     expect(app.createUser).toHaveBeenCalledWith({
       email: payload.email,
       nick: payload.nick,

@@ -34,7 +34,7 @@ export default fp(async (fastify) => {
         } else {
           return reply.code(500).send({ error: 'Ошибка регистрации' })
         }
-      } catch (err) {        
+      } catch (err) {
         if (err.code === 'P2002') {
           const uniqFields = {
             email: 'Электронная почта',
@@ -43,7 +43,7 @@ export default fp(async (fastify) => {
             phone: 'Номер телефона',
           }
           const errorMessage = String(err.message || '').toLowerCase()
-          const foundKey = Object.keys(uniqFields).find(key => errorMessage.includes(key.toLowerCase()))
+          const foundKey = Object.keys(uniqFields).find((key) => errorMessage.includes(key.toLowerCase()))
           const fieldName = uniqFields[foundKey] || foundKey
           return reply.code(409).send({ error: `${fieldName} уже есть в системе` })
         }

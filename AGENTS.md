@@ -10,11 +10,12 @@ You are an expert full-stack developer specializing in Fastify and React integra
 
 # Coding Standards & Syntax
 
-- **Use Arrow Functions**: Always prefer arrow functions (`const myFunc = () => {}`) over the traditional `function` keyword for components, hooks, helpers, and handlers.
+- **Use Arrow Functions**: Always prefer arrow functions (`const myFunc = () => {}`) over the traditional `function` keyword
 
 # Design
 
 - Follows **Luxury mobile dark theme gold** mobile-first design rules
+- Add svg icons as separate .svg files at assets/icons folder. Import them as react components
 
 # Key Architecture Rules
 
@@ -33,13 +34,15 @@ You are an expert full-stack developer specializing in Fastify and React integra
 
 - **Never** use `useEffect` or direct `fetch`/`axios` calls for initial data loading on the client if SSR is required.
 - Always use the `useRouteContext()` hook to access data passed from the Fastify server.
-- For requests inside SSR components, use the built-in `$api` object from the route context.
+- For requests inside `getData` function, use the built-in `$api` object from the route context.
 - Example of correct data retrieval in a component:
   ```jsx
   import { useRouteContext } from '@fastify/react/context'
 
-  export const getData = async ({ server, req, reply }) => {
+  export const getData = async ({ server, req, reply, $api }) => {
     const user = await server.auth.getUser(req)
+    const result = await $api.get('/api/hello')
+    return { user, message: result.message }
   }
 
   const MyPage = () => {

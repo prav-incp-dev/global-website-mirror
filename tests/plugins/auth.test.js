@@ -261,14 +261,16 @@ describe('auth plugin core functionality', () => {
   test('register throws error when no company found', async ({ expect }) => {
     fastifyInstance.db.company.findFirst.mockResolvedValue(null)
 
-    await expect(fastifyInstance.auth.register({
-      email: 'new@example.com',
-      nick: 'newuser',
-      fullName: 'New User',
-      phone: '+10000000002',
-      memberId: 'MBR-9001',
-      password: 'plainpassword',
-    })).rejects.toThrow('No company found')
+    await expect(
+      fastifyInstance.auth.register({
+        email: 'new@example.com',
+        nick: 'newuser',
+        fullName: 'New User',
+        phone: '+10000000002',
+        memberId: 'MBR-9001',
+        password: 'plainpassword',
+      }),
+    ).rejects.toThrow('No company found')
   })
 })
 
