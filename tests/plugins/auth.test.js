@@ -1,4 +1,3 @@
-
 import { test, beforeAll, afterEach, afterAll, vi } from 'vitest'
 import Fastify from 'fastify'
 import authPlugin, { parseUserId } from '../../src/plugins/auth'

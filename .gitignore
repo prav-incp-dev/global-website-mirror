@@ -7,4 +7,4 @@ last-email.json
 playwright-report
 test-results
 .playwright
-src/assets/.DS_Store
+.DS_Store
