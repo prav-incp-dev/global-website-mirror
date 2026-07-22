@@ -46,6 +46,15 @@ const createApp = async (overrides = {}) => {
     createUser: overrides.createUser || vi.fn(app.registration.createUser),
   }
 
+  app.prisma = {
+    ...app.prisma,
+    usedInvite: {
+      ...app.prisma?.usedInvite,
+      findUnique: overrides.findUsedInvite || vi.fn().mockResolvedValue(null),
+      create: overrides.createUsedInvite || vi.fn().mockResolvedValue({ id: 1, code: 'test-jti' }),
+    },
+  }
+
   // Add a test route for CSRF token generation
   app.get('/test/csrf', async (_req, reply) => {
     return { csrfToken: reply.generateCsrf() }
@@ -106,6 +115,8 @@ describe('register routes', () => {
         phone: '+375291234567',
         memberId: 'MBR-9001',
         password: 'password123',
+        parentId: 1,
+        inviteCode: 'test-invite-code-invalid-email',
       },
     })
 
@@ -133,6 +144,8 @@ describe('register routes', () => {
         phone: 'abc',
         memberId: 'MBR-9001-UNIQUE',
         password: 'password123',
+        parentId: 1,
+        inviteCode: 'test-invite-code-invalid-phone',
       },
     })
 
@@ -167,6 +180,8 @@ describe('register routes', () => {
         phone: '+375291234568',
         memberId: 'MBR-9002',
         password: 'password123',
+        parentId: 1,
+        inviteCode: 'test-invite-code-duplicate-email',
       },
     })
 
@@ -203,6 +218,8 @@ describe('register routes', () => {
         phone: '+375291234569', // Duplicate phone
         memberId: 'MBR-9001',
         password: 'password123',
+        parentId: 1,
+        inviteCode: 'test-invite-code-duplicate-phone',
       },
     })
 
@@ -239,6 +256,8 @@ describe('register routes', () => {
         phone: '+375291234570',
         memberId: 'MBR-9001',
         password: 'password123',
+        parentId: 1,
+        inviteCode: 'test-invite-code-duplicate-nick',
       },
     })
 
@@ -275,12 +294,90 @@ describe('register routes', () => {
         phone: '+375291234571',
         memberId: 'existing-member-id', // Duplicate memberId
         password: 'password123',
+        parentId: 1,
+        inviteCode: 'test-invite-code-duplicate-member-id',
       },
     })
 
     expect(response.statusCode).toBe(409)
     expect(response.json()).toEqual({
       error: 'Номер пайщика уже есть в системе',
+    })
+    expect(auth.setSession).not.toHaveBeenCalled()
+  })
+
+  it('POST /api/register returns 409 for duplicate invite code', async () => {
+    const duplicateCodeError = Object.assign(new Error('Unique constraint failed on the fields: (`code`)'), {
+      code: 'P2002',
+      meta: { target: ['code'] },
+    })
+
+    const { app, auth } = await createApp({
+      createUser: vi.fn().mockRejectedValue(duplicateCodeError),
+    })
+    apps.push(app)
+    const { csrfToken, cookieHeader } = await getCsrfContext(app)
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/register',
+      headers: {
+        cookie: cookieHeader,
+        'x-csrf-token': csrfToken,
+      },
+      payload: {
+        email: 'new.user@example.com',
+        nick: 'newuser',
+        fullName: 'New User',
+        phone: '+375291234575',
+        memberId: 'MBR-9001',
+        password: 'password123',
+        parentId: 1,
+        inviteCode: 'already-used-code',
+      },
+    })
+
+    expect(response.statusCode).toBe(409)
+    expect(response.json()).toEqual({
+      error: 'Приглашенный уже есть в системе',
+    })
+    expect(auth.setSession).not.toHaveBeenCalled()
+  })
+
+  it('POST /api/register returns 409 with raw field name for unknown P2002 field', async () => {
+    const unknownFieldError = Object.assign(new Error('Unique constraint failed on the fields: (`wallet`)'), {
+      code: 'P2002',
+      meta: { target: ['wallet'] },
+    })
+
+    const { app, auth } = await createApp({
+      createUser: vi.fn().mockRejectedValue(unknownFieldError),
+    })
+    apps.push(app)
+    const { csrfToken, cookieHeader } = await getCsrfContext(app)
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/register',
+      headers: {
+        cookie: cookieHeader,
+        'x-csrf-token': csrfToken,
+      },
+      payload: {
+        email: 'new.user@example.com',
+        nick: 'newuser',
+        fullName: 'New User',
+        phone: '+375291234576',
+        memberId: 'MBR-9001',
+        password: 'password123',
+        parentId: 1,
+        inviteCode: 'test-invite-code-unknown-field',
+      },
+    })
+
+    expect(response.statusCode).toBe(409)
+    expect(response.json()).toEqual({
+      error: 'wallet уже есть в системе',
     })
     expect(auth.setSession).not.toHaveBeenCalled()
   })
@@ -306,11 +403,49 @@ describe('register routes', () => {
         phone: '+375291234572',
         memberId: 'MBR-9001',
         password: 'password123',
+        parentId: 1,
+        inviteCode: 'test-invite-code-create-user-falsy',
       },
     })
 
     expect(response.statusCode).toBe(500)
     expect(response.json()).toEqual({ error: 'Ошибка регистрации' })
+    expect(auth.setSession).not.toHaveBeenCalled()
+  })
+
+  it('POST /api/register returns 500 when parentId does not point to an existing user', async () => {
+    const foreignKeyError = Object.assign(
+      new Error('Foreign key constraint failed on the field: parentId'),
+      { code: 'P2003' },
+    )
+
+    const { app, auth } = await createApp({
+      createUser: vi.fn().mockRejectedValue(foreignKeyError),
+    })
+    apps.push(app)
+    const { csrfToken, cookieHeader } = await getCsrfContext(app)
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/register',
+      headers: {
+        cookie: cookieHeader,
+        'x-csrf-token': csrfToken,
+      },
+      payload: {
+        email: 'new.user@example.com',
+        nick: 'newuser',
+        fullName: 'New User',
+        phone: '+375291234577',
+        memberId: 'MBR-9001',
+        password: 'password123',
+        parentId: 99999,
+        inviteCode: 'test-invite-code-foreign-key',
+      },
+    })
+
+    expect(response.statusCode).toBe(500)
+    expect(response.json()).toEqual({ error: 'Foreign key constraint failed on the field: parentId' })
     expect(auth.setSession).not.toHaveBeenCalled()
   })
 
@@ -335,6 +470,8 @@ describe('register routes', () => {
         phone: '+375291234573',
         memberId: 'MBR-9001',
         password: 'password123',
+        parentId: 1,
+        inviteCode: 'test-invite-code-generic-error',
       },
     })
 
@@ -360,6 +497,8 @@ describe('register routes', () => {
       phone: '+375291234574',
       memberId: 'MBR-9001',
       password: 'password123',
+      parentId: 1,
+      inviteCode: 'test-invite-code-success',
     }
 
     const response = await app.inject({
@@ -384,6 +523,8 @@ describe('register routes', () => {
       phone: payload.phone,
       memberId: payload.memberId,
       password: payload.password,
+      parentId: payload.parentId,
+      inviteCode: payload.inviteCode,
     })
     expect(auth.setSession).not.toHaveBeenCalled()
   })

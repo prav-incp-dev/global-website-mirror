@@ -79,7 +79,7 @@ export default fp(async (fastify) => {
       const userId = fastify.auth.verifyPendingAuth(token)
       if (!userId) return reply.code(401).send({ error: 'Неверный код или время истекло' })
 
-      const user = await fastify.db.user.findUnique({
+      const user = await fastify.prisma.user.findUnique({
         where: { id: userId },
       })
 

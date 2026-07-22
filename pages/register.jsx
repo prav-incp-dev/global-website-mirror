@@ -3,17 +3,45 @@ import { useForm, useWatch } from 'react-hook-form'
 import { useRouteContext } from '@fastify/react/client'
 import styles from './register.module.css'
 
-export const getData = async ({ server, req, reply }) => {
-  const user = await server.auth.getUser(req)
-  if (user) return reply.redirect('/')
+// Fastify preHandler hook runs before getData is called
+export const preHandler = [
+  async (req, reply) => {
+    const user = await req.server.auth.getUser(req)
+    if (user) return reply.redirect('/')
 
-  const csrfToken = reply.generateCsrf()
-  return { csrfToken }
+    const { token } = req.query
+    if (!token) return reply.redirect('/auth')
+
+    try {
+      const { default: jwt } = await import('jsonwebtoken')
+      const { inviteCode, owner } = jwt.verify(token, process.env.SESSION_SECRET) || {}
+      if (!inviteCode) return reply.redirect('/auth')
+
+      const checkRes = await req.server.inject({
+        method: 'GET',
+        url: `/api/invitation/check/${inviteCode}`,
+      })
+      const isInviteValid = checkRes.statusCode === 200
+      if (!isInviteValid) return reply.redirect('/auth')
+
+      req.invite = { inviteCode, owner: owner }
+    } catch {
+      return reply.redirect('/auth')
+    }
+  }
+]
+
+export const getData = async ({ req, reply }) => {
+  return {
+    csrfToken: reply.generateCsrf(),
+    inviteCode: req.invite.inviteCode,
+    owner: req.invite.owner
+  }
 }
 
 const Register = () => {
   const { data } = useRouteContext()
-  const { csrfToken = {} } = data
+  const { csrfToken = '', inviteCode = '', owner = null } = data
 
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -51,6 +79,8 @@ const Register = () => {
           phone: formData.phone,
           memberId: formData.memberId,
           password: formData.password,
+          parentId: owner,
+          inviteCode,
         }),
       })
       const result = await response.json()

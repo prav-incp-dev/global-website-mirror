@@ -61,9 +61,9 @@ test.describe('generate invitation link', () => {
     // Decode the JWT and verify its payload
     const decoded = jwt.decode(token)
     expect(decoded.owner).toBeNull()
-    expect(decoded).toHaveProperty('jti')
-    expect(typeof decoded.jti).toBe('string')
-    expect(decoded.jti).toMatch(
+    expect(decoded).toHaveProperty('inviteCode')
+    expect(typeof decoded.inviteCode).toBe('string')
+    expect(decoded.inviteCode).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
     )
     expect(decoded).toHaveProperty('exp')
@@ -115,9 +115,9 @@ test.describe('generate invitation link', () => {
     const decoded = jwt.decode(token)
     // Consultant is the second user created, so id should be 2
     expect(decoded.owner).toBe(2)
-    expect(decoded).toHaveProperty('jti')
-    expect(typeof decoded.jti).toBe('string')
-    expect(decoded.jti).toMatch(
+    expect(decoded).toHaveProperty('inviteCode')
+    expect(typeof decoded.inviteCode).toBe('string')
+    expect(decoded.inviteCode).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
     )
     expect(decoded).toHaveProperty('exp')

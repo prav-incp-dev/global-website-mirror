@@ -10,11 +10,11 @@ beforeAll(() => {
   vi.stubEnv('SESSION_SECRET', SESSION_SECRET)
 })
 
-const createApp = async (authOverrides = {}) => {
+const createApp = async (authOverrides = {}, prismaOverrides = {}) => {
   const app = Fastify({ logger: false })
 
-  // Mock db decorator
-  app.decorate('db', {
+  // Mock prisma decorator
+  app.decorate('prisma', {
     user: {
       findUnique: vi.fn(),
       update: vi.fn(),
@@ -22,6 +22,9 @@ const createApp = async (authOverrides = {}) => {
     },
     company: {
       findFirst: vi.fn(),
+    },
+    usedInvite: {
+      findUnique: prismaOverrides.findUsedInvite || vi.fn().mockResolvedValue(null),
     },
   })
 
@@ -112,9 +115,9 @@ describe('POST /api/invitation/generate', () => {
     // Decode the JWT and verify its payload
     const decoded = jwt.verify(body.token, SESSION_SECRET)
     expect(decoded.owner).toBeNull()
-    expect(decoded).toHaveProperty('jti')
-    expect(typeof decoded.jti).toBe('string')
-    expect(decoded.jti).toMatch(
+    expect(decoded).toHaveProperty('inviteCode')
+    expect(typeof decoded.inviteCode).toBe('string')
+    expect(decoded.inviteCode).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
     )
     expect(decoded).toHaveProperty('exp')
@@ -149,13 +152,73 @@ describe('POST /api/invitation/generate', () => {
     // Decode the JWT and verify its payload
     const decoded = jwt.verify(body.token, SESSION_SECRET)
     expect(decoded.owner).toBe(5)
-    expect(decoded).toHaveProperty('jti')
-    expect(typeof decoded.jti).toBe('string')
-    expect(decoded.jti).toMatch(
+    expect(decoded).toHaveProperty('inviteCode')
+    expect(typeof decoded.inviteCode).toBe('string')
+    expect(decoded.inviteCode).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
     )
     expect(decoded).toHaveProperty('exp')
     expect(decoded).toHaveProperty('iat')
     expect(auth.getUser).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('GET /api/invitation/check/:inviteCode', () => {
+  const apps = []
+
+  afterEach(async () => {
+    while (apps.length > 0) {
+      const app = apps.pop()
+      await app.close()
+    }
+  })
+
+  it('returns 400 when inviteCode is missing', async () => {
+    const { app } = await createApp()
+    apps.push(app)
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/invitation/check/',
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(response.json()).toEqual({ error: 'Некорректный код приглашения' })
+  })
+
+  it('returns 409 when invite code is already used', async () => {
+    const { app } = await createApp(
+      {},
+      {
+        findUsedInvite: vi.fn().mockResolvedValue({ id: 1, code: 'already-used-code' }),
+      },
+    )
+    apps.push(app)
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/invitation/check/already-used-code',
+    })
+
+    expect(response.statusCode).toBe(409)
+    expect(response.json()).toEqual({ error: 'Приглашение уже использовано' })
+  })
+
+  it('returns 200 with success when invite code is available', async () => {
+    const { app } = await createApp(
+      {},
+      {
+        findUsedInvite: vi.fn().mockResolvedValue(null),
+      },
+    )
+    apps.push(app)
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/invitation/check/available-code',
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual({ success: true })
   })
 })

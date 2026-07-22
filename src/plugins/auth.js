@@ -41,7 +41,7 @@ export default fp(async (fastify) => {
   })
   fastify.decorate('auth', {
     login: async (email, password) => {
-      const user = await fastify.db.user.findUnique({
+      const user = await fastify.prisma.user.findUnique({
         where: { email },
         include: { company: true },
       })
@@ -79,7 +79,7 @@ export default fp(async (fastify) => {
       const userId = parseUserId(sessionUserId)
       if (!userId) return null
 
-      const user = await fastify.db.user.findUnique({
+      const user = await fastify.prisma.user.findUnique({
         where: { id: userId },
         include: { company: true },
       })
@@ -97,7 +97,7 @@ export default fp(async (fastify) => {
     createTwoFactorCode: async (user) => {
       const code = crypto.randomInt(100000, 999999).toString()
 
-      await fastify.db.user.update({
+      await fastify.prisma.user.update({
         where: { id: user.id },
         data: { confirmationCode: code },
       })
@@ -113,7 +113,7 @@ export default fp(async (fastify) => {
       const parsedUserId = parseUserId(userId)
       if (!parsedUserId) return false
 
-      const user = await fastify.db.user.findUnique({
+      const user = await fastify.prisma.user.findUnique({
         where: { id: parsedUserId },
       })
 
@@ -122,7 +122,7 @@ export default fp(async (fastify) => {
       if (user.confirmationCode !== code) return false
 
       // Clear the code so it can't be reused
-      await fastify.db.user.update({
+      await fastify.prisma.user.update({
         where: { id: parsedUserId },
         data: { confirmationCode: null },
       })

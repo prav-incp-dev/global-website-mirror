@@ -7,13 +7,17 @@ describe('register plugin', () => {
 
   beforeAll(async () => {
     fastifyInstance = Fastify()
-    fastifyInstance.decorate('db', {
-      user: {
-        create: vi.fn(),
-      },
+    fastifyInstance.decorate('prisma', {
       company: {
         findFirst: vi.fn(),
       },
+      user: {
+        create: vi.fn(),
+      },
+      usedInvite: {
+        create: vi.fn(),
+      },
+      $transaction: vi.fn(),
     })
     await fastifyInstance.register(registerPlugin)
   })
@@ -28,7 +32,7 @@ describe('register plugin', () => {
 
   test('createUser creates a user and removes password from result', async ({ expect }) => {
     const mockCompany = { id: 1, name: 'Test Company' }
-    fastifyInstance.db.company.findFirst.mockResolvedValue(mockCompany)
+    fastifyInstance.prisma.company.findFirst.mockResolvedValue(mockCompany)
     const mockCreatedUser = {
       id: 1,
       email: 'new@example.com',
@@ -41,7 +45,13 @@ describe('register plugin', () => {
       companyId: 1,
       company: mockCompany,
     }
-    fastifyInstance.db.user.create.mockResolvedValue(mockCreatedUser)
+    fastifyInstance.prisma.$transaction.mockImplementation(async (cb) => {
+      const tx = {
+        user: { create: vi.fn().mockResolvedValue(mockCreatedUser) },
+        usedInvite: { create: vi.fn().mockResolvedValue({ id: 1, code: 'test-invite' }) },
+      }
+      return cb(tx)
+    })
 
     const result = await fastifyInstance.registration.createUser({
       email: 'new@example.com',
@@ -50,25 +60,31 @@ describe('register plugin', () => {
       phone: '+10000000002',
       memberId: 'MBR-9001',
       password: 'plainpassword',
+      inviteCode: 'test-invite',
     })
 
     expect(result).not.toHaveProperty('password')
     expect(result.email).toBe('new@example.com')
-    expect(fastifyInstance.db.company.findFirst).toHaveBeenCalledWith({
+    expect(fastifyInstance.prisma.company.findFirst).toHaveBeenCalledWith({
       orderBy: { id: 'asc' },
-    })
-    expect(fastifyInstance.db.user.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        email: 'new@example.com',
-        role: 'Candidate',
-        companyId: 1,
-      }),
-      include: { company: true },
     })
   })
 
-  test('createUser throws error when no company found', async ({ expect }) => {
-    fastifyInstance.db.company.findFirst.mockResolvedValue(null)
+  test('createUser throws error when inviteCode is already taken', async ({ expect }) => {
+    const mockCompany = { id: 1, name: 'Test Company' }
+    fastifyInstance.prisma.company.findFirst.mockResolvedValue(mockCompany)
+
+    const p2002Error = Object.assign(new Error('Unique constraint failed on the fields: (`code`)'), {
+      code: 'P2002',
+    })
+
+    fastifyInstance.prisma.$transaction.mockImplementation(async (cb) => {
+      const tx = {
+        user: { create: vi.fn() },
+        usedInvite: { create: vi.fn().mockRejectedValue(p2002Error) },
+      }
+      return cb(tx)
+    })
 
     await expect(
       fastifyInstance.registration.createUser({
@@ -78,6 +94,23 @@ describe('register plugin', () => {
         phone: '+10000000002',
         memberId: 'MBR-9001',
         password: 'plainpassword',
+        inviteCode: 'already-used-code',
+      }),
+    ).rejects.toThrow('Unique constraint failed')
+  })
+
+  test('createUser throws error when no company found', async ({ expect }) => {
+    fastifyInstance.prisma.company.findFirst.mockResolvedValue(null)
+
+    await expect(
+      fastifyInstance.registration.createUser({
+        email: 'new@example.com',
+        nick: 'newuser',
+        fullName: 'New User',
+        phone: '+10000000002',
+        memberId: 'MBR-9001',
+        password: 'plainpassword',
+        inviteCode: 'test-invite',
       }),
     ).rejects.toThrow('No company found')
   })

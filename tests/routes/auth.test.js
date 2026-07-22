@@ -302,8 +302,8 @@ describe('auth routes', () => {
     apps.push(app)
     const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
-    // Mock fastify.db.user.findUnique to return null, simulating a non-existent user
-    app.db = {
+    // Mock fastify.prisma.user.findUnique to return null, simulating a non-existent user
+    app.prisma = {
       user: {
         findUnique: vi.fn().mockResolvedValue(null),
       },
@@ -323,7 +323,7 @@ describe('auth routes', () => {
     expect(response.json()).toEqual({
       error: 'Неверный код или время истекло',
     })
-    expect(app.db.user.findUnique).toHaveBeenCalledWith({
+    expect(app.prisma.user.findUnique).toHaveBeenCalledWith({
       where: { id: 1 },
     })
     expect(auth.createTwoFactorCode).not.toHaveBeenCalled()
@@ -338,8 +338,8 @@ describe('auth routes', () => {
     apps.push(app)
     const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
-    // Mock fastify.db.user.findUnique to return a user
-    app.db = {
+    // Mock fastify.prisma.user.findUnique to return a user
+    app.prisma = {
       user: {
         findUnique: vi.fn().mockResolvedValue(user),
       },
@@ -357,7 +357,7 @@ describe('auth routes', () => {
 
     expect(response.statusCode).toBe(200)
     expect(response.json()).toEqual({ success: true })
-    expect(app.db.user.findUnique).toHaveBeenCalledWith({
+    expect(app.prisma.user.findUnique).toHaveBeenCalledWith({
       where: { id: 1 },
     })
     expect(auth.createTwoFactorCode).toHaveBeenCalledWith(user)
