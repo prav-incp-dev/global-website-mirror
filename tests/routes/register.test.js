@@ -44,6 +44,7 @@ const createApp = async (overrides = {}) => {
 
   app.registration = {
     createUser: overrides.createUser || vi.fn(app.registration.createUser),
+    verifyToken: overrides.verifyToken || vi.fn().mockResolvedValue({ inviteCode: 'test-jti', owner: null }),
   }
 
   app.prisma = {
@@ -115,8 +116,7 @@ describe('register routes', () => {
         phone: '+375291234567',
         memberId: 'MBR-9001',
         password: 'password123',
-        parentId: 1,
-        inviteCode: 'test-invite-code-invalid-email',
+        token: 'some-token',
       },
     })
 
@@ -144,8 +144,7 @@ describe('register routes', () => {
         phone: 'abc',
         memberId: 'MBR-9001-UNIQUE',
         password: 'password123',
-        parentId: 1,
-        inviteCode: 'test-invite-code-invalid-phone',
+        token: 'some-token',
       },
     })
 
@@ -180,8 +179,7 @@ describe('register routes', () => {
         phone: '+375291234568',
         memberId: 'MBR-9002',
         password: 'password123',
-        parentId: 1,
-        inviteCode: 'test-invite-code-duplicate-email',
+        token: 'some-token',
       },
     })
 
@@ -189,6 +187,7 @@ describe('register routes', () => {
     expect(response.json()).toEqual({
       error: 'Электронная почта уже есть в системе',
     })
+    expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
     expect(auth.setSession).not.toHaveBeenCalled()
   })
 
@@ -218,8 +217,7 @@ describe('register routes', () => {
         phone: '+375291234569', // Duplicate phone
         memberId: 'MBR-9001',
         password: 'password123',
-        parentId: 1,
-        inviteCode: 'test-invite-code-duplicate-phone',
+        token: 'some-token',
       },
     })
 
@@ -227,6 +225,7 @@ describe('register routes', () => {
     expect(response.json()).toEqual({
       error: 'Номер телефона уже есть в системе',
     })
+    expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
     expect(auth.setSession).not.toHaveBeenCalled()
   })
 
@@ -256,8 +255,7 @@ describe('register routes', () => {
         phone: '+375291234570',
         memberId: 'MBR-9001',
         password: 'password123',
-        parentId: 1,
-        inviteCode: 'test-invite-code-duplicate-nick',
+        token: 'some-token',
       },
     })
 
@@ -265,6 +263,7 @@ describe('register routes', () => {
     expect(response.json()).toEqual({
       error: 'Ник в Телеграм уже есть в системе',
     })
+    expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
     expect(auth.setSession).not.toHaveBeenCalled()
   })
 
@@ -294,8 +293,7 @@ describe('register routes', () => {
         phone: '+375291234571',
         memberId: 'existing-member-id', // Duplicate memberId
         password: 'password123',
-        parentId: 1,
-        inviteCode: 'test-invite-code-duplicate-member-id',
+        token: 'some-token',
       },
     })
 
@@ -303,6 +301,7 @@ describe('register routes', () => {
     expect(response.json()).toEqual({
       error: 'Номер пайщика уже есть в системе',
     })
+    expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
     expect(auth.setSession).not.toHaveBeenCalled()
   })
 
@@ -332,8 +331,7 @@ describe('register routes', () => {
         phone: '+375291234575',
         memberId: 'MBR-9001',
         password: 'password123',
-        parentId: 1,
-        inviteCode: 'already-used-code',
+        token: 'some-token',
       },
     })
 
@@ -341,6 +339,7 @@ describe('register routes', () => {
     expect(response.json()).toEqual({
       error: 'Приглашенный уже есть в системе',
     })
+    expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
     expect(auth.setSession).not.toHaveBeenCalled()
   })
 
@@ -370,8 +369,7 @@ describe('register routes', () => {
         phone: '+375291234576',
         memberId: 'MBR-9001',
         password: 'password123',
-        parentId: 1,
-        inviteCode: 'test-invite-code-unknown-field',
+        token: 'some-token',
       },
     })
 
@@ -379,6 +377,7 @@ describe('register routes', () => {
     expect(response.json()).toEqual({
       error: 'wallet уже есть в системе',
     })
+    expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
     expect(auth.setSession).not.toHaveBeenCalled()
   })
 
@@ -403,13 +402,13 @@ describe('register routes', () => {
         phone: '+375291234572',
         memberId: 'MBR-9001',
         password: 'password123',
-        parentId: 1,
-        inviteCode: 'test-invite-code-create-user-falsy',
+        token: 'some-token',
       },
     })
 
     expect(response.statusCode).toBe(500)
     expect(response.json()).toEqual({ error: 'Ошибка регистрации' })
+    expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
     expect(auth.setSession).not.toHaveBeenCalled()
   })
 
@@ -439,13 +438,13 @@ describe('register routes', () => {
         phone: '+375291234577',
         memberId: 'MBR-9001',
         password: 'password123',
-        parentId: 99999,
-        inviteCode: 'test-invite-code-foreign-key',
+        token: 'some-token',
       },
     })
 
     expect(response.statusCode).toBe(500)
     expect(response.json()).toEqual({ error: 'Foreign key constraint failed on the field: parentId' })
+    expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
     expect(auth.setSession).not.toHaveBeenCalled()
   })
 
@@ -470,13 +469,13 @@ describe('register routes', () => {
         phone: '+375291234573',
         memberId: 'MBR-9001',
         password: 'password123',
-        parentId: 1,
-        inviteCode: 'test-invite-code-generic-error',
+        token: 'some-token',
       },
     })
 
     expect(response.statusCode).toBe(500)
     expect(response.json()).toEqual({ error: 'Database connection error' })
+    expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
     expect(auth.setSession).not.toHaveBeenCalled()
   })
 
@@ -497,8 +496,7 @@ describe('register routes', () => {
       phone: '+375291234574',
       memberId: 'MBR-9001',
       password: 'password123',
-      parentId: 1,
-      inviteCode: 'test-invite-code-success',
+      token: 'some-token',
     }
 
     const response = await app.inject({
@@ -523,9 +521,10 @@ describe('register routes', () => {
       phone: payload.phone,
       memberId: payload.memberId,
       password: payload.password,
-      parentId: payload.parentId,
-      inviteCode: payload.inviteCode,
+      parentId: null,
+      inviteCode: 'test-jti',
     })
+    expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
     expect(auth.setSession).not.toHaveBeenCalled()
   })
 })

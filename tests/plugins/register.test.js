@@ -1,11 +1,15 @@
 import { test, beforeAll, afterAll, vi } from 'vitest'
 import Fastify from 'fastify'
+import jwt from 'jsonwebtoken'
 import registerPlugin from '../../src/plugins/register'
+
+const SESSION_SECRET = 'test-secret'
 
 describe('register plugin', () => {
   let fastifyInstance
 
   beforeAll(async () => {
+    vi.stubEnv('SESSION_SECRET', SESSION_SECRET)
     fastifyInstance = Fastify()
     fastifyInstance.decorate('prisma', {
       company: {
@@ -16,6 +20,7 @@ describe('register plugin', () => {
       },
       usedInvite: {
         create: vi.fn(),
+        findUnique: vi.fn(),
       },
       $transaction: vi.fn(),
     })
@@ -113,5 +118,44 @@ describe('register plugin', () => {
         inviteCode: 'test-invite',
       }),
     ).rejects.toThrow('No company found')
+  })
+
+  test('verifyToken returns inviteCode and owner for valid token', async ({ expect }) => {
+    vi.spyOn(jwt, 'verify').mockReturnValue({ inviteCode: 'abc123', owner: 'test@example.com' })
+    fastifyInstance.prisma.usedInvite.findUnique.mockResolvedValue(null)
+
+    const result = await fastifyInstance.registration.verifyToken('valid-token')
+
+    expect(result).toEqual({ inviteCode: 'abc123', owner: 'test@example.com' })
+    expect(fastifyInstance.prisma.usedInvite.findUnique).toHaveBeenCalledWith({
+      where: { code: 'abc123' },
+    })
+  })
+
+  test('verifyToken throws error for invalid token (no inviteCode)', async ({ expect }) => {
+    vi.spyOn(jwt, 'verify').mockReturnValue({ owner: 'test@example.com' })
+
+    await expect(
+      fastifyInstance.registration.verifyToken('invalid-token'),
+    ).rejects.toThrow('Invalid token')
+  })
+
+  test('verifyToken throws error when jwt.verify throws', async ({ expect }) => {
+    vi.spyOn(jwt, 'verify').mockImplementation(() => {
+      throw new Error('jwt malformed')
+    })
+
+    await expect(
+      fastifyInstance.registration.verifyToken('malformed-token'),
+    ).rejects.toThrow('jwt malformed')
+  })
+
+  test('verifyToken throws error when invite is already used', async ({ expect }) => {
+    vi.spyOn(jwt, 'verify').mockReturnValue({ inviteCode: 'used-code', owner: 'test@example.com' })
+    fastifyInstance.prisma.usedInvite.findUnique.mockResolvedValue({ code: 'used-code' })
+
+    await expect(
+      fastifyInstance.registration.verifyToken('used-token'),
+    ).rejects.toThrow('Invite already used')
   })
 })

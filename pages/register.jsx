@@ -10,21 +10,9 @@ export const preHandler = [
     if (user) return reply.redirect('/')
 
     const { token } = req.query
-    if (!token) return reply.redirect('/auth')
 
     try {
-      const { default: jwt } = await import('jsonwebtoken')
-      const { inviteCode, owner } = jwt.verify(token, process.env.SESSION_SECRET) || {}
-      if (!inviteCode) return reply.redirect('/auth')
-
-      const checkRes = await req.server.inject({
-        method: 'GET',
-        url: `/api/invitation/check/${inviteCode}`,
-      })
-      const isInviteValid = checkRes.statusCode === 200
-      if (!isInviteValid) return reply.redirect('/auth')
-
-      req.invite = { inviteCode, owner: owner }
+      await req.server.registration.verifyToken(token)
     } catch {
       return reply.redirect('/auth')
     }
@@ -34,14 +22,13 @@ export const preHandler = [
 export const getData = async ({ req, reply }) => {
   return {
     csrfToken: reply.generateCsrf(),
-    inviteCode: req.invite.inviteCode,
-    owner: req.invite.owner
+    token: req.query.token,
   }
 }
 
 const Register = () => {
   const { data } = useRouteContext()
-  const { csrfToken = '', inviteCode = '', owner = null } = data
+  const { csrfToken = '', token = '' } = data
 
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -79,8 +66,7 @@ const Register = () => {
           phone: formData.phone,
           memberId: formData.memberId,
           password: formData.password,
-          parentId: owner,
-          inviteCode,
+          token,
         }),
       })
       const result = await response.json()

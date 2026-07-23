@@ -1,8 +1,19 @@
 import fp from 'fastify-plugin'
 import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
 
 export default fp(async (fastify) => {
   fastify.decorate('registration', {
+    verifyToken: async (token) => {
+      const { inviteCode, owner } = jwt.verify(token, process.env.SESSION_SECRET) || {}
+      if (!inviteCode) throw new Error('Invalid token')
+
+      const usedInvite = await fastify.prisma.usedInvite.findUnique({ where: { code: inviteCode } })
+      if (usedInvite) throw new Error('Invite already used')
+
+      return { inviteCode, owner }
+    },
+
     createUser: async ({ email, nick, fullName, phone, memberId, password, parentId = null, inviteCode }) => {
       const company = await fastify.prisma.company.findFirst({
         orderBy: { id: 'asc' },

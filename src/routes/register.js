@@ -5,7 +5,7 @@ export default fp(async (fastify) => {
     schema: {
       body: {
         type: 'object',
-        required: ['email', 'nick', 'password', 'fullName', 'phone', 'memberId', 'inviteCode'],
+        required: ['email', 'nick', 'password', 'fullName', 'phone', 'memberId', 'token'],
         properties: {
           email: { type: 'string', format: 'email' },
           nick: { type: 'string' },
@@ -13,15 +13,16 @@ export default fp(async (fastify) => {
           phone: { type: 'string', pattern: '^\\+[37][\\s()\\-]*\\d(?:[\\s()\\-]*\\d){8,12}$' },
           memberId: { type: 'string' },
           password: { type: 'string' },
-          parentId: { type: ['number', 'null'] },
-          inviteCode: { type: 'string' },
+          token: { type: 'string' },
         },
       },
     },
     handler: async (req, reply) => {
-      const { email, nick, fullName, phone, memberId, password, parentId, inviteCode } = req.body
+      const { email, nick, fullName, phone, memberId, password, token } = req.body
 
       try {
+        const { inviteCode, owner } = await fastify.registration.verifyToken(token)
+
         const user = await fastify.registration.createUser({
           email,
           nick,
@@ -29,7 +30,7 @@ export default fp(async (fastify) => {
           phone,
           memberId,
           password,
-          parentId,
+          parentId: owner,
           inviteCode,
         })
 
