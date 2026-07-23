@@ -1,6 +1,4 @@
-import fp from 'fastify-plugin'
-
-export default fp(async (fastify) => {
+export default async (fastify) => {
   fastify.post('/api/register', {
     schema: {
       body: {
@@ -61,4 +59,4 @@ export default fp(async (fastify) => {
       }
     },
   })
-})
+}

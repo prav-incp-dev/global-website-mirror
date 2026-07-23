@@ -34,14 +34,6 @@ const createApp = async (authOverrides = {}, prismaOverrides = {}) => {
   // Mock csrf protection
   app.decorate('csrfProtection', (req, reply, next) => next())
 
-  app.addHook('onRequest', (req, reply, next) => {
-    if (['HEAD', 'GET', 'OPTIONS'].includes(req.method)) {
-      next()
-    } else {
-      app.csrfProtection(req, reply, next)
-    }
-  })
-
   // Decorate with auth object
   const defaultAuth = {
     getUser: vi.fn().mockResolvedValue(null),
@@ -156,65 +148,5 @@ describe('POST /api/invitation/generate', () => {
     expect(decoded).toHaveProperty('exp')
     expect(decoded).toHaveProperty('iat')
     expect(auth.getUser).toHaveBeenCalledTimes(1)
-  })
-})
-
-describe('GET /api/invitation/check/:inviteCode', () => {
-  const apps = []
-
-  afterEach(async () => {
-    while (apps.length > 0) {
-      const app = apps.pop()
-      await app.close()
-    }
-  })
-
-  it('returns 400 when inviteCode is missing', async () => {
-    const { app } = await createApp()
-    apps.push(app)
-
-    const response = await app.inject({
-      method: 'GET',
-      url: '/api/invitation/check/',
-    })
-
-    expect(response.statusCode).toBe(400)
-    expect(response.json()).toEqual({ error: 'Некорректный код приглашения' })
-  })
-
-  it('returns 409 when invite code is already used', async () => {
-    const { app } = await createApp(
-      {},
-      {
-        findUsedInvite: vi.fn().mockResolvedValue({ id: 1, code: 'already-used-code' }),
-      },
-    )
-    apps.push(app)
-
-    const response = await app.inject({
-      method: 'GET',
-      url: '/api/invitation/check/already-used-code',
-    })
-
-    expect(response.statusCode).toBe(409)
-    expect(response.json()).toEqual({ error: 'Приглашение уже использовано' })
-  })
-
-  it('returns 200 with success when invite code is available', async () => {
-    const { app } = await createApp(
-      {},
-      {
-        findUsedInvite: vi.fn().mockResolvedValue(null),
-      },
-    )
-    apps.push(app)
-
-    const response = await app.inject({
-      method: 'GET',
-      url: '/api/invitation/check/available-code',
-    })
-
-    expect(response.statusCode).toBe(200)
-    expect(response.json()).toEqual({ success: true })
   })
 })

@@ -1,7 +1,6 @@
-import fp from 'fastify-plugin'
 import { sendTwoFactorCode } from '../services/emailService.js'
 
-export default fp(async (fastify) => {
+export default async (fastify) => {
   fastify.post('/api/auth/login', {
     schema: {
       body: {
@@ -99,4 +98,4 @@ export default fp(async (fastify) => {
       return reply.send({ success: true, redirect: '/auth' })
     },
   })
-})
+}

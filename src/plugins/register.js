@@ -1,6 +1,7 @@
 import fp from 'fastify-plugin'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { UserRole } from '../generated/prisma/client'
 
 export default fp(async (fastify) => {
   fastify.decorate('registration', {
@@ -30,7 +31,7 @@ export default fp(async (fastify) => {
           data: {
             email,
             password: passwordHash,
-            role: 'Candidate',
+            role: UserRole.Candidate,
             nick,
             fullName,
             phone,

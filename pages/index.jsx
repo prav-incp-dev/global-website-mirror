@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useRouteContext } from '@fastify/react/client'
+import { UserRole } from '../src/generated/prisma/client'
 import InvitationModal from '../src/components/InvitationModal/index'
 import styles from './index.module.css'
 
@@ -11,7 +12,7 @@ export const getData = async ({ server, req, reply }) => {
   }
 
   // Redirect Admin users to the admin panel
-  if (user.role === 'Admin') {
+  if (user.role === UserRole.Admin) {
     return reply.redirect('/admin')
   }
 

@@ -1,6 +1,6 @@
-import fp from 'fastify-plugin'
+import { UserRole } from '../generated/prisma/client'
 
-export default fp(async (fastify) => {
+export default async (fastify) => {
   fastify.put('/api/admin/company', {
     schema: {
       body: {
@@ -15,7 +15,7 @@ export default fp(async (fastify) => {
     },
     handler: async (req, reply) => {
       const user = await fastify.auth.getUser(req)
-      if (!user || user.role !== 'Admin') {
+      if (!user || user.role !== UserRole.Admin) {
         return reply.code(403).send({ error: 'Доступ запрещен' })
       }
 
@@ -48,4 +48,4 @@ export default fp(async (fastify) => {
       }
     },
   })
-})
+}

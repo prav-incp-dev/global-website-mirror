@@ -27,14 +27,6 @@ const createApp = async (authOverrides = {}, prismaOverrides = {}) => {
   // Mock csrf protection
   app.decorate('csrfProtection', (req, reply, next) => next())
 
-  app.addHook('onRequest', (req, reply, next) => {
-    if (['HEAD', 'GET', 'OPTIONS'].includes(req.method)) {
-      next()
-    } else {
-      app.csrfProtection(req, reply, next)
-    }
-  })
-
   // Decorate with auth object
   const defaultAuth = {
     getUser: vi.fn().mockResolvedValue(null),
