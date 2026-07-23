@@ -2,6 +2,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import Fastify from 'fastify'
 import cookie from '@fastify/cookie'
 import adminRoutes from '../../src/routes/admin.js'
+import { WALLET_REGEXP, PHONE_REGEXP } from '../../src/lib/regexps.js'
 
 const SESSION_SECRET = 'test-secret-key-for-testing-purposes'
 
@@ -10,7 +11,17 @@ beforeAll(() => {
 })
 
 const createApp = async (authOverrides = {}, prismaOverrides = {}) => {
-  const app = Fastify({ logger: false })
+  const app = Fastify({
+    logger: false,
+    ajv: {
+      plugins: [
+        (ajv) => {
+          ajv.addFormat('phone', PHONE_REGEXP)
+          ajv.addFormat('wallet', WALLET_REGEXP)
+        },
+      ],
+    },
+  })
 
   // Mock prisma decorator
   const defaultPrisma = {

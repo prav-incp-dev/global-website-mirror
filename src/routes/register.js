@@ -8,7 +8,7 @@ export default async (fastify) => {
           email: { type: 'string', format: 'email' },
           nick: { type: 'string' },
           fullName: { type: 'string' },
-          phone: { type: 'string', pattern: '^\\+[37][\\s()\\-]*\\d(?:[\\s()\\-]*\\d){8,12}$' },
+          phone: { type: 'string', format: 'phone' },
           memberId: { type: 'string' },
           password: { type: 'string' },
           token: { type: 'string' },

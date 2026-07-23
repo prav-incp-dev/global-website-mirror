@@ -149,7 +149,7 @@ describe('register routes', () => {
     })
 
     expect(response.statusCode).toBe(400)
-    expect(response.json().message).toContain('pattern')
+    expect(response.json().message).toContain('format')
     expect(app.registration.createUser).not.toHaveBeenCalled()
   })
 

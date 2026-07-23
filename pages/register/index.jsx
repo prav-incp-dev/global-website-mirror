@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { useRouteContext } from '@fastify/react/client'
+import { PHONE_REGEXP } from '../../src/lib/regexps.js'
 import styles from './index.module.css'
 
 // Fastify preHandler hook runs before getData is called
@@ -154,7 +155,7 @@ const Register = () => {
             {...register('phone', {
               required: 'Обязательное поле',
               pattern: {
-                value: /^\+[37][\s()-]*\d(?:[\s()-]*\d){8,12}$/,
+                value: PHONE_REGEXP,
                 message: 'Введите корректный номер телефона',
               },
             })}
