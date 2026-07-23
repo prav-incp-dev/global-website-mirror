@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { useRouteContext } from '@fastify/react/client'
-import styles from './register.module.css'
+import styles from './index.module.css'
 
 // Fastify preHandler hook runs before getData is called
 export const preHandler = [
@@ -16,7 +16,7 @@ export const preHandler = [
     } catch {
       return reply.redirect('/auth')
     }
-  }
+  },
 ]
 
 export const getData = async ({ req, reply }) => {

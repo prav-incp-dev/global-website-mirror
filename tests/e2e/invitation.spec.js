@@ -63,9 +63,7 @@ test.describe('generate invitation link', () => {
     expect(decoded.owner).toBeNull()
     expect(decoded).toHaveProperty('inviteCode')
     expect(typeof decoded.inviteCode).toBe('string')
-    expect(decoded.inviteCode).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-    )
+    expect(decoded.inviteCode).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
     expect(decoded).toHaveProperty('exp')
     expect(decoded).toHaveProperty('iat')
 
@@ -117,9 +115,7 @@ test.describe('generate invitation link', () => {
     expect(decoded.owner).toBe(2)
     expect(decoded).toHaveProperty('inviteCode')
     expect(typeof decoded.inviteCode).toBe('string')
-    expect(decoded.inviteCode).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-    )
+    expect(decoded.inviteCode).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
     expect(decoded).toHaveProperty('exp')
     expect(decoded).toHaveProperty('iat')
 

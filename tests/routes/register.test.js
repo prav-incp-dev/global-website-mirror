@@ -413,10 +413,9 @@ describe('register routes', () => {
   })
 
   it('POST /api/register returns 500 when parentId does not point to an existing user', async () => {
-    const foreignKeyError = Object.assign(
-      new Error('Foreign key constraint failed on the field: parentId'),
-      { code: 'P2003' },
-    )
+    const foreignKeyError = Object.assign(new Error('Foreign key constraint failed on the field: parentId'), {
+      code: 'P2003',
+    })
 
     const { app, auth } = await createApp({
       createUser: vi.fn().mockRejectedValue(foreignKeyError),

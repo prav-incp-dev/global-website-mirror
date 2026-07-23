@@ -169,9 +169,7 @@ describe('register plugin', () => {
   test('verifyToken throws error for invalid token (no inviteCode)', async ({ expect }) => {
     vi.spyOn(jwt, 'verify').mockReturnValue({ owner: 'test@example.com' })
 
-    await expect(
-      fastifyInstance.registration.verifyToken('invalid-token'),
-    ).rejects.toThrow('Invalid token')
+    await expect(fastifyInstance.registration.verifyToken('invalid-token')).rejects.toThrow('Invalid token')
   })
 
   test('verifyToken throws error when jwt.verify throws', async ({ expect }) => {
@@ -179,17 +177,13 @@ describe('register plugin', () => {
       throw new Error('jwt malformed')
     })
 
-    await expect(
-      fastifyInstance.registration.verifyToken('malformed-token'),
-    ).rejects.toThrow('jwt malformed')
+    await expect(fastifyInstance.registration.verifyToken('malformed-token')).rejects.toThrow('jwt malformed')
   })
 
   test('verifyToken throws error when invite is already used', async ({ expect }) => {
     vi.spyOn(jwt, 'verify').mockReturnValue({ inviteCode: 'used-code', owner: 'test@example.com' })
     fastifyInstance.prisma.usedInvite.findUnique.mockResolvedValue({ code: 'used-code' })
 
-    await expect(
-      fastifyInstance.registration.verifyToken('used-token'),
-    ).rejects.toThrow('Invite already used')
+    await expect(fastifyInstance.registration.verifyToken('used-token')).rejects.toThrow('Invite already used')
   })
 })

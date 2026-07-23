@@ -1,4 +1,4 @@
-import styles from './404.module.css'
+import styles from './index.module.css'
 
 const NotFound = () => {
   return (

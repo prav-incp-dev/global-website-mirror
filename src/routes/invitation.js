@@ -10,7 +10,9 @@ export default fp(async (fastify) => {
     }
 
     const owner = user.role === 'Admin' ? null : user.id
-    const token = jwt.sign({ owner: owner, inviteCode: crypto.randomUUID() }, process.env.SESSION_SECRET, { expiresIn: '24h' })
+    const token = jwt.sign({ owner: owner, inviteCode: crypto.randomUUID() }, process.env.SESSION_SECRET, {
+      expiresIn: '24h',
+    })
 
     return { token }
   })

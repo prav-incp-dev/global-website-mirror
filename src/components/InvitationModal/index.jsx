@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
-import styles from './InvitationModal.module.css'
-import CopyIcon from '../assets/icons/CopyIcon.svg?react'
-import CheckIcon from '../assets/icons/CheckIcon.svg?react'
-import CloseIcon from '../assets/icons/CloseIcon.svg?react'
+import styles from './index.module.css'
+import CopyIcon from '../../assets/icons/CopyIcon.svg?react'
+import CheckIcon from '../../assets/icons/CheckIcon.svg?react'
+import CloseIcon from '../../assets/icons/CloseIcon.svg?react'
 
 const ModalContent = ({ onClose, csrfToken }) => {
   const [token, setToken] = useState('')
@@ -38,7 +38,7 @@ const ModalContent = ({ onClose, csrfToken }) => {
 
     generateLink()
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleCopy = async () => {

@@ -7,11 +7,7 @@ const SESSION_SECRET = process.env.SESSION_SECRET || 'test-session-secret-not-fo
 
 const signSessionCookie = (userId) => {
   const value = String(userId)
-  const signature = crypto
-    .createHmac('sha256', SESSION_SECRET)
-    .update(value)
-    .digest('base64')
-    .replace(/=+$/, '')
+  const signature = crypto.createHmac('sha256', SESSION_SECRET).update(value).digest('base64').replace(/=+$/, '')
 
   // Fastify @fastify/cookie format: "<value>.<signature>"
   return `${value}.${signature}`

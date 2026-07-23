@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { useState } from 'react'
-import styles from './Login.module.css'
-import ErrorIcon from '../assets/icons/ErrorIcon.svg?react'
+import styles from './index.module.css'
+import ErrorIcon from '../../assets/icons/ErrorIcon.svg?react'
 
 const Login = ({ csrfToken, onSuccess }) => {
   const {

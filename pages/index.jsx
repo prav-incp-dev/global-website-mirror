@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useRouteContext } from '@fastify/react/client'
-import InvitationModal from '../src/components/InvitationModal'
+import InvitationModal from '../src/components/InvitationModal/index'
 import styles from './index.module.css'
 
 export const getData = async ({ server, req, reply }) => {
@@ -8,6 +8,11 @@ export const getData = async ({ server, req, reply }) => {
   const user = await server.auth.getUser(req)
   if (!user) {
     return reply.redirect('/auth')
+  }
+
+  // Redirect Admin users to the admin panel
+  if (user.role === 'Admin') {
+    return reply.redirect('/admin')
   }
 
   // Generate CSRF token for logout form

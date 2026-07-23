@@ -1,0 +1,127 @@
+.formField {
+  margin-bottom: 16px;
+}
+
+.formFieldLast {
+  margin-bottom: 24px;
+}
+
+.label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #d3c2b5;
+  letter-spacing: 0.02em;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  background-color: #252525;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #f5f5f5;
+  font-size: 0.9375rem;
+  transition: all 0.3s ease;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  border-color: #d4af37;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+}
+
+.input::placeholder {
+  color: #666;
+}
+
+.fieldError {
+  display: block;
+  margin-top: 6px;
+  color: #ff6b6b;
+  font-size: 0.8125rem;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 12px;
+}
+
+.submitButton {
+  flex: 1;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #d4af37 0%, #c9a832 100%);
+  color: #0d0d0d;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.02em;
+}
+
+.submitButton:hover {
+  background: linear-gradient(135deg, #f0d060 0%, #d4af37 100%);
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+  transform: translateY(-1px);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.cancelButton {
+  flex: 1;
+  padding: 12px 24px;
+  background: transparent;
+  color: #999;
+  border: 1px solid #444;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.02em;
+}
+
+.cancelButton:hover {
+  color: #f5f5f5;
+  border-color: #666;
+}
+
+.cancelButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ff6b6b;
+  background-color: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.25);
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 0.875rem;
+  text-align: left;
+}
+
+.messageSuccess {
+  color: #4caf50;
+  background-color: rgba(76, 175, 80, 0.1);
+  border-color: rgba(76, 175, 80, 0.25);
+}
+
+.messageIcon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}

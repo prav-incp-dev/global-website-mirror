@@ -219,7 +219,6 @@ describe('auth plugin core functionality', () => {
     const userId = fastifyInstance.auth.verifyPendingAuth(token)
     expect(userId).toBeNull()
   })
-
 })
 
 describe('csrfProtection hook', () => {

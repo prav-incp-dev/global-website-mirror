@@ -117,9 +117,7 @@ describe('POST /api/invitation/generate', () => {
     expect(decoded.owner).toBeNull()
     expect(decoded).toHaveProperty('inviteCode')
     expect(typeof decoded.inviteCode).toBe('string')
-    expect(decoded.inviteCode).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-    )
+    expect(decoded.inviteCode).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
     expect(decoded).toHaveProperty('exp')
     expect(decoded).toHaveProperty('iat')
     expect(auth.getUser).toHaveBeenCalledTimes(1)
@@ -154,9 +152,7 @@ describe('POST /api/invitation/generate', () => {
     expect(decoded.owner).toBe(5)
     expect(decoded).toHaveProperty('inviteCode')
     expect(typeof decoded.inviteCode).toBe('string')
-    expect(decoded.inviteCode).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-    )
+    expect(decoded.inviteCode).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
     expect(decoded).toHaveProperty('exp')
     expect(decoded).toHaveProperty('iat')
     expect(auth.getUser).toHaveBeenCalledTimes(1)
