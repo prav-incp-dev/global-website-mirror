@@ -8,9 +8,7 @@ const toCookieHeader = (setCookieHeader) => {
     return ''
   }
 
-  const values = Array.isArray(setCookieHeader)
-    ? setCookieHeader
-    : [setCookieHeader]
+  const values = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader]
 
   return values.map((cookieValue) => cookieValue.split(';')[0]).join('; ')
 }
@@ -104,10 +102,7 @@ describe('auth routes', () => {
       },
     })
 
-    expect(auth.login).toHaveBeenCalledWith(
-      'admin@example.com',
-      'wrong-password',
-    )
+    expect(auth.login).toHaveBeenCalledWith('admin@example.com', 'wrong-password')
     expect(response.statusCode).toBe(401)
     expect(response.json()).toEqual({
       error: 'Неверный адрес или пароль',
@@ -278,7 +273,7 @@ describe('auth routes', () => {
   })
 
   it('POST /api/auth/resend returns 401 when token is invalid', async () => {
-    const { app, auth } = await createApp({
+    const { app } = await createApp({
       verifyPendingAuth: vi.fn().mockReturnValue(null),
     })
     apps.push(app)
@@ -307,8 +302,8 @@ describe('auth routes', () => {
     apps.push(app)
     const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
-    // Mock fastify.db.user.findUnique to return null, simulating a non-existent user
-    app.db = {
+    // Mock fastify.prisma.user.findUnique to return null, simulating a non-existent user
+    app.prisma = {
       user: {
         findUnique: vi.fn().mockResolvedValue(null),
       },
@@ -328,7 +323,7 @@ describe('auth routes', () => {
     expect(response.json()).toEqual({
       error: 'Неверный код или время истекло',
     })
-    expect(app.db.user.findUnique).toHaveBeenCalledWith({
+    expect(app.prisma.user.findUnique).toHaveBeenCalledWith({
       where: { id: 1 },
     })
     expect(auth.createTwoFactorCode).not.toHaveBeenCalled()
@@ -343,8 +338,8 @@ describe('auth routes', () => {
     apps.push(app)
     const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
-    // Mock fastify.db.user.findUnique to return a user
-    app.db = {
+    // Mock fastify.prisma.user.findUnique to return a user
+    app.prisma = {
       user: {
         findUnique: vi.fn().mockResolvedValue(user),
       },
@@ -362,7 +357,7 @@ describe('auth routes', () => {
 
     expect(response.statusCode).toBe(200)
     expect(response.json()).toEqual({ success: true })
-    expect(app.db.user.findUnique).toHaveBeenCalledWith({
+    expect(app.prisma.user.findUnique).toHaveBeenCalledWith({
       where: { id: 1 },
     })
     expect(auth.createTwoFactorCode).toHaveBeenCalledWith(user)

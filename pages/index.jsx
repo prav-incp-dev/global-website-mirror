@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { useRouteContext } from '@fastify/react/client'
+import InvitationModal from '../src/components/InvitationModal'
 import styles from './index.module.css'
 
 export const getData = async ({ server, req, reply }) => {
@@ -28,6 +30,7 @@ export const getData = async ({ server, req, reply }) => {
 const Index = () => {
   const { data } = useRouteContext()
   const { profile = {}, csrfToken = '' } = data
+  const [invitationOpen, setInvitationOpen] = useState(false)
 
   const handleLogout = async (e) => {
     e.preventDefault()
@@ -82,6 +85,11 @@ const Index = () => {
           <span className={styles.value}>{profile.companyName || '—'}</span>
         </div>
       </div>
+      <button className={styles.inviteButton} onClick={() => setInvitationOpen(true)}>
+        Сгенерировать пригласительную ссылку
+      </button>
+
+      <InvitationModal isOpen={invitationOpen} onClose={() => setInvitationOpen(false)} csrfToken={csrfToken} />
     </div>
   )
 }

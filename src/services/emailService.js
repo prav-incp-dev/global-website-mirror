@@ -11,8 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
  * as JSON instead of actually being sent.
  */
 const createTransport = () => {
-  if (process.env.NODE_ENV === 'test')
-    return nodemailer.createTransport({ jsonTransport: true })
+  if (process.env.NODE_ENV === 'test') return nodemailer.createTransport({ jsonTransport: true })
 
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -31,21 +30,14 @@ const createTransport = () => {
  */
 const processMailResult = (info, user) => {
   if (process.env.NODE_ENV === 'test') {
-    const fixturePath = path.join(
-      __dirname,
-      '../../tests/fixtures/last-email.json',
-    )
+    const fixturePath = path.join(__dirname, '../../tests/fixtures/last-email.json')
     const parsed = info.message ? JSON.parse(info.message.toString()) : {}
     const emailContent = {
       to: user.email,
       subject: parsed.subject || info.envelope?.subject,
       text: parsed.text,
     }
-    fs.writeFileSync(
-      fixturePath,
-      JSON.stringify(emailContent, null, 2),
-      'utf-8',
-    )
+    fs.writeFileSync(fixturePath, JSON.stringify(emailContent, null, 2), 'utf-8')
   }
 }
 
@@ -53,8 +45,7 @@ const processMailResult = (info, user) => {
  * Sends a 2FA confirmation code email to the user.
  */
 export const sendTwoFactorCode = async (user, code) => {
-  const fromEmail =
-    process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@ourhouse.app'
+  const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@ourhouse.app'
 
   const transport = createTransport()
 

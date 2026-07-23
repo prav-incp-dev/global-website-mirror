@@ -3,17 +3,32 @@ import { useForm, useWatch } from 'react-hook-form'
 import { useRouteContext } from '@fastify/react/client'
 import styles from './register.module.css'
 
-export const getData = async ({ server, req, reply }) => {
-  const user = await server.auth.getUser(req)
-  if (user) return reply.redirect('/')
+// Fastify preHandler hook runs before getData is called
+export const preHandler = [
+  async (req, reply) => {
+    const user = await req.server.auth.getUser(req)
+    if (user) return reply.redirect('/')
 
-  const csrfToken = reply.generateCsrf()
-  return { csrfToken }
+    const { token } = req.query
+
+    try {
+      await req.server.registration.verifyToken(token)
+    } catch {
+      return reply.redirect('/auth')
+    }
+  }
+]
+
+export const getData = async ({ req, reply }) => {
+  return {
+    csrfToken: reply.generateCsrf(),
+    token: req.query.token,
+  }
 }
 
 const Register = () => {
   const { data } = useRouteContext()
-  const { csrfToken = {} } = data
+  const { csrfToken = '', token = '' } = data
 
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -51,6 +66,7 @@ const Register = () => {
           phone: formData.phone,
           memberId: formData.memberId,
           password: formData.password,
+          token,
         }),
       })
       const result = await response.json()
@@ -63,7 +79,7 @@ const Register = () => {
       } else {
         setError(result.error || 'Ошибка регистрации')
       }
-    } catch (err) {
+    } catch {
       setError('Что-то пошло не так. Попробуйте еще раз.')
     }
   }
@@ -82,7 +98,9 @@ const Register = () => {
       <form onSubmit={handleSubmit(handleRegister)}>
         <input type="hidden" name="_csrf" value={csrfToken} />
         <div className={styles.formField}>
-          <label htmlFor="email" className={styles.label}>Электронная почта</label>
+          <label htmlFor="email" className={styles.label}>
+            Электронная почта
+          </label>
           <input
             type="email"
             id="email"
@@ -98,7 +116,9 @@ const Register = () => {
           {errors.email && <span className={styles.fieldError}>{errors.email.message}</span>}
         </div>
         <div className={styles.formField}>
-          <label htmlFor="nick" className={styles.label}>Ник в Телеграм</label>
+          <label htmlFor="nick" className={styles.label}>
+            Ник в Телеграм
+          </label>
           <input
             type="text"
             id="nick"
@@ -110,7 +130,9 @@ const Register = () => {
           {errors.nick && <span className={styles.fieldError}>{errors.nick.message}</span>}
         </div>
         <div className={styles.formField}>
-          <label htmlFor="fullName" className={styles.label}>Фамилия и имя</label>
+          <label htmlFor="fullName" className={styles.label}>
+            Фамилия и имя
+          </label>
           <input
             type="text"
             id="fullName"
@@ -122,7 +144,9 @@ const Register = () => {
           {errors.fullName && <span className={styles.fieldError}>{errors.fullName.message}</span>}
         </div>
         <div className={styles.formField}>
-          <label htmlFor="phone" className={styles.label}>Номер телефона</label>
+          <label htmlFor="phone" className={styles.label}>
+            Номер телефона
+          </label>
           <input
             type="tel"
             id="phone"
@@ -138,7 +162,9 @@ const Register = () => {
           {errors.phone && <span className={styles.fieldError}>{errors.phone.message}</span>}
         </div>
         <div className={styles.formField}>
-          <label htmlFor="memberId" className={styles.label}>Номер пайщика</label>
+          <label htmlFor="memberId" className={styles.label}>
+            Номер пайщика
+          </label>
           <input
             type="text"
             id="memberId"
@@ -150,7 +176,9 @@ const Register = () => {
           {errors.memberId && <span className={styles.fieldError}>{errors.memberId.message}</span>}
         </div>
         <div className={styles.formField}>
-          <label htmlFor="password" className={styles.label}>Пароль</label>
+          <label htmlFor="password" className={styles.label}>
+            Пароль
+          </label>
           <input
             type="password"
             id="password"
@@ -166,20 +194,19 @@ const Register = () => {
           {errors.password && <span className={styles.fieldError}>{errors.password.message}</span>}
         </div>
         <div className={styles.formFieldLast}>
-          <label htmlFor="confirmPassword" className={styles.label}>Подтверждение пароля</label>
+          <label htmlFor="confirmPassword" className={styles.label}>
+            Подтверждение пароля
+          </label>
           <input
             type="password"
             id="confirmPassword"
             className={styles.input}
             {...register('confirmPassword', {
               required: 'Обязательное поле',
-              validate: (value) =>
-                value === password || 'Пароли не совпадают',
+              validate: (value) => value === password || 'Пароли не совпадают',
             })}
           />
-          {errors.confirmPassword && (
-            <span className={styles.fieldError}>{errors.confirmPassword.message}</span>
-          )}
+          {errors.confirmPassword && <span className={styles.fieldError}>{errors.confirmPassword.message}</span>}
         </div>
         <button type="submit" disabled={isSubmitting} className={styles.submitButton}>
           {isSubmitting ? 'Регистрация...' : 'Зарегистрироваться'}

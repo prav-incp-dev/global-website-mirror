@@ -33,7 +33,7 @@ afterAll(async () => {
 describe('auth plugin core functionality', () => {
   beforeAll(async () => {
     fastifyInstance = Fastify()
-    fastifyInstance.decorate('db', {
+    fastifyInstance.decorate('prisma', {
       user: {
         findUnique: vi.fn(),
         update: vi.fn(),
@@ -64,13 +64,13 @@ describe('auth plugin core functionality', () => {
   })
 
   test('login returns null for non-existent user', async ({ expect }) => {
-    fastifyInstance.db.user.findUnique.mockResolvedValue(null)
+    fastifyInstance.prisma.user.findUnique.mockResolvedValue(null)
     const user = await fastifyInstance.auth.login('test@example.com', 'password')
     expect(user).toBeNull()
   })
 
   test('login returns null for invalid password', async ({ expect }) => {
-    fastifyInstance.db.user.findUnique.mockResolvedValue({
+    fastifyInstance.prisma.user.findUnique.mockResolvedValue({
       password: await bcrypt.hash('wrongpassword', 10),
     })
     const user = await fastifyInstance.auth.login('test@example.com', 'password')
@@ -80,7 +80,7 @@ describe('auth plugin core functionality', () => {
   test('login returns user for valid credentials', async ({ expect }) => {
     const hashedPassword = await bcrypt.hash('password', 10)
     const mockUser = { id: 1, email: 'test@example.com', password: hashedPassword, company: { name: 'Test Company' } }
-    fastifyInstance.db.user.findUnique.mockResolvedValue(mockUser)
+    fastifyInstance.prisma.user.findUnique.mockResolvedValue(mockUser)
     const user = await fastifyInstance.auth.login('test@example.com', 'password')
     expect(user).toEqual({ id: 1, email: 'test@example.com', company: { name: 'Test Company' } })
   })
@@ -132,7 +132,7 @@ describe('auth plugin core functionality', () => {
       cookies: { session: '1' },
       unsignCookie: vi.fn(() => ({ valid: true, value: '1' })),
     }
-    fastifyInstance.db.user.findUnique.mockResolvedValue(null)
+    fastifyInstance.prisma.user.findUnique.mockResolvedValue(null)
     const user = await fastifyInstance.auth.getUser(reqMock)
     expect(user).toBeNull()
   })
@@ -143,7 +143,7 @@ describe('auth plugin core functionality', () => {
       unsignCookie: vi.fn(() => ({ valid: true, value: '1' })),
     }
     const mockUser = { id: 1, email: 'test@example.com', password: 'hashedpassword', company: { name: 'Test Company' } }
-    fastifyInstance.db.user.findUnique.mockResolvedValue(mockUser)
+    fastifyInstance.prisma.user.findUnique.mockResolvedValue(mockUser)
     const user = await fastifyInstance.auth.getUser(reqMock)
     expect(user).toEqual({ id: 1, email: 'test@example.com', company: { name: 'Test Company' } })
   })
@@ -151,10 +151,10 @@ describe('auth plugin core functionality', () => {
   test('createTwoFactorCode generates and stores a code', async ({ expect }) => {
     vi.spyOn(crypto, 'randomInt').mockReturnValue(123456)
     const mockUser = { id: 1 }
-    fastifyInstance.db.user.update.mockResolvedValue(mockUser)
+    fastifyInstance.prisma.user.update.mockResolvedValue(mockUser)
     const code = await fastifyInstance.auth.createTwoFactorCode(mockUser)
     expect(code).toBe('123456')
-    expect(fastifyInstance.db.user.update).toHaveBeenCalledWith({
+    expect(fastifyInstance.prisma.user.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: { confirmationCode: '123456' },
     })
@@ -166,29 +166,29 @@ describe('auth plugin core functionality', () => {
   })
 
   test('verifyTwoFactorCode returns false if user not found', async ({ expect }) => {
-    fastifyInstance.db.user.findUnique.mockResolvedValue(null)
+    fastifyInstance.prisma.user.findUnique.mockResolvedValue(null)
     const result = await fastifyInstance.auth.verifyTwoFactorCode(1, '123456')
     expect(result).toBe(false)
   })
 
   test('verifyTwoFactorCode returns false if no confirmationCode', async ({ expect }) => {
-    fastifyInstance.db.user.findUnique.mockResolvedValue({ id: 1, confirmationCode: null })
+    fastifyInstance.prisma.user.findUnique.mockResolvedValue({ id: 1, confirmationCode: null })
     const result = await fastifyInstance.auth.verifyTwoFactorCode(1, '123456')
     expect(result).toBe(false)
   })
 
   test('verifyTwoFactorCode returns false for incorrect code', async ({ expect }) => {
-    fastifyInstance.db.user.findUnique.mockResolvedValue({ id: 1, confirmationCode: '654321' })
+    fastifyInstance.prisma.user.findUnique.mockResolvedValue({ id: 1, confirmationCode: '654321' })
     const result = await fastifyInstance.auth.verifyTwoFactorCode(1, '123456')
     expect(result).toBe(false)
   })
 
   test('verifyTwoFactorCode returns true for correct code and clears it', async ({ expect }) => {
-    fastifyInstance.db.user.findUnique.mockResolvedValue({ id: 1, confirmationCode: '123456' })
-    fastifyInstance.db.user.update.mockResolvedValue({ id: 1, confirmationCode: null })
+    fastifyInstance.prisma.user.findUnique.mockResolvedValue({ id: 1, confirmationCode: '123456' })
+    fastifyInstance.prisma.user.update.mockResolvedValue({ id: 1, confirmationCode: null })
     const result = await fastifyInstance.auth.verifyTwoFactorCode(1, '123456')
     expect(result).toBe(true)
-    expect(fastifyInstance.db.user.update).toHaveBeenCalledWith({
+    expect(fastifyInstance.prisma.user.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: { confirmationCode: null },
     })
@@ -220,62 +220,12 @@ describe('auth plugin core functionality', () => {
     expect(userId).toBeNull()
   })
 
-  test('register creates a user successfully', async ({ expect }) => {
-    const mockCompany = { id: 1, name: 'Test Company' }
-    fastifyInstance.db.company.findFirst.mockResolvedValue(mockCompany)
-    const mockUser = {
-      id: 1,
-      email: 'new@example.com',
-      password: 'hashedpassword',
-      role: 'Candidate',
-      nick: 'newuser',
-      fullName: 'New User',
-      phone: '+10000000002',
-      memberId: 'MBR-9001',
-      companyId: 1,
-      company: mockCompany,
-    }
-    fastifyInstance.db.user.create.mockResolvedValue(mockUser)
-
-    const result = await fastifyInstance.auth.register({
-      email: 'new@example.com',
-      nick: 'newuser',
-      fullName: 'New User',
-      phone: '+10000000002',
-      memberId: 'MBR-9001',
-      password: 'plainpassword',
-    })
-
-    expect(result).not.toHaveProperty('password')
-    expect(result.email).toBe('new@example.com')
-    expect(fastifyInstance.db.user.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        email: 'new@example.com',
-        role: 'Candidate',
-        companyId: 1,
-      }),
-      include: { company: true },
-    })
-  })
-
-  test('register throws error when no company found', async ({ expect }) => {
-    fastifyInstance.db.company.findFirst.mockResolvedValue(null)
-
-    await expect(fastifyInstance.auth.register({
-      email: 'new@example.com',
-      nick: 'newuser',
-      fullName: 'New User',
-      phone: '+10000000002',
-      memberId: 'MBR-9001',
-      password: 'plainpassword',
-    })).rejects.toThrow('No company found')
-  })
 })
 
 describe('csrfProtection hook', () => {
   beforeAll(async () => {
     fastifyInstance = Fastify()
-    fastifyInstance.decorate('db', {
+    fastifyInstance.decorate('prisma', {
       user: {
         findUnique: vi.fn(),
         update: vi.fn(),
