@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useRouteContext } from '@fastify/react/client'
-import { UserRole } from '../../src/generated/prisma/client'
+import { UserRole } from '../../src/generated/prisma/enums'
 import AdminProfile from '../../src/components/AdminProfile/index'
 import CompanyProfile from '../../src/components/CompanyProfile/index'
 import styles from './index.module.css'

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useRouteContext } from '@fastify/react/client'
-import { UserRole } from '../src/generated/prisma/client'
+import { UserRole } from '../src/generated/prisma/enums'
 import InvitationModal from '../src/components/InvitationModal/index'
 import styles from './index.module.css'
 

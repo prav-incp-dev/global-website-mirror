@@ -2,7 +2,7 @@ import { config } from 'dotenv'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '../../src/generated/prisma/client'
+import { PrismaClient } from '../../src/generated/prisma/enums'
 import bcrypt from 'bcryptjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
