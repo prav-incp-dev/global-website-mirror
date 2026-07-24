@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useRouteContext } from '@fastify/react/client'
+import { UserRole } from '../src/generated/prisma/enums'
 import InvitationModal from '../src/components/InvitationModal'
 import styles from './index.module.css'
 
@@ -8,6 +9,11 @@ export const getData = async ({ server, req, reply }) => {
   const user = await server.auth.getUser(req)
   if (!user) {
     return reply.redirect('/auth')
+  }
+
+  // Redirect Admin users to the admin panel
+  if (user.role === UserRole.Admin) {
+    return reply.redirect('/admin')
   }
 
   // Generate CSRF token for logout form

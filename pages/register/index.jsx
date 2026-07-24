@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { useRouteContext } from '@fastify/react/client'
-import styles from './register.module.css'
+import { PHONE_REGEXP, EMAIL_REGEXP } from '../../src/lib/regexps.js'
+import styles from './index.module.css'
 
 // Fastify preHandler hook runs before getData is called
 export const preHandler = [
@@ -16,7 +17,7 @@ export const preHandler = [
     } catch {
       return reply.redirect('/auth')
     }
-  }
+  },
 ]
 
 export const getData = async ({ req, reply }) => {
@@ -108,7 +109,7 @@ const Register = () => {
             {...register('email', {
               required: 'Обязательное поле',
               pattern: {
-                value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                value: EMAIL_REGEXP,
                 message: 'Введите корректный адрес',
               },
             })}
@@ -154,7 +155,7 @@ const Register = () => {
             {...register('phone', {
               required: 'Обязательное поле',
               pattern: {
-                value: /^\+[37][\s()-]*\d(?:[\s()-]*\d){8,12}$/,
+                value: PHONE_REGEXP,
                 message: 'Введите корректный номер телефона',
               },
             })}

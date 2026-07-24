@@ -17,7 +17,7 @@ const getConfirmationCode = async () => {
   if (match) return match[1]
 }
 
-test.describe('login flow with 2FA', () => {
+test.describe('consultant login flow with 2FA', () => {
   test('logs in with email + password, enters confirmation code, and redirects to profile page', async ({ page }) => {
     await page.goto('/auth')
     await page.waitForLoadState('networkidle')
@@ -25,9 +25,9 @@ test.describe('login flow with 2FA', () => {
     const emailInput = page.locator('#email')
     const passwordInput = page.locator('#password')
 
-    await emailInput.fill('admin@example.com')
+    await emailInput.fill('consultant@example.com')
     await passwordInput.fill('password')
-    await expect(emailInput).toHaveValue('admin@example.com')
+    await expect(emailInput).toHaveValue('consultant@example.com')
     await expect(passwordInput).toHaveValue('password')
     await page.getByRole('button', { name: 'Войти' }).click()
 
@@ -45,7 +45,7 @@ test.describe('login flow with 2FA', () => {
 
     await expect(page).toHaveURL('http://127.0.0.1:3101/')
     await expect(page.getByRole('heading', { name: 'Профиль' })).toBeVisible()
-    await expect(page.getByText('admin@example.com')).toBeVisible()
+    await expect(page.getByText('consultant@example.com')).toBeVisible()
   })
 
   test('shows error on invalid credentials', async ({ page }) => {
@@ -95,7 +95,7 @@ test.describe('login flow with 2FA', () => {
     const emailInput = page.locator('#email')
     const passwordInput = page.locator('#password')
 
-    await emailInput.fill('admin@example.com')
+    await emailInput.fill('consultant@example.com')
     await passwordInput.fill('password')
     await page.getByRole('button', { name: 'Войти' }).click()
 
@@ -124,6 +124,35 @@ test.describe('login flow with 2FA', () => {
     // Should successfully log in and redirect to profile page
     await expect(page).toHaveURL('http://127.0.0.1:3101/')
     await expect(page.getByRole('heading', { name: 'Профиль' })).toBeVisible()
+    await expect(page.getByText('consultant@example.com')).toBeVisible()
+  })
+
+  test('admin gets to admin panel', async ({ page }) => {
+    await page.goto('/auth')
+    await page.waitForLoadState('networkidle')
+
+    const emailInput = page.locator('#email')
+    const passwordInput = page.locator('#password')
+
+    await emailInput.fill('admin@example.com')
+    await passwordInput.fill('password')
+    await page.getByRole('button', { name: 'Войти' }).click()
+    
+    // Wait for the confirmation code step to appear
+    await expect(page.getByRole('heading', { name: 'Подтверждение' })).toBeVisible()
+    
+    // Get the first generated confirmation code
+    const code = await getConfirmationCode()
+    expect(code).toBeDefined()
+    
+    // Fill in the new Code and click confirm
+    const codeInput = page.locator('#code')
+    await codeInput.fill(code)
+    await page.getByRole('button', { name: 'Подтвердить' }).click()
+    
+    // Should successfully log in and redirect to profile page
+    await expect(page).toHaveURL('http://127.0.0.1:3101/admin')
+    await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
     await expect(page.getByText('admin@example.com')).toBeVisible()
   })
 
@@ -146,13 +175,15 @@ test.describe('login flow with 2FA', () => {
     await page.getByRole('button', { name: 'Подтвердить' }).click()
 
     // Verify we are logged in
-    await expect(page).toHaveURL('http://127.0.0.1:3101/')
-    await expect(page.getByRole('heading', { name: 'Профиль' })).toBeVisible()
+    await expect(page).toHaveURL('http://127.0.0.1:3101/admin')
+    await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
+    await expect(page.getByText('admin@example.com')).toBeVisible()
 
     // Click logout
     await page.getByRole('button', { name: 'Выйти' }).click()
 
     // Verify redirect to auth page
+    await expect(page.getByRole('heading', { name: 'Вход в систему' })).toBeVisible()
     await expect(page).toHaveURL('http://127.0.0.1:3101/auth')
 
     // Navigate to homepage / profile, check that we get redirected to /auth again because we are logged out

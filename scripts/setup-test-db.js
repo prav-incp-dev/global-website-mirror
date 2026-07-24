@@ -1,11 +1,9 @@
 import { config } from 'dotenv'
 import { Client } from 'pg'
 import { execSync } from 'node:child_process'
-import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
+import { join } from 'node:path'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const projectRoot = join(__dirname, '..')
+const projectRoot = join(import.meta.dirname, '..')
 
 // Load test env, overriding any existing values so .env cannot clobber the test DB URL
 config({ path: join(projectRoot, '.env.test'), override: true })
@@ -22,11 +20,11 @@ if (!dbName) {
   throw new Error('Could not determine database name from DATABASE_URL')
 }
 
-// To create a new database we must connect to an existing one (the maintenance DB)
-const adminUrl = new URL(databaseUrl)
-adminUrl.pathname = '/postgres'
-
 const ensureDatabase = async () => {
+  // To create a new database we must connect to an existing one (the maintenance DB)
+  const adminUrl = new URL(databaseUrl)
+  adminUrl.pathname = '/postgres'
+
   const client = new Client({ connectionString: adminUrl.toString() })
   await client.connect()
   try {
@@ -48,7 +46,7 @@ const main = async () => {
   await ensureDatabase()
 
   console.log('Pushing Prisma schema to test database...')
-  execSync('npx prisma db push --accept-data-loss', {
+  execSync('npx prisma db push --force-reset --accept-data-loss', {
     stdio: 'inherit',
     cwd: projectRoot,
     env: process.env,
@@ -61,7 +59,7 @@ const main = async () => {
     env: process.env,
   })
 
-  console.log('\n✓ Test database is ready.')
+  console.log('\n✅ Test database is ready.')
 }
 
 main().catch((err) => {

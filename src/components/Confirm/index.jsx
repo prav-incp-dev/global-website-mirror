@@ -1,8 +1,9 @@
 import { useForm } from 'react-hook-form'
 import { useState } from 'react'
-import styles from './Confirm.module.css'
-import ErrorIcon from '../assets/icons/ErrorIcon.svg?react'
-import InfoIcon from '../assets/icons/InfoIcon.svg?react'
+import styles from './index.module.css'
+import ErrorIcon from '../../assets/icons/ErrorIcon.svg?react'
+import InfoIcon from '../../assets/icons/InfoIcon.svg?react'
+import { CONFIRMATION_REGEXP } from '../../lib/regexps.js'
 
 const Confirm = ({ csrfToken, token }) => {
   const {
@@ -98,7 +99,7 @@ const Confirm = ({ csrfToken, token }) => {
             {...register('code', {
               required: 'Обязательное поле',
               pattern: {
-                value: /^\d{6}$/,
+                value: CONFIRMATION_REGEXP,
                 message: 'Введите 6-значный код',
               },
             })}

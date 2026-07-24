@@ -17,7 +17,9 @@ export const parseUserId = (value) => {
   return userId
 }
 
-export default fp(async (fastify) => {
+export default fp(async (fastify, opts) => {
+  const { enableCsrf = true } = opts
+
   await fastify.register(cookie, {
     secret: process.env.SESSION_SECRET,
   })
@@ -32,13 +34,15 @@ export default fp(async (fastify) => {
       secure: SECURE_COOKIES,
     },
   })
-  fastify.addHook('onRequest', (req, reply, next) => {
-    if (['HEAD', 'GET', 'OPTIONS'].includes(req.method)) {
-      next()
-    } else {
-      fastify.csrfProtection(req, reply, next)
-    }
-  })
+  if (enableCsrf) {
+    fastify.addHook('onRequest', (req, reply, next) => {
+      if (['HEAD', 'GET', 'OPTIONS'].includes(req.method)) {
+        next()
+      } else {
+        fastify.csrfProtection(req, reply, next)
+      }
+    })
+  }
   fastify.decorate('auth', {
     login: async (email, password) => {
       const user = await fastify.prisma.user.findUnique({

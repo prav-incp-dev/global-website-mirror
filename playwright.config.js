@@ -20,7 +20,7 @@ export default defineConfig({
     headless: true,
   },
   webServer: {
-    command: 'npm run db:test:setup && NODE_ENV=test PORT=3101 npm run dev',
+    command: 'vite build && npm run db:test:setup && NODE_ENV=test PORT=3101 npm run start',
     url: 'http://127.0.0.1:3101',
     // Always start a fresh server so the DB is in a known state
     reuseExistingServer: false,

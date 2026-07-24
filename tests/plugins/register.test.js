@@ -38,22 +38,35 @@ describe('register plugin', () => {
   test('createUser creates a user and removes password from result', async ({ expect }) => {
     const mockCompany = { id: 1, name: 'Test Company' }
     fastifyInstance.prisma.company.findFirst.mockResolvedValue(mockCompany)
-    const mockCreatedUser = {
-      id: 1,
-      email: 'new@example.com',
-      password: 'hashed-password',
-      role: 'Candidate',
-      nick: 'newuser',
-      fullName: 'New User',
-      phone: '+10000000002',
-      memberId: 'MBR-9001',
-      companyId: 1,
-      company: mockCompany,
-    }
+
+    let capturedUserCreateArgs = null
+    let capturedUsedInviteCreateArgs = null
+
     fastifyInstance.prisma.$transaction.mockImplementation(async (cb) => {
       const tx = {
-        user: { create: vi.fn().mockResolvedValue(mockCreatedUser) },
-        usedInvite: { create: vi.fn().mockResolvedValue({ id: 1, code: 'test-invite' }) },
+        user: {
+          create: vi.fn().mockImplementation((args) => {
+            capturedUserCreateArgs = args
+            return {
+              id: 1,
+              email: args.data.email,
+              password: args.data.password,
+              role: args.data.role,
+              nick: args.data.nick,
+              fullName: args.data.fullName,
+              phone: args.data.phone,
+              memberId: args.data.memberId,
+              companyId: args.data.companyId,
+              company: mockCompany,
+            }
+          }),
+        },
+        usedInvite: {
+          create: vi.fn().mockImplementation((args) => {
+            capturedUsedInviteCreateArgs = args
+            return { id: 1, code: args.data.code }
+          }),
+        },
       }
       return cb(tx)
     })
@@ -68,8 +81,29 @@ describe('register plugin', () => {
       inviteCode: 'test-invite',
     })
 
+    // Verify password was actually hashed (not plaintext)
+    expect(capturedUserCreateArgs.data.password).not.toBe('plainpassword')
+    expect(capturedUserCreateArgs.data.password).toBeDefined()
+
+    // Verify user.create was called with correct data
+    expect(capturedUserCreateArgs.data).toMatchObject({
+      email: 'new@example.com',
+      nick: 'newuser',
+      fullName: 'New User',
+      phone: '+10000000002',
+      memberId: 'MBR-9001',
+      role: 'Candidate',
+      companyId: 1,
+    })
+
+    // Verify usedInvite.create was called with the invite code
+    expect(capturedUsedInviteCreateArgs.data).toEqual({ code: 'test-invite' })
+
+    // Verify password is stripped from the result
     expect(result).not.toHaveProperty('password')
     expect(result.email).toBe('new@example.com')
+
+    // Verify company lookup was called
     expect(fastifyInstance.prisma.company.findFirst).toHaveBeenCalledWith({
       orderBy: { id: 'asc' },
     })
@@ -135,9 +169,7 @@ describe('register plugin', () => {
   test('verifyToken throws error for invalid token (no inviteCode)', async ({ expect }) => {
     vi.spyOn(jwt, 'verify').mockReturnValue({ owner: 'test@example.com' })
 
-    await expect(
-      fastifyInstance.registration.verifyToken('invalid-token'),
-    ).rejects.toThrow('Invalid token')
+    await expect(fastifyInstance.registration.verifyToken('invalid-token')).rejects.toThrow('Invalid token')
   })
 
   test('verifyToken throws error when jwt.verify throws', async ({ expect }) => {
@@ -145,17 +177,13 @@ describe('register plugin', () => {
       throw new Error('jwt malformed')
     })
 
-    await expect(
-      fastifyInstance.registration.verifyToken('malformed-token'),
-    ).rejects.toThrow('jwt malformed')
+    await expect(fastifyInstance.registration.verifyToken('malformed-token')).rejects.toThrow('jwt malformed')
   })
 
   test('verifyToken throws error when invite is already used', async ({ expect }) => {
     vi.spyOn(jwt, 'verify').mockReturnValue({ inviteCode: 'used-code', owner: 'test@example.com' })
     fastifyInstance.prisma.usedInvite.findUnique.mockResolvedValue({ code: 'used-code' })
 
-    await expect(
-      fastifyInstance.registration.verifyToken('used-token'),
-    ).rejects.toThrow('Invite already used')
+    await expect(fastifyInstance.registration.verifyToken('used-token')).rejects.toThrow('Invite already used')
   })
 })

@@ -4,6 +4,7 @@ node_modules
 dist
 /src/generated/prisma
 last-email.json
+coverage
 playwright-report
 test-results
 .playwright
