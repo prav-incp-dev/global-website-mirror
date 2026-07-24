@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form'
 import { useState } from 'react'
+import { EMAIL_REGEXP } from '../../lib/regexps.js'
 import styles from './index.module.css'
 import ErrorIcon from '../../assets/icons/ErrorIcon.svg?react'
 
@@ -59,7 +60,7 @@ const Login = ({ csrfToken, onSuccess }) => {
             {...register('email', {
               required: 'Обязательное поле',
               pattern: {
-                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                value: EMAIL_REGEXP,
                 message: 'Введите корректный адрес',
               },
             })}

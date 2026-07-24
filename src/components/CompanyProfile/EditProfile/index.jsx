@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { WALLET_REGEXP } from '../../../lib/regexps.js'
 import styles from './index.module.css'
 import ErrorIcon from '../../../assets/icons/ErrorIcon.svg?react'
 
@@ -77,7 +78,7 @@ const EditProfile = ({ company, csrfToken, onUpdate, onCancel }) => {
             className={styles.input}
             {...register('primaryWallet', {
               pattern: {
-                value: /^0x[a-fA-F0-9]{40}$/,
+                value: WALLET_REGEXP,
                 message: 'Неверный формат кошелька',
               },
             })}
@@ -95,7 +96,7 @@ const EditProfile = ({ company, csrfToken, onUpdate, onCancel }) => {
             className={styles.input}
             {...register('secondaryWallet', {
               pattern: {
-                value: /^0x[a-fA-F0-9]{40}$/,
+                value: WALLET_REGEXP,
                 message: 'Неверный формат кошелька',
               },
             })}

@@ -151,7 +151,7 @@ test.describe('registration flow', () => {
     await page.goto(`/register?token=${token}`)
     await page.waitForLoadState('networkidle')
 
-    await page.locator('#email').fill('new.user@example.c')
+    await page.locator('#email').fill('new.user@example')
     await page.locator('#nick').fill('newuser')
     await page.locator('#fullName').fill('New User')
     await page.locator('#phone').fill('+375(33)000-0001')
