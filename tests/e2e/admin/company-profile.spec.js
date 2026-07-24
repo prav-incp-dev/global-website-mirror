@@ -12,10 +12,6 @@ test.describe('admin manages company profile', () => {
     await page.getByRole('button', { name: 'Профиль компании' }).click()
   }
 
-  const clickEdit = async (page) => {
-    await page.getByRole('button', { name: 'Редактировать' }).click()
-  }
-
   test('updates company data successfully', async ({ loginAs, page }) => {
     await loginAs(1)
     await navigateToCompanyTab(page)
@@ -43,7 +39,7 @@ test.describe('admin manages company profile', () => {
   test('shows validation error for invalid primary wallet', async ({ loginAs, page }) => {
     await loginAs(1)
     await navigateToCompanyTab(page)
-    await clickEdit(page)
+    await page.getByRole('button', { name: 'Редактировать' }).click()
 
     await page.locator('#primaryWallet').fill('invalid-wallet-format')
     await page.locator('#secondaryWallet').fill('bad-wallet')
@@ -63,7 +59,7 @@ test.describe('admin manages company profile', () => {
 
     await loginAs(1)
     await navigateToCompanyTab(page)
-    await clickEdit(page)
+    await page.getByRole('button', { name: 'Редактировать' }).click()
 
     // Try to rename to the existing company name
     await page.locator('#name').fill('Existing Company')
