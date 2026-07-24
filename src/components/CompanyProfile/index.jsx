@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import ViewProfile from './ViewProfile/index'
-import EditProfile from './EditProfile/index'
+import ViewProfile from './ViewProfile'
+import EditProfile from './EditProfile'
 
 const CompanyProfile = ({ company, csrfToken }) => {
   const [isEditing, setIsEditing] = useState(false)

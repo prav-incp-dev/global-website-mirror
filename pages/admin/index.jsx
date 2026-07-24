@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useRouteContext } from '@fastify/react/client'
 import { UserRole } from '../../src/generated/prisma/enums'
-import AdminProfile from '../../src/components/AdminProfile/index'
-import CompanyProfile from '../../src/components/CompanyProfile/index'
+import AdminProfile from '../../src/components/AdminProfile'
+import CompanyProfile from '../../src/components/CompanyProfile'
 import styles from './index.module.css'
 
 export const getData = async ({ server, req, reply }) => {

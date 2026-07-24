@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import styles from './index.module.css'
-import InvitationModal from '../InvitationModal/index'
+import InvitationModal from '../InvitationModal'
 
 const AdminProfile = ({ profile, csrfToken }) => {
   const [invitationOpen, setInvitationOpen] = useState(false)

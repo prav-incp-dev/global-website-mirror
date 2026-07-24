@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useRouteContext } from '@fastify/react/client'
-import Login from '../../src/components/Login/index'
-import Confirm from '../../src/components/Confirm/index'
+import Login from '../../src/components/Login'
+import Confirm from '../../src/components/Confirm'
 import styles from './index.module.css'
 
 export const getData = async ({ server, req, reply }) => {
