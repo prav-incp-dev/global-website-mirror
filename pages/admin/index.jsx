@@ -48,14 +48,14 @@ export const getData = async ({ server, req, reply }) => {
 }
 
 const TABS = [
-  { key: 'company', label: 'Профиль компании' },
   { key: 'admin', label: 'Профиль администратора' },
+  { key: 'company', label: 'Профиль компании' },
 ]
 
 const Admin = () => {
   const { data } = useRouteContext()
   const { profile = {}, company = null, csrfToken = '' } = data
-  const [activeTab, setActiveTab] = useState('company')
+  const [activeTab, setActiveTab] = useState('admin')
 
   const handleLogout = async (e) => {
     e.preventDefault()
@@ -93,8 +93,8 @@ const Admin = () => {
       </div>
 
       <div className={styles.content}>
-        {activeTab === 'company' && <CompanyProfile company={company} csrfToken={csrfToken} />}
         {activeTab === 'admin' && <AdminProfile profile={profile} csrfToken={csrfToken} />}
+        {activeTab === 'company' && <CompanyProfile company={company} csrfToken={csrfToken} />}
       </div>
     </div>
   )

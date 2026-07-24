@@ -33,10 +33,9 @@ test.describe('generate invitation link', () => {
     await loginAs(1)
 
     // Verify admin email is visible on profile
+    await expect(page).toHaveURL('http://127.0.0.1:3101/admin')
+    await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
     await expect(page.getByText('admin@example.com')).toBeVisible()
-
-    // Wait for the profile card to be fully rendered
-    await expect(page.locator('text=Ник в Телеграм')).toBeVisible()
 
     // Click "Generate invitation" button
     const inviteButton = page.locator('button', { hasText: 'Сгенерировать пригласительную ссылку' })
@@ -71,7 +70,7 @@ test.describe('generate invitation link', () => {
     await page.getByRole('button', { name: 'Закрыть' }).click()
 
     // Verify modal is closed and we are back on the profile page
-    await expect(page.getByRole('heading', { name: 'Профиль' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
     await expect(page.getByText('admin@example.com')).toBeVisible()
   })
 

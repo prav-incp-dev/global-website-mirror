@@ -250,7 +250,7 @@ describe('PUT /api/admin/company', () => {
   it('returns 200 and updates company on success', async () => {
     const adminUser = {
       id: 1,
-      email: 'admin@example.com',
+      email: '[EMAIL]',
       role: 'Admin',
       company: { id: 1 },
     }
@@ -290,6 +290,72 @@ describe('PUT /api/admin/company', () => {
         id: 1,
         name: 'Updated Company',
         primaryWallet: '0x1234567890abcdef1234567890abcdef12345678',
+        secondaryWallet: null,
+      },
+    })
+    expect(app.prisma.company.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: {
+        name: 'Updated Company',
+        primaryWallet: '0x1234567890abcdef1234567890abcdef12345678',
+        secondaryWallet: null,
+      },
+    })
+  })
+
+  it('returns 200 when wallets are empty strings', async () => {
+    const adminUser = {
+      id: 1,
+      email: '[EMAIL]',
+      role: 'Admin',
+      company: { id: 1 },
+    }
+
+    const updatedCompany = {
+      id: 1,
+      name: 'Test Company',
+      primaryWallet: null,
+      secondaryWallet: null,
+    }
+
+    const { app } = await createApp(
+      {
+        getUser: vi.fn().mockResolvedValue(adminUser),
+      },
+      {
+        company: {
+          update: vi.fn().mockResolvedValue(updatedCompany),
+        },
+      },
+    )
+    apps.push(app)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/company',
+      payload: {
+        name: 'Test Company',
+        primaryWallet: '',
+        secondaryWallet: '',
+      },
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual({
+      success: true,
+      company: {
+        id: 1,
+        name: 'Test Company',
+        primaryWallet: null,
+        secondaryWallet: null,
+      },
+    })
+    // Verify the handler converts empty strings to null before passing to Prisma
+    expect(app.prisma.company.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: {
+        name: 'Test Company',
+        primaryWallet: null,
         secondaryWallet: null,
       },
     })

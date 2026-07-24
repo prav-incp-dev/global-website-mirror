@@ -8,8 +8,18 @@ export default async (fastify) => {
         required: ['name'],
         properties: {
           name: { type: 'string' },
-          primaryWallet: { type: 'string', format: 'wallet' },
-          secondaryWallet: { type: 'string', format: 'wallet' },
+          primaryWallet: {
+            anyOf: [
+              { type: 'string', format: 'wallet' },
+              { type: 'string', maxLength: 0 },
+            ],
+          },
+          secondaryWallet: {
+            anyOf: [
+              { type: 'string', format: 'wallet' },
+              { type: 'string', maxLength: 0 },
+            ],
+          },
         },
       },
     },
