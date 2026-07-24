@@ -1,8 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import jwt from 'jsonwebtoken'
-import Fastify from 'fastify'
-import cookie from '@fastify/cookie'
-import invitationRoutes from '../../src/routes/invitation.js'
+import { buildBackendApp } from '../../backend.js'
 
 const SESSION_SECRET = 'test-secret-key-for-testing-purposes'
 
@@ -11,10 +9,13 @@ beforeAll(() => {
 })
 
 const createApp = async (authOverrides = {}, prismaOverrides = {}) => {
-  const app = Fastify({ logger: false })
+  const app = await buildBackendApp({ logger: false })
+
+  // Override CSRF protection with a no-op
+  app.csrfProtection = (req, reply, next) => next()
 
   // Mock prisma decorator
-  app.decorate('prisma', {
+  const defaultPrisma = {
     user: {
       findUnique: vi.fn(),
       update: vi.fn(),
@@ -24,17 +25,13 @@ const createApp = async (authOverrides = {}, prismaOverrides = {}) => {
       findFirst: vi.fn(),
     },
     usedInvite: {
-      findUnique: prismaOverrides.findUsedInvite || vi.fn().mockResolvedValue(null),
+      findUnique: vi.fn().mockResolvedValue(null),
     },
-  })
+  }
 
-  // Register cookie plugin (needed by auth decorator's getUser for cookie parsing)
-  await app.register(cookie, { secret: SESSION_SECRET })
+  app.prisma = { ...defaultPrisma, ...prismaOverrides }
 
-  // Mock csrf protection
-  app.decorate('csrfProtection', (req, reply, next) => next())
-
-  // Decorate with auth object
+  // Mock auth functions
   const defaultAuth = {
     getUser: vi.fn().mockResolvedValue(null),
     register: vi.fn(),
@@ -47,9 +44,9 @@ const createApp = async (authOverrides = {}, prismaOverrides = {}) => {
     verifyPendingAuth: vi.fn(),
   }
 
-  app.decorate('auth', { ...defaultAuth, ...authOverrides })
-
-  await app.register(invitationRoutes)
+  for (const key in defaultAuth) {
+    app.auth[key] = authOverrides[key] || defaultAuth[key]
+  }
 
   return { app, auth: app.auth }
 }

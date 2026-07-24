@@ -7,23 +7,11 @@ import styles from './index.module.css'
 
 export const getData = async ({ server, req, reply }) => {
   const user = await server.auth.getUser(req)
-  if (!user) {
-    return reply.redirect('/auth')
-  }
-
-  // Only Admin users can access this page
-  if (user.role !== UserRole.Admin) {
-    return reply.redirect('/')
-  }
+  if (!user) return reply.redirect('/auth')
+  if (user.role !== UserRole.Admin) return reply.redirect('/')
 
   const csrfToken = reply.generateCsrf()
-
-  // Fetch company data for the company profile tab
-  const company = user.company
-    ? await server.prisma.company.findUnique({
-        where: { id: user.company.id },
-      })
-    : null
+  const company = await server.admin.getCompany(user)
 
   return {
     profile: {
@@ -35,14 +23,7 @@ export const getData = async ({ server, req, reply }) => {
       wallet: user.wallet,
       companyName: company?.name ?? null,
     },
-    company: company
-      ? {
-          id: company.id,
-          name: company.name,
-          primaryWallet: company.primaryWallet ?? '',
-          secondaryWallet: company.secondaryWallet ?? '',
-        }
-      : null,
+    company: company,
     csrfToken,
   }
 }
