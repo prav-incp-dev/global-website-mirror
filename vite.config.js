@@ -11,6 +11,7 @@ export default defineConfig({
     setupFiles: './tests/setup.js',
     exclude: ['**/node_modules/**', '**/dist/**', 'tests/e2e/**'],
     coverage: {
+      exclude: ['tests/**', 'src/generated/prisma/**'],
       reporter: ['text'],
     },
   },

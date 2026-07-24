@@ -10,12 +10,13 @@ import adminRoutes from './src/routes/admin'
 import { WALLET_REGEXP, PHONE_REGEXP } from './src/lib/regexps.js'
 
 export const buildBackendApp = async (opts = {}) => {
+  const { auth: authOpts, ...fastifyOpts } = opts
   const backend = Fastify({
-    ...opts,
+    ...fastifyOpts,
     ajv: {
-      ...opts.ajv,
+      ...fastifyOpts.ajv,
       plugins: [
-        ...(opts.ajv?.plugins || []),
+        ...(fastifyOpts.ajv?.plugins || []),
         (ajv) => {
           ajv.addFormat('phone', PHONE_REGEXP)
           ajv.addFormat('wallet', WALLET_REGEXP)
@@ -25,7 +26,7 @@ export const buildBackendApp = async (opts = {}) => {
   })
 
   await backend.register(dbPlugin)
-  await backend.register(authPlugin)
+  await backend.register(authPlugin, authOpts)
   await backend.register(registerPlugin)
   await backend.register(adminPlugin)
   await backend.register(authRoutes)
