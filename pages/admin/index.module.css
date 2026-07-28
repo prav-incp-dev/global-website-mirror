@@ -39,6 +39,29 @@
   box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
 }
 
+.inviteButton {
+  display: block;
+  width: 100%;
+  padding: 14px 20px;
+  margin-bottom: 30px;
+  background: transparent;
+  color: #00b894;
+  border: 1.5px solid #00b894;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.03em;
+}
+
+.inviteButton:hover {
+  background: #00b894;
+  color: #0d0d0d;
+  box-shadow: 0 0 24px rgba(0, 184, 148, 0.35);
+  transform: translateY(-1px);
+}
+
 .tabs {
   display: flex;
   gap: 0;

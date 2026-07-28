@@ -1,6 +1,48 @@
 import { UserRole } from '../generated/prisma/client'
 
 export default async (fastify) => {
+  fastify.put('/api/admin/profile', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['firstName', 'lastName'],
+        properties: {
+          firstName: { type: 'string', minLength: 1 },
+          lastName: { type: 'string', minLength: 1 },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      const { firstName, lastName } = req.body
+
+      try {
+        const updatedUser = await fastify.prisma.user.update({
+          where: { id: user.id },
+          data: {
+            firstName,
+            lastName,
+          },
+        })
+
+        return reply.send({
+          success: true,
+          profile: {
+            id: updatedUser.id,
+            firstName: updatedUser.firstName,
+            lastName: updatedUser.lastName,
+          },
+        })
+      } catch (err) {
+        return reply.code(500).send({ error: 'Ошибка обновления профиля' })
+      }
+    },
+  })
+
   fastify.put('/api/admin/company', {
     schema: {
       body: {

@@ -19,6 +19,10 @@ const createApp = async (authOverrides = {}, prismaOverrides = {}) => {
       findUnique: vi.fn(),
       update: vi.fn(),
     },
+    user: {
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
   }
 
   app.prisma = { ...defaultPrisma, ...prismaOverrides }
@@ -42,6 +46,202 @@ const createApp = async (authOverrides = {}, prismaOverrides = {}) => {
 
   return { app, auth: app.auth }
 }
+
+describe('PUT /api/admin/profile', () => {
+  const apps = []
+
+  afterEach(async () => {
+    while (apps.length > 0) {
+      const app = apps.pop()
+      await app.close()
+    }
+  })
+
+  it('returns 403 when user is not authenticated', async () => {
+    const { app, auth } = await createApp({
+      getUser: vi.fn().mockResolvedValue(null),
+    })
+    apps.push(app)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/profile',
+      payload: {
+        firstName: 'John',
+        lastName: 'Doe',
+      },
+    })
+
+    expect(response.statusCode).toBe(403)
+    expect(response.json()).toEqual({ error: 'Доступ запрещен' })
+    expect(auth.getUser).toHaveBeenCalledTimes(1)
+  })
+
+  it('returns 403 when user is not Admin', async () => {
+    const nonAdminUser = {
+      id: 1,
+      email: 'user@example.com',
+      role: 'Candidate',
+      company: { id: 1 },
+    }
+
+    const { app, auth } = await createApp({
+      getUser: vi.fn().mockResolvedValue(nonAdminUser),
+    })
+    apps.push(app)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/profile',
+      payload: {
+        firstName: 'John',
+        lastName: 'Doe',
+      },
+    })
+
+    expect(response.statusCode).toBe(403)
+    expect(response.json()).toEqual({ error: 'Доступ запрещен' })
+    expect(auth.getUser).toHaveBeenCalledTimes(1)
+  })
+
+  it('returns 400 when firstName is missing', async () => {
+    const adminUser = {
+      id: 1,
+      email: 'admin@example.com',
+      role: 'Admin',
+      company: { id: 1 },
+    }
+
+    const { app } = await createApp({
+      getUser: vi.fn().mockResolvedValue(adminUser),
+    })
+    apps.push(app)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/profile',
+      payload: {
+        lastName: 'Doe',
+      },
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(response.json().message).toContain('required')
+  })
+
+  it('returns 400 when lastName is missing', async () => {
+    const adminUser = {
+      id: 1,
+      email: 'admin@example.com',
+      role: 'Admin',
+      company: { id: 1 },
+    }
+
+    const { app } = await createApp({
+      getUser: vi.fn().mockResolvedValue(adminUser),
+    })
+    apps.push(app)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/profile',
+      payload: {
+        firstName: 'John',
+      },
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(response.json().message).toContain('required')
+  })
+
+  it('returns 500 on unexpected error', async () => {
+    const adminUser = {
+      id: 1,
+      email: 'admin@example.com',
+      role: 'Admin',
+      company: { id: 1 },
+    }
+
+    const { app } = await createApp(
+      {
+        getUser: vi.fn().mockResolvedValue(adminUser),
+      },
+      {
+        user: {
+          update: vi.fn().mockRejectedValue(new Error('Database connection failed')),
+        },
+      },
+    )
+    apps.push(app)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/profile',
+      payload: {
+        firstName: 'John',
+        lastName: 'Doe',
+      },
+    })
+
+    expect(response.statusCode).toBe(500)
+    expect(response.json()).toEqual({ error: 'Ошибка обновления профиля' })
+  })
+
+  it('returns 200 and updates profile on success', async () => {
+    const adminUser = {
+      id: 1,
+      email: 'admin@example.com',
+      firstName: 'John',
+      lastName: 'Doe',
+      role: 'Admin',
+      company: { id: 1 },
+    }
+
+    const updatedAdmin = {
+      id: 1,
+      firstName: 'Jane',
+      lastName: 'Smith',
+    }
+
+    const { app } = await createApp(
+      {
+        getUser: vi.fn().mockResolvedValue(adminUser),
+      },
+      {
+        user: {
+          update: vi.fn().mockResolvedValue(updatedAdmin),
+        },
+      },
+    )
+    apps.push(app)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/profile',
+      payload: {
+        firstName: 'Jane',
+        lastName: 'Smith',
+      },
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual({
+      success: true,
+      profile: {
+        id: 1,
+        firstName: 'Jane',
+        lastName: 'Smith',
+      },
+    })
+    expect(app.prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: {
+        firstName: 'Jane',
+        lastName: 'Smith',
+      },
+    })
+  })
+})
 
 describe('PUT /api/admin/company', () => {
   const apps = []
@@ -235,7 +435,7 @@ describe('PUT /api/admin/company', () => {
   it('returns 200 and updates company on success', async () => {
     const adminUser = {
       id: 1,
-      email: '[EMAIL]',
+      email: 'admin@example.com',
       role: 'Admin',
       company: { id: 1 },
     }
@@ -291,7 +491,7 @@ describe('PUT /api/admin/company', () => {
   it('returns 200 when wallets are empty strings', async () => {
     const adminUser = {
       id: 1,
-      email: '[EMAIL]',
+      email: 'admin@example.com',
       role: 'Admin',
       company: { id: 1 },
     }
