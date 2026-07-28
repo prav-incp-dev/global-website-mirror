@@ -1,26 +1,31 @@
 import { useState } from 'react'
-import styles from './index.module.css'
-import InvitationModal from '../InvitationModal'
+import ViewProfile from './ViewProfile'
+import EditProfile from './EditProfile'
 
 const AdminProfile = ({ profile, csrfToken }) => {
-  const [invitationOpen, setInvitationOpen] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [profileData, setProfileData] = useState(profile)
+
+  const handleEdit = () => {
+    setIsEditing(true)
+  }
+
+  const handleCancel = () => {
+    setIsEditing(false)
+  }
+
+  const handleUpdate = (updatedProfile) => {
+    setProfileData({ ...profile, ...updatedProfile })
+    setIsEditing(false)
+  }
 
   return (
     <div>
-      <div className={styles.row}>
-        <span className={styles.label}>Фамилия и имя:</span>
-        <span className={styles.value}>{profile.fullName || '—'}</span>
-      </div>
-      <div className={styles.row}>
-        <span className={styles.label}>Почта:</span>
-        <span className={styles.value}>{profile.email || '—'}</span>
-      </div>
-
-      <button className={styles.inviteButton} onClick={() => setInvitationOpen(true)}>
-        Сгенерировать пригласительную ссылку
-      </button>
-
-      <InvitationModal isOpen={invitationOpen} onClose={() => setInvitationOpen(false)} csrfToken={csrfToken} />
+      {isEditing ? (
+        <EditProfile profile={profileData} csrfToken={csrfToken} onUpdate={handleUpdate} onCancel={handleCancel} />
+      ) : (
+        <ViewProfile profile={profileData} onEdit={handleEdit} />
+      )}
     </div>
   )
 }

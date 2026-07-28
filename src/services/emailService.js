@@ -53,7 +53,7 @@ export const sendTwoFactorCode = async (user, code) => {
     from: `"Наш Дом" <${fromEmail}>`,
     to: user.email,
     subject: 'Код подтверждения для входа в систему',
-    text: `Здравствуйте ${user.fullName || user.nick || 'уважаемый пользователь'},
+    text: `Здравствуйте ${user.firstName || user.nick || 'уважаемый пользователь'},
 
 Вот ваш 6-значный код подтверждения:
 
@@ -62,6 +62,34 @@ ${code}
 Этот код действителен в течение 10 минут. Если вы не запрашивали этот код, просто проигнорируйте это письмо.
 
 — Наш Дом`,
+  })
+
+  processMailResult(info, user)
+
+  return info
+}
+
+/**
+ * Sends a registration confirmation email to the user.
+ */
+export const sendRegistrationConfirmation = async (user) => {
+  const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@ourhouse.app'
+  const transport = createTransport()
+  const link = `${process.env.BASE_URL}/auth`
+
+  const info = await transport.sendMail({
+    from: `"Наш Дом" <${fromEmail}>`,
+    to: user.email,
+    subject: 'Добро пожаловать в Наш Дом!',
+    text: `Здравствуйте ${user.firstName || 'уважаемый пользователь'}!
+
+Благодарим вас за регистрацию в системе "Наш Дом".
+
+Для входа в систему, пожалуйста, перейдите по следующей ссылке:
+${link}
+
+С уважением,
+Команда "Наш Дом"`,
   })
 
   processMailResult(info, user)

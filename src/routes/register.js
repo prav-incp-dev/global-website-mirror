@@ -1,38 +1,37 @@
+import { sendRegistrationConfirmation } from '../services/emailService.js'
+
 export default async (fastify) => {
   fastify.post('/api/register', {
     schema: {
       body: {
         type: 'object',
-        required: ['email', 'nick', 'password', 'fullName', 'phone', 'memberId', 'token'],
+        required: ['email', 'password', 'firstName', 'phone', 'token'],
         properties: {
           email: { type: 'string', format: 'email' },
-          nick: { type: 'string' },
-          fullName: { type: 'string' },
+          firstName: { type: 'string' },
           phone: { type: 'string', format: 'phone' },
-          memberId: { type: 'string' },
           password: { type: 'string' },
           token: { type: 'string' },
         },
       },
     },
     handler: async (req, reply) => {
-      const { email, nick, fullName, phone, memberId, password, token } = req.body
+      const { email, firstName, phone, password, token } = req.body
 
       try {
         const { inviteCode, owner } = await fastify.registration.verifyToken(token)
 
         const user = await fastify.registration.createUser({
           email,
-          nick,
-          fullName,
+          firstName,
           phone,
-          memberId,
           password,
           parentId: owner,
           inviteCode,
         })
 
         if (user) {
+          await sendRegistrationConfirmation(user)
           return reply.send({ success: true, message: 'Регистрация прошла успешно' })
         } else {
           return reply.code(500).send({ error: 'Ошибка регистрации' })
@@ -41,8 +40,6 @@ export default async (fastify) => {
         if (err.code === 'P2002') {
           const uniqFields = {
             email: 'Электронная почта',
-            nick: 'Ник в Телеграм',
-            memberId: 'Номер пайщика',
             phone: 'Номер телефона',
             code: 'Приглашенный',
           }

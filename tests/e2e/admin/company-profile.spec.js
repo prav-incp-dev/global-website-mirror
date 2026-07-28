@@ -47,7 +47,6 @@ test.describe('admin manages company profile', () => {
 
     // Client-side validation from react-hook-form pattern
     await expect(page.getByText('Неверный формат кошелька')).toHaveCount(2)
-    
   })
 
   test('shows error when company name is already taken', async ({ loginAs, page }) => {

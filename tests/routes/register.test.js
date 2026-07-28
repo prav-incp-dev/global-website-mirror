@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { buildBackendApp } from '../../backend.js'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const lastEmailFixturePath = path.join(__dirname, '../fixtures/last-email.json')
 
 const toCookieHeader = (setCookieHeader) => {
   if (!setCookieHeader) {
@@ -88,7 +94,6 @@ describe('register routes', () => {
       },
       payload: {
         email: 'new.user@example.com',
-        nick: 'newuser',
       },
     })
 
@@ -111,10 +116,8 @@ describe('register routes', () => {
       },
       payload: {
         email: 'invalid-email',
-        nick: 'newuser',
-        fullName: 'New User',
+        firstName: 'New',
         phone: '+375291234567',
-        memberId: 'MBR-9001',
         password: 'password123',
         token: 'some-token',
       },
@@ -139,10 +142,8 @@ describe('register routes', () => {
       },
       payload: {
         email: 'another.unique.user@example.com',
-        nick: 'anotheruniqueuser',
-        fullName: 'New User',
+        firstName: 'New',
         phone: 'abc',
-        memberId: 'MBR-9001-UNIQUE',
         password: 'password123',
         token: 'some-token',
       },
@@ -174,10 +175,8 @@ describe('register routes', () => {
       },
       payload: {
         email: 'admin@example.com',
-        nick: 'anotheruser',
-        fullName: 'Another User',
+        firstName: 'Another',
         phone: '+375291234568',
-        memberId: 'MBR-9002',
         password: 'password123',
         token: 'some-token',
       },
@@ -212,10 +211,8 @@ describe('register routes', () => {
       },
       payload: {
         email: 'new.user@example.com',
-        nick: 'newuser',
-        fullName: 'New User',
+        firstName: 'New',
         phone: '+375291234569', // Duplicate phone
-        memberId: 'MBR-9001',
         password: 'password123',
         token: 'some-token',
       },
@@ -224,82 +221,6 @@ describe('register routes', () => {
     expect(response.statusCode).toBe(409)
     expect(response.json()).toEqual({
       error: 'Номер телефона уже есть в системе',
-    })
-    expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
-    expect(auth.setSession).not.toHaveBeenCalled()
-  })
-
-  it('POST /api/register returns 409 for duplicate nick', async () => {
-    const duplicateNickError = Object.assign(new Error('Unique constraint failed on the fields: (`nick`)'), {
-      code: 'P2002',
-      meta: { target: ['nick'] },
-    })
-
-    const { app, auth } = await createApp({
-      createUser: vi.fn().mockRejectedValue(duplicateNickError),
-    })
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
-
-    const response = await app.inject({
-      method: 'POST',
-      url: '/api/register',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
-      payload: {
-        email: 'new.user@example.com',
-        nick: 'existingnick', // Duplicate nick
-        fullName: 'New User',
-        phone: '+375291234570',
-        memberId: 'MBR-9001',
-        password: 'password123',
-        token: 'some-token',
-      },
-    })
-
-    expect(response.statusCode).toBe(409)
-    expect(response.json()).toEqual({
-      error: 'Ник в Телеграм уже есть в системе',
-    })
-    expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
-    expect(auth.setSession).not.toHaveBeenCalled()
-  })
-
-  it('POST /api/register returns 409 for duplicate memberId', async () => {
-    const duplicateMemberIdError = Object.assign(new Error('Unique constraint failed on the fields: (`memberId`)'), {
-      code: 'P2002',
-      meta: { target: ['memberId'] },
-    })
-
-    const { app, auth } = await createApp({
-      createUser: vi.fn().mockRejectedValue(duplicateMemberIdError),
-    })
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
-
-    const response = await app.inject({
-      method: 'POST',
-      url: '/api/register',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
-      payload: {
-        email: 'new.user@example.com',
-        nick: 'newuser',
-        fullName: 'New User',
-        phone: '+375291234571',
-        memberId: 'existing-member-id', // Duplicate memberId
-        password: 'password123',
-        token: 'some-token',
-      },
-    })
-
-    expect(response.statusCode).toBe(409)
-    expect(response.json()).toEqual({
-      error: 'Номер пайщика уже есть в системе',
     })
     expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
     expect(auth.setSession).not.toHaveBeenCalled()
@@ -326,10 +247,8 @@ describe('register routes', () => {
       },
       payload: {
         email: 'new.user@example.com',
-        nick: 'newuser',
-        fullName: 'New User',
+        firstName: 'New',
         phone: '+375291234575',
-        memberId: 'MBR-9001',
         password: 'password123',
         token: 'some-token',
       },
@@ -364,10 +283,8 @@ describe('register routes', () => {
       },
       payload: {
         email: 'new.user@example.com',
-        nick: 'newuser',
-        fullName: 'New User',
+        firstName: 'New',
         phone: '+375291234576',
-        memberId: 'MBR-9001',
         password: 'password123',
         token: 'some-token',
       },
@@ -397,10 +314,8 @@ describe('register routes', () => {
       },
       payload: {
         email: 'new.user@example.com',
-        nick: 'newuser',
-        fullName: 'New User',
+        firstName: 'New',
         phone: '+375291234572',
-        memberId: 'MBR-9001',
         password: 'password123',
         token: 'some-token',
       },
@@ -432,10 +347,8 @@ describe('register routes', () => {
       },
       payload: {
         email: 'new.user@example.com',
-        nick: 'newuser',
-        fullName: 'New User',
+        firstName: 'New',
         phone: '+375291234577',
-        memberId: 'MBR-9001',
         password: 'password123',
         token: 'some-token',
       },
@@ -463,10 +376,8 @@ describe('register routes', () => {
       },
       payload: {
         email: 'new.user@example.com',
-        nick: 'newuser',
-        fullName: 'New User',
+        firstName: 'New',
         phone: '+375291234573',
-        memberId: 'MBR-9001',
         password: 'password123',
         token: 'some-token',
       },
@@ -479,10 +390,13 @@ describe('register routes', () => {
   })
 
   it('POST /api/register returns 200 with success message on success', async () => {
+    if (fs.existsSync(lastEmailFixturePath)) fs.unlinkSync(lastEmailFixturePath)
+
     const { app, auth } = await createApp({
       createUser: vi.fn().mockResolvedValue({
         id: 42,
         email: 'new.user@example.com',
+        firstName: 'New',
       }),
     })
     apps.push(app)
@@ -490,10 +404,8 @@ describe('register routes', () => {
 
     const payload = {
       email: 'new.user@example.com',
-      nick: 'newuser',
-      fullName: 'New User',
+      firstName: 'New',
       phone: '+375291234574',
-      memberId: 'MBR-9001',
       password: 'password123',
       token: 'some-token',
     }
@@ -515,15 +427,20 @@ describe('register routes', () => {
     })
     expect(app.registration.createUser).toHaveBeenCalledWith({
       email: payload.email,
-      nick: payload.nick,
-      fullName: payload.fullName,
+      firstName: payload.firstName,
       phone: payload.phone,
-      memberId: payload.memberId,
       password: payload.password,
       parentId: null,
       inviteCode: 'test-jti',
     })
     expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
     expect(auth.setSession).not.toHaveBeenCalled()
+  
+    expect(fs.existsSync(lastEmailFixturePath)).toBe(true)
+    const emailContent = JSON.parse(fs.readFileSync(lastEmailFixturePath, 'utf-8'))
+    expect(emailContent.to).toBe(payload.email)
+    expect(emailContent.subject).toBe('Добро пожаловать в Наш Дом!')
+    expect(emailContent.text).toContain(`Здравствуйте ${payload.firstName}!`)
+    expect(emailContent.text).toContain('/auth')
   })
 })

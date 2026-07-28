@@ -22,7 +22,8 @@ export const getData = async ({ server, req, reply }) => {
   return {
     profile: {
       nick: user.nick,
-      fullName: user.fullName,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
       phone: user.phone,
       memberId: user.memberId,
@@ -67,8 +68,12 @@ const Index = () => {
           <span className={styles.value}>{profile.nick || '—'}</span>
         </div>
         <div className={styles.row}>
-          <span className={styles.label}>Фамилия и имя:</span>
-          <span className={styles.value}>{profile.fullName || '—'}</span>
+          <span className={styles.label}>Имя:</span>
+          <span className={styles.value}>{profile.firstName || '—'}</span>
+        </div>
+        <div className={styles.row}>
+          <span className={styles.label}>Фамилия:</span>
+          <span className={styles.value}>{profile.lastName || '—'}</span>
         </div>
         <div className={styles.row}>
           <span className={styles.label}>Почта:</span>

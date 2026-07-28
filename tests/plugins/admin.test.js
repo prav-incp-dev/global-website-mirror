@@ -56,7 +56,7 @@ describe('admin plugin', () => {
   it('getCompany returns null when user has no company', async () => {
     const adminUser = {
       id: 1,
-      email: '[EMAIL]',
+      email: 'admin@example.com',
       role: 'Admin',
       company: null,
     }
@@ -85,7 +85,7 @@ describe('admin plugin', () => {
   it('getCompany returns company data', async () => {
     const adminUser = {
       id: 1,
-      email: '[EMAIL]',
+      email: 'admin@example.com',
       role: 'Admin',
       company: { id: 1 },
     }

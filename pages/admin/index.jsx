@@ -3,6 +3,7 @@ import { useRouteContext } from '@fastify/react/client'
 import { UserRole } from '../../src/generated/prisma/enums'
 import AdminProfile from '../../src/components/AdminProfile'
 import CompanyProfile from '../../src/components/CompanyProfile'
+import InvitationModal from '../../src/components/InvitationModal'
 import styles from './index.module.css'
 
 export const getData = async ({ server, req, reply }) => {
@@ -15,13 +16,9 @@ export const getData = async ({ server, req, reply }) => {
 
   return {
     profile: {
-      nick: user.nick,
-      fullName: user.fullName,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
-      phone: user.phone,
-      memberId: user.memberId,
-      wallet: user.wallet,
-      companyName: company?.name ?? null,
     },
     company: company,
     csrfToken,
@@ -37,6 +34,7 @@ const Admin = () => {
   const { data } = useRouteContext()
   const { profile = {}, company = null, csrfToken = '' } = data
   const [activeTab, setActiveTab] = useState('admin')
+  const [invitationOpen, setInvitationOpen] = useState(false)
 
   const handleLogout = async (e) => {
     e.preventDefault()
@@ -60,6 +58,13 @@ const Admin = () => {
           Выйти
         </button>
       </div>
+
+      <>
+        <button className={styles.inviteButton} onClick={() => setInvitationOpen(true)}>
+          Сгенерировать пригласительную ссылку
+        </button>
+        <InvitationModal isOpen={invitationOpen} onClose={() => setInvitationOpen(false)} csrfToken={csrfToken} />
+      </>
 
       <div className={styles.tabs}>
         {TABS.map((tab) => (

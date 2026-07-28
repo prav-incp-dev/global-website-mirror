@@ -38,7 +38,8 @@ model User {
   companyId        Int
   company         Company  @relation(fields: [companyId], references: [id])
   nick            String?  @unique
-  fullName        String?
+  firstName        String?
+  lastName         String?
   phone            String   @unique
   memberId        String?  @unique
   parentId         Int?

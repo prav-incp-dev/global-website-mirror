@@ -137,19 +137,19 @@ test.describe('consultant login flow with 2FA', () => {
     await emailInput.fill('admin@example.com')
     await passwordInput.fill('password')
     await page.getByRole('button', { name: 'Войти' }).click()
-    
+
     // Wait for the confirmation code step to appear
     await expect(page.getByRole('heading', { name: 'Подтверждение' })).toBeVisible()
-    
+
     // Get the first generated confirmation code
     const code = await getConfirmationCode()
     expect(code).toBeDefined()
-    
+
     // Fill in the new Code and click confirm
     const codeInput = page.locator('#code')
     await codeInput.fill(code)
     await page.getByRole('button', { name: 'Подтвердить' }).click()
-    
+
     // Should successfully log in and redirect to profile page
     await expect(page).toHaveURL('http://127.0.0.1:3101/admin')
     await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
