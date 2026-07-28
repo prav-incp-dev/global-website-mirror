@@ -41,11 +41,8 @@ const Register = () => {
   } = useForm({
     defaultValues: {
       email: '',
-      nick: '',
       firstName: '',
-      lastName: '',
       phone: '',
-      memberId: '',
       password: '',
       confirmPassword: '',
     },
@@ -63,11 +60,8 @@ const Register = () => {
         },
         body: JSON.stringify({
           email: formData.email,
-          nick: formData.nick,
           firstName: formData.firstName,
-          lastName: formData.lastName,
           phone: formData.phone,
-          memberId: formData.memberId,
           password: formData.password,
           token,
         }),
@@ -119,20 +113,6 @@ const Register = () => {
           {errors.email && <span className={styles.fieldError}>{errors.email.message}</span>}
         </div>
         <div className={styles.formField}>
-          <label htmlFor="nick" className={styles.label}>
-            Ник в Телеграм
-          </label>
-          <input
-            type="text"
-            id="nick"
-            className={styles.input}
-            {...register('nick', {
-              required: 'Обязательное поле',
-            })}
-          />
-          {errors.nick && <span className={styles.fieldError}>{errors.nick.message}</span>}
-        </div>
-        <div className={styles.formField}>
           <label htmlFor="firstName" className={styles.label}>
             Имя
           </label>
@@ -145,20 +125,6 @@ const Register = () => {
             })}
           />
           {errors.firstName && <span className={styles.fieldError}>{errors.firstName.message}</span>}
-        </div>
-        <div className={styles.formField}>
-          <label htmlFor="lastName" className={styles.label}>
-            Фамилия
-          </label>
-          <input
-            type="text"
-            id="lastName"
-            className={styles.input}
-            {...register('lastName', {
-              required: 'Обязательное поле',
-            })}
-          />
-          {errors.lastName && <span className={styles.fieldError}>{errors.lastName.message}</span>}
         </div>
         <div className={styles.formField}>
           <label htmlFor="phone" className={styles.label}>
@@ -177,20 +143,6 @@ const Register = () => {
             })}
           />
           {errors.phone && <span className={styles.fieldError}>{errors.phone.message}</span>}
-        </div>
-        <div className={styles.formField}>
-          <label htmlFor="memberId" className={styles.label}>
-            Номер пайщика
-          </label>
-          <input
-            type="text"
-            id="memberId"
-            className={styles.input}
-            {...register('memberId', {
-              required: 'Обязательное поле',
-            })}
-          />
-          {errors.memberId && <span className={styles.fieldError}>{errors.memberId.message}</span>}
         </div>
         <div className={styles.formField}>
           <label htmlFor="password" className={styles.label}>

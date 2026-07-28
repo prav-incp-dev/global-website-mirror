@@ -3,32 +3,26 @@ export default async (fastify) => {
     schema: {
       body: {
         type: 'object',
-        required: ['email', 'nick', 'password', 'firstName', 'lastName', 'phone', 'memberId', 'token'],
+        required: ['email', 'password', 'firstName', 'phone', 'token'],
         properties: {
           email: { type: 'string', format: 'email' },
-          nick: { type: 'string' },
           firstName: { type: 'string' },
-          lastName: { type: 'string' },
           phone: { type: 'string', format: 'phone' },
-          memberId: { type: 'string' },
           password: { type: 'string' },
           token: { type: 'string' },
         },
       },
     },
     handler: async (req, reply) => {
-      const { email, nick, firstName, lastName, phone, memberId, password, token } = req.body
+      const { email, firstName, phone, password, token } = req.body
 
       try {
         const { inviteCode, owner } = await fastify.registration.verifyToken(token)
 
         const user = await fastify.registration.createUser({
           email,
-          nick,
           firstName,
-          lastName,
           phone,
-          memberId,
           password,
           parentId: owner,
           inviteCode,
@@ -43,8 +37,6 @@ export default async (fastify) => {
         if (err.code === 'P2002') {
           const uniqFields = {
             email: 'Электронная почта',
-            nick: 'Ник в Телеграм',
-            memberId: 'Номер пайщика',
             phone: 'Номер телефона',
             code: 'Приглашенный',
           }

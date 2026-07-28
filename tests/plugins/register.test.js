@@ -73,12 +73,9 @@ describe('register plugin', () => {
     })
 
     const result = await fastifyInstance.registration.createUser({
-      email: '[EMAIL]',
-      nick: 'newuser',
+      email: 'new.user@example.com',
       firstName: 'New',
-      lastName: 'User',
       phone: '+10000000002',
-      memberId: 'MBR-9001',
       password: 'plainpassword',
       inviteCode: 'test-invite',
     })
@@ -89,12 +86,9 @@ describe('register plugin', () => {
 
     // Verify user.create was called with correct data
     expect(capturedUserCreateArgs.data).toMatchObject({
-      email: '[EMAIL]',
-      nick: 'newuser',
+      email: 'new.user@example.com',
       firstName: 'New',
-      lastName: 'User',
       phone: '+10000000002',
-      memberId: 'MBR-9001',
       role: 'Candidate',
       companyId: 1,
     })
@@ -104,7 +98,7 @@ describe('register plugin', () => {
 
     // Verify password is stripped from the result
     expect(result).not.toHaveProperty('password')
-    expect(result.email).toBe('[EMAIL]')
+    expect(result.email).toBe('new.user@example.com')
 
     // Verify company lookup was called
     expect(fastifyInstance.prisma.company.findFirst).toHaveBeenCalledWith({
@@ -130,12 +124,9 @@ describe('register plugin', () => {
 
     await expect(
       fastifyInstance.registration.createUser({
-        email: '[EMAIL]',
-        nick: 'newuser',
+        email: 'new.user@example.com',
         firstName: 'New',
-        lastName: 'User',
         phone: '+10000000002',
-        memberId: 'MBR-9001',
         password: 'plainpassword',
         inviteCode: 'already-used-code',
       }),
@@ -147,12 +138,9 @@ describe('register plugin', () => {
 
     await expect(
       fastifyInstance.registration.createUser({
-        email: '[EMAIL]',
-        nick: 'newuser',
+        email: 'new.user@example.com',
         firstName: 'New',
-        lastName: 'User',
         phone: '+10000000002',
-        memberId: 'MBR-9001',
         password: 'plainpassword',
         inviteCode: 'test-invite',
       }),
@@ -160,19 +148,19 @@ describe('register plugin', () => {
   })
 
   test('verifyToken returns inviteCode and owner for valid token', async ({ expect }) => {
-    vi.spyOn(jwt, 'verify').mockReturnValue({ inviteCode: 'abc123', owner: '[EMAIL]' })
+    vi.spyOn(jwt, 'verify').mockReturnValue({ inviteCode: 'abc123', owner: 1 })
     fastifyInstance.prisma.usedInvite.findUnique.mockResolvedValue(null)
 
     const result = await fastifyInstance.registration.verifyToken('valid-token')
 
-    expect(result).toEqual({ inviteCode: 'abc123', owner: '[EMAIL]' })
+    expect(result).toEqual({ inviteCode: 'abc123', owner: 1 })
     expect(fastifyInstance.prisma.usedInvite.findUnique).toHaveBeenCalledWith({
       where: { code: 'abc123' },
     })
   })
 
   test('verifyToken throws error for invalid token (no inviteCode)', async ({ expect }) => {
-    vi.spyOn(jwt, 'verify').mockReturnValue({ owner: '[EMAIL]' })
+    vi.spyOn(jwt, 'verify').mockReturnValue({ owner: '1' })
 
     await expect(fastifyInstance.registration.verifyToken('invalid-token')).rejects.toThrow('Invalid token')
   })
@@ -186,7 +174,7 @@ describe('register plugin', () => {
   })
 
   test('verifyToken throws error when invite is already used', async ({ expect }) => {
-    vi.spyOn(jwt, 'verify').mockReturnValue({ inviteCode: 'used-code', owner: '[EMAIL]' })
+    vi.spyOn(jwt, 'verify').mockReturnValue({ inviteCode: 'used-code', owner: '1' })
     fastifyInstance.prisma.usedInvite.findUnique.mockResolvedValue({ code: 'used-code' })
 
     await expect(fastifyInstance.registration.verifyToken('used-token')).rejects.toThrow('Invite already used')

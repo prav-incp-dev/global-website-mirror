@@ -15,7 +15,7 @@ export default fp(async (fastify) => {
       return { inviteCode, owner }
     },
 
-    createUser: async ({ email, nick, firstName, lastName, phone, memberId, password, parentId = null, inviteCode }) => {
+    createUser: async ({ email, firstName, phone, password, parentId = null, inviteCode }) => {
       const company = await fastify.prisma.company.findFirst({
         orderBy: { id: 'asc' },
       })
@@ -32,11 +32,8 @@ export default fp(async (fastify) => {
             email,
             password: passwordHash,
             role: UserRole.Candidate,
-            nick,
             firstName,
-            lastName,
             phone,
-            memberId,
             parentId,
             companyId: company.id,
           },
