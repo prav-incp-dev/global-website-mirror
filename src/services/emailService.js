@@ -72,9 +72,10 @@ ${code}
 /**
  * Sends a registration confirmation email to the user.
  */
-export const sendRegistrationConfirmation = async (user, link) => {
+export const sendRegistrationConfirmation = async (user) => {
   const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@ourhouse.app'
   const transport = createTransport()
+  const link = `${process.env.BASE_URL}/auth`
 
   const info = await transport.sendMail({
     from: `"Наш Дом" <${fromEmail}>`,
