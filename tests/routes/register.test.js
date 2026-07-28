@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { buildBackendApp } from '../../backend.js'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const lastEmailFixturePath = path.join(__dirname, '../fixtures/last-email.json')
 
 const toCookieHeader = (setCookieHeader) => {
   if (!setCookieHeader) {
@@ -384,10 +390,13 @@ describe('register routes', () => {
   })
 
   it('POST /api/register returns 200 with success message on success', async () => {
+    if (fs.existsSync(lastEmailFixturePath)) fs.unlinkSync(lastEmailFixturePath)
+
     const { app, auth } = await createApp({
       createUser: vi.fn().mockResolvedValue({
         id: 42,
         email: 'new.user@example.com',
+        firstName: 'New',
       }),
     })
     apps.push(app)
@@ -426,5 +435,12 @@ describe('register routes', () => {
     })
     expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
     expect(auth.setSession).not.toHaveBeenCalled()
+  
+    expect(fs.existsSync(lastEmailFixturePath)).toBe(true)
+    const emailContent = JSON.parse(fs.readFileSync(lastEmailFixturePath, 'utf-8'))
+    expect(emailContent.to).toBe(payload.email)
+    expect(emailContent.subject).toBe('Добро пожаловать в Наш Дом!')
+    expect(emailContent.text).toContain(`Здравствуйте ${payload.firstName}!`)
+    expect(emailContent.text).toContain('/auth')
   })
 })

@@ -1,3 +1,5 @@
+import { sendRegistrationConfirmation } from '../services/emailService.js'
+
 export default async (fastify) => {
   fastify.post('/api/register', {
     schema: {
@@ -29,6 +31,8 @@ export default async (fastify) => {
         })
 
         if (user) {
+          const linkUrl = `${req.protocol}://${req.hostname}/auth`
+          await sendRegistrationConfirmation(user, linkUrl)
           return reply.send({ success: true, message: 'Регистрация прошла успешно' })
         } else {
           return reply.code(500).send({ error: 'Ошибка регистрации' })

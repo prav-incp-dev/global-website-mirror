@@ -68,3 +68,30 @@ ${code}
 
   return info
 }
+
+/**
+ * Sends a registration confirmation email to the user.
+ */
+export const sendRegistrationConfirmation = async (user, link) => {
+  const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@ourhouse.app'
+  const transport = createTransport()
+
+  const info = await transport.sendMail({
+    from: `"Наш Дом" <${fromEmail}>`,
+    to: user.email,
+    subject: 'Добро пожаловать в Наш Дом!',
+    text: `Здравствуйте ${user.firstName || 'уважаемый пользователь'}!
+
+Благодарим вас за регистрацию в системе "Наш Дом".
+
+Для входа в систему, пожалуйста, перейдите по следующей ссылке:
+${link}
+
+С уважением,
+Команда "Наш Дом"`,
+  })
+
+  processMailResult(info, user)
+
+  return info
+}
