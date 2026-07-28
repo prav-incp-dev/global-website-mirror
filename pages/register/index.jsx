@@ -42,7 +42,8 @@ const Register = () => {
     defaultValues: {
       email: '',
       nick: '',
-      fullName: '',
+      firstName: '',
+      lastName: '',
       phone: '',
       memberId: '',
       password: '',
@@ -63,7 +64,8 @@ const Register = () => {
         body: JSON.stringify({
           email: formData.email,
           nick: formData.nick,
-          fullName: formData.fullName,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
           phone: formData.phone,
           memberId: formData.memberId,
           password: formData.password,
@@ -131,18 +133,32 @@ const Register = () => {
           {errors.nick && <span className={styles.fieldError}>{errors.nick.message}</span>}
         </div>
         <div className={styles.formField}>
-          <label htmlFor="fullName" className={styles.label}>
-            Фамилия и имя
+          <label htmlFor="firstName" className={styles.label}>
+            Имя
           </label>
           <input
             type="text"
-            id="fullName"
+            id="firstName"
             className={styles.input}
-            {...register('fullName', {
+            {...register('firstName', {
               required: 'Обязательное поле',
             })}
           />
-          {errors.fullName && <span className={styles.fieldError}>{errors.fullName.message}</span>}
+          {errors.firstName && <span className={styles.fieldError}>{errors.firstName.message}</span>}
+        </div>
+        <div className={styles.formField}>
+          <label htmlFor="lastName" className={styles.label}>
+            Фамилия
+          </label>
+          <input
+            type="text"
+            id="lastName"
+            className={styles.input}
+            {...register('lastName', {
+              required: 'Обязательное поле',
+            })}
+          />
+          {errors.lastName && <span className={styles.fieldError}>{errors.lastName.message}</span>}
         </div>
         <div className={styles.formField}>
           <label htmlFor="phone" className={styles.label}>

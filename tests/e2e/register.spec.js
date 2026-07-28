@@ -62,7 +62,8 @@ test.describe('registration flow', () => {
 
     await page.locator('#email').fill('noowner.user@example.com')
     await page.locator('#nick').fill('noowneruser')
-    await page.locator('#fullName').fill('No Owner User')
+    await page.locator('#firstName').fill('No Owner')
+    await page.locator('#lastName').fill('User')
     await page.locator('#phone').fill('+375330000001')
     await page.locator('#memberId').fill('MBR-9001')
     await page.locator('#password').fill('password123')
@@ -93,7 +94,8 @@ test.describe('registration flow', () => {
 
     await page.locator('#email').fill('nullowner.user@example.com')
     await page.locator('#nick').fill('nullowneruser')
-    await page.locator('#fullName').fill('Null Owner User')
+    await page.locator('#firstName').fill('Null Owner')
+    await page.locator('#lastName').fill('User')
     await page.locator('#phone').fill('+375330000002')
     await page.locator('#memberId').fill('MBR-9002')
     await page.locator('#password').fill('password123')
@@ -124,7 +126,8 @@ test.describe('registration flow', () => {
 
     await page.locator('#email').fill('withowner.user@example.com')
     await page.locator('#nick').fill('withowneruser')
-    await page.locator('#fullName').fill('With Owner User')
+    await page.locator('#firstName').fill('With Owner')
+    await page.locator('#lastName').fill('User')
     await page.locator('#phone').fill('+375330000003')
     await page.locator('#memberId').fill('MBR-9003')
     await page.locator('#password').fill('password123')
@@ -153,7 +156,8 @@ test.describe('registration flow', () => {
 
     await page.locator('#email').fill('new.user@example')
     await page.locator('#nick').fill('newuser')
-    await page.locator('#fullName').fill('New User')
+    await page.locator('#firstName').fill('New')
+    await page.locator('#lastName').fill('User')
     await page.locator('#phone').fill('+375(33)000-0001')
     await page.locator('#memberId').fill('MBR-9001')
     await page.locator('#password').fill('password123')
@@ -176,7 +180,8 @@ test.describe('registration flow', () => {
 
     await page.locator('#email').fill('new.user@example.com')
     await page.locator('#nick').fill('newuser')
-    await page.locator('#fullName').fill('New User')
+    await page.locator('#firstName').fill('New')
+    await page.locator('#lastName').fill('User')
     await page.locator('#phone').fill('+79221110500')
     await page.locator('#memberId').fill('MBR-9001')
     await page.locator('#password').fill('password123')
@@ -199,7 +204,8 @@ test.describe('registration flow', () => {
 
     await page.locator('#email').fill('admin@example.com')
     await page.locator('#nick').fill('anotheruser')
-    await page.locator('#fullName').fill('Another User')
+    await page.locator('#firstName').fill('Another')
+    await page.locator('#lastName').fill('User')
     await page.locator('#phone').fill('+7 (495) 000-00-00')
     await page.locator('#memberId').fill('MBR-9002')
     await page.locator('#password').fill('password123')

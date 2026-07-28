@@ -3,11 +3,12 @@ export default async (fastify) => {
     schema: {
       body: {
         type: 'object',
-        required: ['email', 'nick', 'password', 'fullName', 'phone', 'memberId', 'token'],
+        required: ['email', 'nick', 'password', 'firstName', 'lastName', 'phone', 'memberId', 'token'],
         properties: {
           email: { type: 'string', format: 'email' },
           nick: { type: 'string' },
-          fullName: { type: 'string' },
+          firstName: { type: 'string' },
+          lastName: { type: 'string' },
           phone: { type: 'string', format: 'phone' },
           memberId: { type: 'string' },
           password: { type: 'string' },
@@ -16,7 +17,7 @@ export default async (fastify) => {
       },
     },
     handler: async (req, reply) => {
-      const { email, nick, fullName, phone, memberId, password, token } = req.body
+      const { email, nick, firstName, lastName, phone, memberId, password, token } = req.body
 
       try {
         const { inviteCode, owner } = await fastify.registration.verifyToken(token)
@@ -24,7 +25,8 @@ export default async (fastify) => {
         const user = await fastify.registration.createUser({
           email,
           nick,
-          fullName,
+          firstName,
+          lastName,
           phone,
           memberId,
           password,

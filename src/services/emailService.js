@@ -53,7 +53,7 @@ export const sendTwoFactorCode = async (user, code) => {
     from: `"Наш Дом" <${fromEmail}>`,
     to: user.email,
     subject: 'Код подтверждения для входа в систему',
-    text: `Здравствуйте ${user.fullName || user.nick || 'уважаемый пользователь'},
+    text: `Здравствуйте ${user.firstName || user.nick || 'уважаемый пользователь'},
 
 Вот ваш 6-значный код подтверждения:
 

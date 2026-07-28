@@ -26,7 +26,7 @@ describe('emailService in production mode', () => {
     const { sendTwoFactorCode } = await import('../../src/services/emailService')
     const nodemailer = await import('nodemailer')
 
-    const user = { email: 'test@example.com', fullName: 'Test User' }
+    const user = { email: 'test@example.com', firstName: 'Test', lastName: 'User' }
     await sendTwoFactorCode(user, '123456')
 
     expect(nodemailer.default.createTransport).toHaveBeenCalledWith({

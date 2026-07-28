@@ -14,6 +14,15 @@ CREATE TABLE "Company" (
 );
 
 -- CreateTable
+CREATE TABLE "UsedInvite" (
+    "id" SERIAL NOT NULL,
+    "code" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "UsedInvite_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
     "email" TEXT NOT NULL,
@@ -21,7 +30,8 @@ CREATE TABLE "User" (
     "role" "UserRole" NOT NULL DEFAULT 'Candidate',
     "companyId" INTEGER NOT NULL,
     "nick" TEXT,
-    "fullName" TEXT,
+    "firstName" TEXT,
+    "lastName" TEXT,
     "phone" TEXT NOT NULL,
     "memberId" TEXT,
     "parentId" INTEGER,
@@ -31,15 +41,6 @@ CREATE TABLE "User" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "UsedInvite" (
-    "id" SERIAL NOT NULL,
-    "code" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "UsedInvite_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -55,10 +56,10 @@ CREATE TABLE "ServiceWallet" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "UsedInvite_code_key" ON "UsedInvite"("code");
+CREATE UNIQUE INDEX "Company_name_key" ON "Company"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Company_name_key" ON "Company"("name");
+CREATE UNIQUE INDEX "UsedInvite_code_key" ON "UsedInvite"("code");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");

@@ -161,7 +161,8 @@ npm run test:e2e
 | `role`      | Enum: `Admin`, `Candidate`, `Consultant` | Роль пользователя (по умолчанию `Candidate`) |
 | `companyId` | String (FK → `Company`)                  | Привязка к компании                          |
 | `nick`      | String?                                  | Никнейм                                      |
-| `fullName`  | String?                                  | Полное имя                                   |
+| `firstName` | String?                                  | Имя                                          |
+| `lastName`  | String?                                  | Фамилия                                      |
 | `memberId`  | String? (уникальный)                     | Идентификатор участника                      |
 | `parentId`  | String? (FK → `User`)                    | Родительский пользователь (реферал)          |
 | `wallet`    | String?                                  | Кошелёк                                      |

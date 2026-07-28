@@ -112,7 +112,8 @@ describe('register routes', () => {
       payload: {
         email: 'invalid-email',
         nick: 'newuser',
-        fullName: 'New User',
+        firstName: 'New',
+        lastName: 'User',
         phone: '+375291234567',
         memberId: 'MBR-9001',
         password: 'password123',
@@ -140,7 +141,8 @@ describe('register routes', () => {
       payload: {
         email: 'another.unique.user@example.com',
         nick: 'anotheruniqueuser',
-        fullName: 'New User',
+        firstName: 'New',
+        lastName: 'User',
         phone: 'abc',
         memberId: 'MBR-9001-UNIQUE',
         password: 'password123',
@@ -175,7 +177,8 @@ describe('register routes', () => {
       payload: {
         email: 'admin@example.com',
         nick: 'anotheruser',
-        fullName: 'Another User',
+        firstName: 'Another',
+        lastName: 'User',
         phone: '+375291234568',
         memberId: 'MBR-9002',
         password: 'password123',
@@ -213,7 +216,8 @@ describe('register routes', () => {
       payload: {
         email: 'new.user@example.com',
         nick: 'newuser',
-        fullName: 'New User',
+        firstName: 'New',
+        lastName: 'User',
         phone: '+375291234569', // Duplicate phone
         memberId: 'MBR-9001',
         password: 'password123',
@@ -251,7 +255,8 @@ describe('register routes', () => {
       payload: {
         email: 'new.user@example.com',
         nick: 'existingnick', // Duplicate nick
-        fullName: 'New User',
+        firstName: 'New',
+        lastName: 'User',
         phone: '+375291234570',
         memberId: 'MBR-9001',
         password: 'password123',
@@ -289,7 +294,8 @@ describe('register routes', () => {
       payload: {
         email: 'new.user@example.com',
         nick: 'newuser',
-        fullName: 'New User',
+        firstName: 'New',
+        lastName: 'User',
         phone: '+375291234571',
         memberId: 'existing-member-id', // Duplicate memberId
         password: 'password123',
@@ -327,7 +333,8 @@ describe('register routes', () => {
       payload: {
         email: 'new.user@example.com',
         nick: 'newuser',
-        fullName: 'New User',
+        firstName: 'New',
+        lastName: 'User',
         phone: '+375291234575',
         memberId: 'MBR-9001',
         password: 'password123',
@@ -365,7 +372,8 @@ describe('register routes', () => {
       payload: {
         email: 'new.user@example.com',
         nick: 'newuser',
-        fullName: 'New User',
+        firstName: 'New',
+        lastName: 'User',
         phone: '+375291234576',
         memberId: 'MBR-9001',
         password: 'password123',
@@ -398,7 +406,8 @@ describe('register routes', () => {
       payload: {
         email: 'new.user@example.com',
         nick: 'newuser',
-        fullName: 'New User',
+        firstName: 'New',
+        lastName: 'User',
         phone: '+375291234572',
         memberId: 'MBR-9001',
         password: 'password123',
@@ -433,7 +442,8 @@ describe('register routes', () => {
       payload: {
         email: 'new.user@example.com',
         nick: 'newuser',
-        fullName: 'New User',
+        firstName: 'New',
+        lastName: 'User',
         phone: '+375291234577',
         memberId: 'MBR-9001',
         password: 'password123',
@@ -464,7 +474,8 @@ describe('register routes', () => {
       payload: {
         email: 'new.user@example.com',
         nick: 'newuser',
-        fullName: 'New User',
+        firstName: 'New',
+        lastName: 'User',
         phone: '+375291234573',
         memberId: 'MBR-9001',
         password: 'password123',
@@ -491,7 +502,8 @@ describe('register routes', () => {
     const payload = {
       email: 'new.user@example.com',
       nick: 'newuser',
-      fullName: 'New User',
+      firstName: 'New',
+      lastName: 'User',
       phone: '+375291234574',
       memberId: 'MBR-9001',
       password: 'password123',
@@ -516,7 +528,8 @@ describe('register routes', () => {
     expect(app.registration.createUser).toHaveBeenCalledWith({
       email: payload.email,
       nick: payload.nick,
-      fullName: payload.fullName,
+      firstName: payload.firstName,
+      lastName: payload.lastName,
       phone: payload.phone,
       memberId: payload.memberId,
       password: payload.password,

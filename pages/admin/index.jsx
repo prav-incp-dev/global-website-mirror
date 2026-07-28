@@ -16,7 +16,8 @@ export const getData = async ({ server, req, reply }) => {
   return {
     profile: {
       nick: user.nick,
-      fullName: user.fullName,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
       phone: user.phone,
       memberId: user.memberId,
