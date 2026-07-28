@@ -9,7 +9,7 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './tests/setup.js',
-    exclude: ['**/node_modules/**', '**/dist/**', 'tests/e2e/**'],
+    exclude: ['**/node_modules/**', '**/dist/**', 'tests/e2e/**', '**/stryker-tmp/**'],
     coverage: {
       exclude: ['tests/**', 'src/generated/prisma/**'],
       reporter: ['text'],
