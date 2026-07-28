@@ -23,7 +23,7 @@ describe('emailService in production mode', () => {
     }))
 
     // Use dynamic import so the mock is applied
-    const { sendTwoFactorCode } = await import('../../src/services/emailService')
+    const { sendTwoFactorCode } = await import('@/services/emailService')
     const nodemailer = await import('nodemailer')
 
     const user = { email: 'test@example.com', firstName: 'Test', lastName: 'User' }

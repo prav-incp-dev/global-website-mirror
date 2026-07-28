@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import styles from './index.module.css'
-import CopyIcon from '../../assets/icons/CopyIcon.svg?react'
-import CheckIcon from '../../assets/icons/CheckIcon.svg?react'
-import CloseIcon from '../../assets/icons/CloseIcon.svg?react'
+import CopyIcon from '@/assets/icons/CopyIcon.svg?react'
+import CheckIcon from '@/assets/icons/CheckIcon.svg?react'
+import CloseIcon from '@/assets/icons/CloseIcon.svg?react'
 
 const ModalContent = ({ onClose, csrfToken }) => {
   const [token, setToken] = useState('')

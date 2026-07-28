@@ -1,6 +1,6 @@
 import { test, beforeAll, afterEach, afterAll, vi } from 'vitest'
 import Fastify from 'fastify'
-import authPlugin, { parseUserId } from '../../src/plugins/auth'
+import authPlugin, { parseUserId } from '@/plugins/auth'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import jwt from 'jsonwebtoken'

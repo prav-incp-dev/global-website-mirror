@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useRouteContext } from '@fastify/react/client'
-import { UserRole } from '../src/generated/prisma/enums'
-import InvitationModal from '../src/components/InvitationModal'
+import { UserRole } from '@/generated/prisma/enums'
+import InvitationModal from '@/components/InvitationModal'
 import styles from './index.module.css'
 
 export const getData = async ({ server, req, reply }) => {
