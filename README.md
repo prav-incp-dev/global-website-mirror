@@ -160,10 +160,10 @@ npm run test:e2e
 | `password`  | String                                   | Хэш пароля                                   |
 | `role`      | Enum: `Admin`, `Candidate`, `Consultant` | Роль пользователя (по умолчанию `Candidate`) |
 | `companyId` | String (FK → `Company`)                  | Привязка к компании                          |
-| `nick`      | String?                                  | Никнейм                                      |
+| `nick`      | String?                                  | Ник в Телеграм                               |
 | `firstName` | String?                                  | Имя                                          |
 | `lastName`  | String?                                  | Фамилия                                      |
-| `memberId`  | String? (уникальный)                     | Идентификатор участника                      |
+| `memberId`  | String? (уникальный)                     | Номер пайщика.                               |
 | `parentId`  | String? (FK → `User`)                    | Родительский пользователь (реферал)          |
 | `wallet`    | String?                                  | Кошелёк                                      |
 | `createdAt` | DateTime                                 | Дата создания                                |

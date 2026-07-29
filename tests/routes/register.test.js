@@ -435,7 +435,7 @@ describe('register routes', () => {
     })
     expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
     expect(auth.setSession).not.toHaveBeenCalled()
-  
+
     expect(fs.existsSync(lastEmailFixturePath)).toBe(true)
     const emailContent = JSON.parse(fs.readFileSync(lastEmailFixturePath, 'utf-8'))
     expect(emailContent.to).toBe(payload.email)

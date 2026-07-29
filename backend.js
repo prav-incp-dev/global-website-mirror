@@ -7,7 +7,8 @@ import authRoutes from './src/routes/auth'
 import registerRoutes from './src/routes/register'
 import invitationRoutes from './src/routes/invitation'
 import adminRoutes from './src/routes/admin'
-import { WALLET_REGEXP, PHONE_REGEXP } from './src/lib/regexps.js'
+import userRoutes from './src/routes/user'
+import { WALLET_REGEXP, PHONE_REGEXP, MEMBER_REGEXP } from './src/lib/regexps.js'
 
 export const buildBackendApp = async (opts = {}) => {
   const { auth: authOpts, ...fastifyOpts } = opts
@@ -20,6 +21,7 @@ export const buildBackendApp = async (opts = {}) => {
         (ajv) => {
           ajv.addFormat('phone', PHONE_REGEXP)
           ajv.addFormat('wallet', WALLET_REGEXP)
+          ajv.addFormat('member', MEMBER_REGEXP)
         },
       ],
     },
@@ -33,6 +35,7 @@ export const buildBackendApp = async (opts = {}) => {
   await backend.register(registerRoutes)
   await backend.register(invitationRoutes)
   await backend.register(adminRoutes)
+  await backend.register(userRoutes)
 
   return backend
 }
