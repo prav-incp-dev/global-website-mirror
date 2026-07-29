@@ -30,6 +30,7 @@ export const getData = async ({ server, req, reply }) => {
       memberId: user.memberId,
       wallet: user.wallet,
       companyName: user.company?.name ?? null,
+      parent: user.parent,
     },
     csrfToken,
   }

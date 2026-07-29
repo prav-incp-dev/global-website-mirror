@@ -1,6 +1,15 @@
 import styles from './index.module.css'
 
 const ViewProfile = ({ profile, onEdit }) => {
+  const getParent = () => {
+    const parent = profile.parent
+    if (!parent) return null
+
+    return parent.nick || `${parent.firstName} ${parent.lastName}`
+  }
+
+  const parent = getParent()
+
   return (
     <div>
       <div className={styles.row}>
@@ -35,6 +44,12 @@ const ViewProfile = ({ profile, onEdit }) => {
         <span className={styles.label}>Компания:</span>
         <span className={styles.value}>{profile.companyName || '—'}</span>
       </div>
+      {!!parent && (
+        <div className={styles.row}>
+          <span className={styles.label}>Ваш пригласитель:</span>
+          <span className={styles.value}>{profile.parent}</span>
+        </div>
+      )}
       <button className={styles.editButton} onClick={onEdit}>
         Редактировать
       </button>

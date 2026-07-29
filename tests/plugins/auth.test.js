@@ -148,6 +148,50 @@ describe('auth plugin core functionality', () => {
     expect(user).toEqual({ id: 1, email: 'test@example.com', company: { name: 'Test Company' } })
   })
 
+  test('getUser returns user with parent info when parent exists', async ({ expect }) => {
+    const reqMock = {
+      cookies: { session: '1' },
+      unsignCookie: vi.fn(() => ({ valid: true, value: '1' })),
+    }
+    const mockUser = {
+      id: 2,
+      email: 'test@example.com',
+      password: 'hashedpassword',
+      company: { name: 'Test Company' },
+      parent: { id: 1, nick: 'parentNick', firstName: 'Parent', lastName: 'User' },
+    }
+    fastifyInstance.prisma.user.findUnique.mockResolvedValue(mockUser)
+    const user = await fastifyInstance.auth.getUser(reqMock)
+    expect(user).toEqual({
+      id: 2,
+      email: 'test@example.com',
+      company: { name: 'Test Company' },
+      parent: { id: 1, nick: 'parentNick', firstName: 'Parent', lastName: 'User' },
+    })
+  })
+
+  test('getUser returns user with null parent when no parent exists', async ({ expect }) => {
+    const reqMock = {
+      cookies: { session: '1' },
+      unsignCookie: vi.fn(() => ({ valid: true, value: '1' })),
+    }
+    const mockUser = {
+      id: 2,
+      email: 'test@example.com',
+      password: 'hashedpassword',
+      company: { name: 'Test Company' },
+      parent: null,
+    }
+    fastifyInstance.prisma.user.findUnique.mockResolvedValue(mockUser)
+    const user = await fastifyInstance.auth.getUser(reqMock)
+    expect(user).toEqual({
+      id: 2,
+      email: 'test@example.com',
+      company: { name: 'Test Company' },
+      parent: null,
+    })
+  })
+
   test('createTwoFactorCode generates and stores a code', async ({ expect }) => {
     vi.spyOn(crypto, 'randomInt').mockReturnValue(123456)
     const mockUser = { id: 1 }

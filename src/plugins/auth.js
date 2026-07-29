@@ -85,7 +85,7 @@ export default fp(async (fastify, opts) => {
 
       const user = await fastify.prisma.user.findUnique({
         where: { id: userId },
-        include: { company: true },
+        include: { company: true, parent: true },
       })
 
       if (!user) return null
