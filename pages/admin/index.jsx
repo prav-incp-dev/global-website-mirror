@@ -36,6 +36,7 @@ const Admin = () => {
   const [activeTab, setActiveTab] = useState('admin')
   const [invitationOpen, setInvitationOpen] = useState(false)
   const [profileData, setProfileData] = useState(profile)
+  const [companyData, setCompanyData] = useState(company)
 
   const handleLogout = async (e) => {
     e.preventDefault()
@@ -53,6 +54,10 @@ const Admin = () => {
 
   const handleUpdateProfile = (updatedProfile) => {
     setProfileData({ ...profileData, ...updatedProfile })
+  }
+
+  const handleUpdateCompany = (updatedCompany) => {
+    setCompanyData({ ...profileData, ...updatedCompany })
   }
 
   return (
@@ -84,8 +89,12 @@ const Admin = () => {
       </div>
 
       <div className={styles.content}>
-        {activeTab === 'admin' && <AdminProfile profile={profileData} csrfToken={csrfToken} onUpdate={handleUpdateProfile} />}
-        {activeTab === 'company' && <CompanyProfile company={company} csrfToken={csrfToken} />}
+        {activeTab === 'admin' && (
+          <AdminProfile profile={profileData} csrfToken={csrfToken} onUpdate={handleUpdateProfile} />
+        )}
+        {activeTab === 'company' && (
+          <CompanyProfile company={companyData} csrfToken={csrfToken} onUpdate={handleUpdateCompany} />
+        )}
       </div>
     </div>
   )

@@ -34,6 +34,10 @@ test.describe('admin manages company profile', () => {
     await page.locator('#secondaryWallet').fill('')
     await page.getByRole('button', { name: 'Сохранить' }).click()
     await expect(page.getByText('—')).toHaveCount(2)
+
+    await page.getByRole('button', { name: 'Профиль администратора' }).click()
+    await page.getByRole('button', { name: 'Профиль компании' }).click()
+    await expect(page.getByText(updatedName)).toBeVisible()
   })
 
   test('shows validation error for invalid primary wallet', async ({ loginAs, page }) => {

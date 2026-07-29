@@ -97,7 +97,9 @@ const Index = () => {
       </div>
 
       <div className={styles.content}>
-        {activeTab === 'profile' && <UserProfile profile={profileData} csrfToken={csrfToken} onUpdate={handleUpdateProfile} />}
+        {activeTab === 'profile' && (
+          <UserProfile profile={profileData} csrfToken={csrfToken} onUpdate={handleUpdateProfile} />
+        )}
         {activeTab === 'payments' && <div>Payments</div>}
       </div>
     </div>
