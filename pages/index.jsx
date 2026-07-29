@@ -31,6 +31,7 @@ export const getData = async ({ server, req, reply }) => {
       wallet: user.wallet,
       companyName: user.company?.name ?? null,
       parent: user.parent,
+      role: user.role,
     },
     csrfToken,
   }
@@ -46,6 +47,7 @@ const Index = () => {
   const { profile = {}, csrfToken = '' } = data
   const [activeTab, setActiveTab] = useState('profile')
   const [invitationOpen, setInvitationOpen] = useState(false)
+  const [profileData, setProfileData] = useState(profile)
 
   const handleLogout = async (e) => {
     e.preventDefault()
@@ -61,6 +63,10 @@ const Index = () => {
     }
   }
 
+  const handleUpdateProfile = (updatedProfile) => {
+    setProfileData({ ...profileData, ...updatedProfile })
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -69,13 +75,15 @@ const Index = () => {
           Выйти
         </button>
       </div>
-      <>
-        <button className={styles.inviteButton} onClick={() => setInvitationOpen(true)}>
-          Сгенерировать пригласительную ссылку
-        </button>
+      {profileData.role === UserRole.Consultant && (
+        <>
+          <button className={styles.inviteButton} onClick={() => setInvitationOpen(true)}>
+            Сгенерировать пригласительную ссылку
+          </button>
 
-        <InvitationModal isOpen={invitationOpen} onClose={() => setInvitationOpen(false)} csrfToken={csrfToken} />
-      </>
+          <InvitationModal isOpen={invitationOpen} onClose={() => setInvitationOpen(false)} csrfToken={csrfToken} />
+        </>
+      )}
       <div className={styles.tabs}>
         {TABS.map((tab) => (
           <button
@@ -89,8 +97,8 @@ const Index = () => {
       </div>
 
       <div className={styles.content}>
-        {activeTab === 'profile' && <UserProfile profile={profile} csrfToken={csrfToken} />}
-        {activeTab === 'payments' && <h1>Payments</h1>}
+        {activeTab === 'profile' && <UserProfile profile={profileData} csrfToken={csrfToken} onUpdate={handleUpdateProfile} />}
+        {activeTab === 'payments' && <div>Payments</div>}
       </div>
     </div>
   )

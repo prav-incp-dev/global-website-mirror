@@ -2,9 +2,8 @@ import { useState } from 'react'
 import ViewProfile from './ViewProfile'
 import EditProfile from './EditProfile'
 
-const AdminProfile = ({ profile, csrfToken }) => {
+const AdminProfile = ({ profile, csrfToken, onUpdate }) => {
   const [isEditing, setIsEditing] = useState(false)
-  const [profileData, setProfileData] = useState(profile)
 
   const handleEdit = () => {
     setIsEditing(true)
@@ -15,16 +14,16 @@ const AdminProfile = ({ profile, csrfToken }) => {
   }
 
   const handleUpdate = (updatedProfile) => {
-    setProfileData({ ...profile, ...updatedProfile })
+    onUpdate(updatedProfile)
     setIsEditing(false)
   }
 
   return (
     <div>
       {isEditing ? (
-        <EditProfile profile={profileData} csrfToken={csrfToken} onUpdate={handleUpdate} onCancel={handleCancel} />
+        <EditProfile profile={profile} csrfToken={csrfToken} onUpdate={handleUpdate} onCancel={handleCancel} />
       ) : (
-        <ViewProfile profile={profileData} onEdit={handleEdit} />
+        <ViewProfile profile={profile} onEdit={handleEdit} />
       )}
     </div>
   )

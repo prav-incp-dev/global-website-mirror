@@ -35,6 +35,7 @@ const Admin = () => {
   const { profile = {}, company = null, csrfToken = '' } = data
   const [activeTab, setActiveTab] = useState('admin')
   const [invitationOpen, setInvitationOpen] = useState(false)
+  const [profileData, setProfileData] = useState(profile)
 
   const handleLogout = async (e) => {
     e.preventDefault()
@@ -48,6 +49,10 @@ const Admin = () => {
     if (result.success) {
       window.location.href = result.redirect
     }
+  }
+
+  const handleUpdateProfile = (updatedProfile) => {
+    setProfileData({ ...profileData, ...updatedProfile })
   }
 
   return (
@@ -79,7 +84,7 @@ const Admin = () => {
       </div>
 
       <div className={styles.content}>
-        {activeTab === 'admin' && <AdminProfile profile={profile} csrfToken={csrfToken} />}
+        {activeTab === 'admin' && <AdminProfile profile={profileData} csrfToken={csrfToken} onUpdate={handleUpdateProfile} />}
         {activeTab === 'company' && <CompanyProfile company={company} csrfToken={csrfToken} />}
       </div>
     </div>

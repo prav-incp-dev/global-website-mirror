@@ -47,7 +47,7 @@ const ViewProfile = ({ profile, onEdit }) => {
       {!!parent && (
         <div className={styles.row}>
           <span className={styles.label}>Ваш пригласитель:</span>
-          <span className={styles.value}>{profile.parent}</span>
+          <span className={styles.value}>{parent}</span>
         </div>
       )}
       <button className={styles.editButton} onClick={onEdit}>
