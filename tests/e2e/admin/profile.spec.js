@@ -40,5 +40,11 @@ test.describe('admin manages own profile', () => {
 
     // Email should remain unchanged
     await expect(page.getByText('admin@example.com')).toBeVisible()
+    await page.getByRole('button', { name: 'Профиль компании' }).click()
+    await page.getByRole('button', { name: 'Профиль администратора' }).click()
+
+    // Verify updated data are still in place
+    await expect(page.getByText(updatedFirstName)).toBeVisible()
+    await expect(page.getByText(updatedLastName)).toBeVisible()
   })
 })

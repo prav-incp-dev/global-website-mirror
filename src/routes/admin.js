@@ -37,7 +37,7 @@ export default async (fastify) => {
             lastName: updatedUser.lastName,
           },
         })
-      } catch (err) {
+      } catch {
         return reply.code(500).send({ error: 'Ошибка обновления профиля' })
       }
     },

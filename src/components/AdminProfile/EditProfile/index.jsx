@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import styles from './index.module.css'
-import ErrorIcon from '../../../assets/icons/ErrorIcon.svg?react'
+import ErrorIcon from '@/assets/icons/ErrorIcon.svg?react'
 
 const EditProfile = ({ profile, csrfToken, onUpdate, onCancel }) => {
   const [error, setError] = useState('')

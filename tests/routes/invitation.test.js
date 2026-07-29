@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest'
 import jwt from 'jsonwebtoken'
 import { buildBackendApp } from '../../backend'
-import { UserRole } from '../../src/generated/prisma/client'
+import { UserRole } from '@/generated/prisma/client'
 
 const SESSION_SECRET = 'test-secret-key-for-testing-purposes'
 

@@ -43,25 +43,41 @@ export const resetDatabase = async () => {
       nick: 'admin',
       firstName: 'Alice',
       lastName: 'Admin',
-      phone: '+10000000001',
-      memberId: 'MBR-0001',
+      phone: '+375290000001',
+      memberId: '0001',
       wallet: '0xABCDEF1234567890',
+      companyId: company.id,
+    },
+  })
+
+  const consultant = await prisma.user.create({
+    data: {
+      email: 'consultant@example.com',
+      password: testPasswordHash,
+      role: 'Consultant',
+      nick: '@inviter',
+      firstName: 'Consultant',
+      lastName: 'Inviter',
+      phone: '+375330000022',
+      memberId: '0002',
+      wallet: '0x1234567890abcdef1234567890abcdef11111111',
       companyId: company.id,
     },
   })
 
   await prisma.user.create({
     data: {
-      email: 'consultant@example.com',
+      email: 'candidate@example.com',
       password: testPasswordHash,
-      role: 'Consultant',
-      nick: 'consultant',
-      firstName: 'Consultant',
+      role: 'Candidate',
+      nick: '@candidate',
+      firstName: 'Candidate',
       lastName: 'User',
-      phone: '+10000000002',
-      memberId: 'MBR-0002',
-      wallet: '0xABCDEF1234567891',
+      phone: '+375290000033',
+      memberId: '0003',
+      wallet: '0x1234567890abcdef1234567890abcdef22222222',
       companyId: company.id,
+      parentId: consultant.id,
     },
   })
 }

@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useRouteContext } from '@fastify/react/client'
-import { UserRole } from '../../src/generated/prisma/enums'
-import AdminProfile from '../../src/components/AdminProfile'
-import CompanyProfile from '../../src/components/CompanyProfile'
-import InvitationModal from '../../src/components/InvitationModal'
+import { UserRole } from '@/generated/prisma/enums'
+import AdminProfile from '@/components/AdminProfile'
+import CompanyProfile from '@/components/CompanyProfile'
+import InvitationModal from '@/components/InvitationModal'
 import styles from './index.module.css'
 
 export const getData = async ({ server, req, reply }) => {
@@ -35,6 +35,8 @@ const Admin = () => {
   const { profile = {}, company = null, csrfToken = '' } = data
   const [activeTab, setActiveTab] = useState('admin')
   const [invitationOpen, setInvitationOpen] = useState(false)
+  const [profileData, setProfileData] = useState(profile)
+  const [companyData, setCompanyData] = useState(company)
 
   const handleLogout = async (e) => {
     e.preventDefault()
@@ -48,6 +50,14 @@ const Admin = () => {
     if (result.success) {
       window.location.href = result.redirect
     }
+  }
+
+  const handleUpdateProfile = (updatedProfile) => {
+    setProfileData({ ...profileData, ...updatedProfile })
+  }
+
+  const handleUpdateCompany = (updatedCompany) => {
+    setCompanyData({ ...profileData, ...updatedCompany })
   }
 
   return (
@@ -79,8 +89,12 @@ const Admin = () => {
       </div>
 
       <div className={styles.content}>
-        {activeTab === 'admin' && <AdminProfile profile={profile} csrfToken={csrfToken} />}
-        {activeTab === 'company' && <CompanyProfile company={company} csrfToken={csrfToken} />}
+        {activeTab === 'admin' && (
+          <AdminProfile profile={profileData} csrfToken={csrfToken} onUpdate={handleUpdateProfile} />
+        )}
+        {activeTab === 'company' && (
+          <CompanyProfile company={companyData} csrfToken={csrfToken} onUpdate={handleUpdateCompany} />
+        )}
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 import { test, beforeAll, afterEach, afterAll, vi } from 'vitest'
 import Fastify from 'fastify'
-import authPlugin, { parseUserId } from '../../src/plugins/auth'
+import authPlugin, { parseUserId } from '@/plugins/auth'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
@@ -146,6 +146,50 @@ describe('auth plugin core functionality', () => {
     fastifyInstance.prisma.user.findUnique.mockResolvedValue(mockUser)
     const user = await fastifyInstance.auth.getUser(reqMock)
     expect(user).toEqual({ id: 1, email: 'test@example.com', company: { name: 'Test Company' } })
+  })
+
+  test('getUser returns user with parent info when parent exists', async ({ expect }) => {
+    const reqMock = {
+      cookies: { session: '1' },
+      unsignCookie: vi.fn(() => ({ valid: true, value: '1' })),
+    }
+    const mockUser = {
+      id: 2,
+      email: 'test@example.com',
+      password: 'hashedpassword',
+      company: { name: 'Test Company' },
+      parent: { id: 1, nick: 'parentNick', firstName: 'Parent', lastName: 'User' },
+    }
+    fastifyInstance.prisma.user.findUnique.mockResolvedValue(mockUser)
+    const user = await fastifyInstance.auth.getUser(reqMock)
+    expect(user).toEqual({
+      id: 2,
+      email: 'test@example.com',
+      company: { name: 'Test Company' },
+      parent: { id: 1, nick: 'parentNick', firstName: 'Parent', lastName: 'User' },
+    })
+  })
+
+  test('getUser returns user with null parent when no parent exists', async ({ expect }) => {
+    const reqMock = {
+      cookies: { session: '1' },
+      unsignCookie: vi.fn(() => ({ valid: true, value: '1' })),
+    }
+    const mockUser = {
+      id: 2,
+      email: 'test@example.com',
+      password: 'hashedpassword',
+      company: { name: 'Test Company' },
+      parent: null,
+    }
+    fastifyInstance.prisma.user.findUnique.mockResolvedValue(mockUser)
+    const user = await fastifyInstance.auth.getUser(reqMock)
+    expect(user).toEqual({
+      id: 2,
+      email: 'test@example.com',
+      company: { name: 'Test Company' },
+      parent: null,
+    })
   })
 
   test('createTwoFactorCode generates and stores a code', async ({ expect }) => {

@@ -34,7 +34,7 @@ try {
       firstName: 'Alice',
       lastName: 'Admin',
       phone: '+10000000001',
-      memberId: 'MBR-0001',
+      memberId: '0001',
       wallet: '0xABCDEF1234567890',
     },
     create: {
@@ -45,7 +45,7 @@ try {
       firstName: 'Alice',
       lastName: 'Admin',
       phone: '+10000000001',
-      memberId: 'MBR-0001',
+      memberId: '0001',
       wallet: '0xABCDEF1234567890',
       company: {
         connect: { id: company.id },

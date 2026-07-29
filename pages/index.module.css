@@ -41,23 +41,24 @@
 .inviteButton {
   display: block;
   width: 100%;
-  padding: 12px 20px;
-  margin-top: 30px;
+  padding: 14px 20px;
+  margin-bottom: 30px;
   background: transparent;
-  color: #d4af37;
-  border: 1px solid #d4af37;
+  color: #00b894;
+  border: 1.5px solid #00b894;
   border-radius: 8px;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
 }
 
 .inviteButton:hover {
-  background: #d4af37;
+  background: #00b894;
   color: #0d0d0d;
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 0 24px rgba(0, 184, 148, 0.35);
+  transform: translateY(-1px);
 }
 
 .profileCard {
@@ -69,35 +70,50 @@
     0 8px 32px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(212, 175, 55, 0.05);
 }
-
-.row {
+.tabs {
   display: flex;
-  flex-direction: column;
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 0;
+  margin-bottom: 24px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 55, 0.2);
 }
 
-.row:last-child {
-  margin-bottom: 0;
-  padding-bottom: 0;
-  border-bottom: none;
-}
-
-.label {
-  font-size: 0.75rem;
+.tab {
+  flex: 1;
+  padding: 12px 16px;
+  background: #1a1a1a;
+  color: #999;
+  border: none;
+  font-size: 0.8125rem;
   font-weight: 500;
-  color: #d4af37;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.02em;
+  text-align: center;
 }
 
-.value {
-  font-size: 1rem;
-  color: #f5f5f5;
-  font-weight: 400;
-  line-height: 1.5;
+.tab:not(:last-child) {
+  border-right: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+.tabActive {
+  background: rgba(212, 175, 55, 0.15);
+  color: #d4af37;
+}
+
+.tab:hover {
+  color: #d4af37;
+}
+
+.content {
+  background: linear-gradient(135deg, #1a1a1a 0%, #222 100%);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(212, 175, 55, 0.05);
 }
 
 @media (max-width: 480px) {
@@ -105,12 +121,17 @@
     padding: 24px 16px 40px;
   }
 
-  .profileCard {
+  .headerTitle {
+    font-size: 1.25rem;
+  }
+
+  .content {
     padding: 20px;
     border-radius: 12px;
   }
 
-  .headerTitle {
-    font-size: 1.25rem;
+  .tab {
+    padding: 10px 12px;
+    font-size: 0.75rem;
   }
 }

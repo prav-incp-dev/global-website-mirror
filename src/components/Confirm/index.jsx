@@ -1,9 +1,9 @@
 import { useForm } from 'react-hook-form'
 import { useState } from 'react'
 import styles from './index.module.css'
-import ErrorIcon from '../../assets/icons/ErrorIcon.svg?react'
-import InfoIcon from '../../assets/icons/InfoIcon.svg?react'
-import { CONFIRMATION_REGEXP } from '../../lib/regexps.js'
+import ErrorIcon from '@/assets/icons/ErrorIcon.svg?react'
+import InfoIcon from '@/assets/icons/InfoIcon.svg?react'
+import { CONFIRMATION_REGEXP } from '@/lib/regexps.js'
 
 const Confirm = ({ csrfToken, token }) => {
   const {

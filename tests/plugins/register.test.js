@@ -1,7 +1,7 @@
 import { test, beforeAll, afterAll, vi } from 'vitest'
 import Fastify from 'fastify'
 import jwt from 'jsonwebtoken'
-import registerPlugin from '../../src/plugins/register'
+import registerPlugin from '@/plugins/register'
 
 const SESSION_SECRET = 'test-secret'
 

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { useRouteContext } from '@fastify/react/client'
-import { PHONE_REGEXP, EMAIL_REGEXP } from '../../src/lib/regexps.js'
+import { PHONE_REGEXP, EMAIL_REGEXP } from '@/lib/regexps.js'
 import styles from './index.module.css'
 
 // Fastify preHandler hook runs before getData is called

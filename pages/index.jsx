@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useRouteContext } from '@fastify/react/client'
-import { UserRole } from '../src/generated/prisma/enums'
-import InvitationModal from '../src/components/InvitationModal'
+import { UserRole } from '@/generated/prisma/enums'
+import UserProfile from '@/components/UserProfile'
+import InvitationModal from '@/components/InvitationModal'
 import styles from './index.module.css'
 
 export const getData = async ({ server, req, reply }) => {
@@ -29,15 +30,24 @@ export const getData = async ({ server, req, reply }) => {
       memberId: user.memberId,
       wallet: user.wallet,
       companyName: user.company?.name ?? null,
+      parent: user.parent,
+      role: user.role,
     },
     csrfToken,
   }
 }
 
+const TABS = [
+  { key: 'profile', label: 'Профиль' },
+  { key: 'payments', label: 'Платежи' },
+]
+
 const Index = () => {
   const { data } = useRouteContext()
   const { profile = {}, csrfToken = '' } = data
+  const [activeTab, setActiveTab] = useState('profile')
   const [invitationOpen, setInvitationOpen] = useState(false)
+  const [profileData, setProfileData] = useState(profile)
 
   const handleLogout = async (e) => {
     e.preventDefault()
@@ -53,6 +63,10 @@ const Index = () => {
     }
   }
 
+  const handleUpdateProfile = (updatedProfile) => {
+    setProfileData({ ...profileData, ...updatedProfile })
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -61,46 +75,33 @@ const Index = () => {
           Выйти
         </button>
       </div>
+      {profileData.role === UserRole.Consultant && (
+        <>
+          <button className={styles.inviteButton} onClick={() => setInvitationOpen(true)}>
+            Сгенерировать пригласительную ссылку
+          </button>
 
-      <div className={styles.profileCard}>
-        <div className={styles.row}>
-          <span className={styles.label}>Ник в Телеграм:</span>
-          <span className={styles.value}>{profile.nick || '—'}</span>
-        </div>
-        <div className={styles.row}>
-          <span className={styles.label}>Имя:</span>
-          <span className={styles.value}>{profile.firstName || '—'}</span>
-        </div>
-        <div className={styles.row}>
-          <span className={styles.label}>Фамилия:</span>
-          <span className={styles.value}>{profile.lastName || '—'}</span>
-        </div>
-        <div className={styles.row}>
-          <span className={styles.label}>Почта:</span>
-          <span className={styles.value}>{profile.email || '—'}</span>
-        </div>
-        <div className={styles.row}>
-          <span className={styles.label}>Номер телефона:</span>
-          <span className={styles.value}>{profile.phone || '—'}</span>
-        </div>
-        <div className={styles.row}>
-          <span className={styles.label}>Номер пайщика:</span>
-          <span className={styles.value}>{profile.memberId || '—'}</span>
-        </div>
-        <div className={styles.row}>
-          <span className={styles.label}>Кошелек:</span>
-          <span className={styles.value}>{profile.wallet || '—'}</span>
-        </div>
-        <div className={styles.row}>
-          <span className={styles.label}>Компания:</span>
-          <span className={styles.value}>{profile.companyName || '—'}</span>
-        </div>
+          <InvitationModal isOpen={invitationOpen} onClose={() => setInvitationOpen(false)} csrfToken={csrfToken} />
+        </>
+      )}
+      <div className={styles.tabs}>
+        {TABS.map((tab) => (
+          <button
+            key={tab.key}
+            className={`${styles.tab} ${activeTab === tab.key ? styles.tabActive : ''}`}
+            onClick={() => setActiveTab(tab.key)}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
-      <button className={styles.inviteButton} onClick={() => setInvitationOpen(true)}>
-        Сгенерировать пригласительную ссылку
-      </button>
 
-      <InvitationModal isOpen={invitationOpen} onClose={() => setInvitationOpen(false)} csrfToken={csrfToken} />
+      <div className={styles.content}>
+        {activeTab === 'profile' && (
+          <UserProfile profile={profileData} csrfToken={csrfToken} onUpdate={handleUpdateProfile} />
+        )}
+        {activeTab === 'payments' && <div>Payments</div>}
+      </div>
     </div>
   )
 }
