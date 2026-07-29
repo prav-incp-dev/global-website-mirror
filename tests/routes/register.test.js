@@ -298,6 +298,41 @@ describe('register routes', () => {
     expect(auth.setSession).not.toHaveBeenCalled()
   })
 
+  it('POST /api/register returns 409 with generic field label when P2002 message has no backtick field', async () => {
+    const p2002NoFieldError = Object.assign(new Error('Constraint violation'), {
+      code: 'P2002',
+    })
+
+    const { app, auth } = await createApp({
+      createUser: vi.fn().mockRejectedValue(p2002NoFieldError),
+    })
+    apps.push(app)
+    const { csrfToken, cookieHeader } = await getCsrfContext(app)
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/register',
+      headers: {
+        cookie: cookieHeader,
+        'x-csrf-token': csrfToken,
+      },
+      payload: {
+        email: 'user@example.com',
+        firstName: 'New',
+        phone: '+375291234580',
+        password: 'password123',
+        token: 'some-token',
+      },
+    })
+
+    expect(response.statusCode).toBe(409)
+    expect(response.json()).toEqual({
+      error: 'Поле уже есть в системе',
+    })
+    expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
+    expect(auth.setSession).not.toHaveBeenCalled()
+  })
+
   it('POST /api/register returns 500 when createUser returns falsy', async () => {
     const { app, auth } = await createApp({
       createUser: vi.fn().mockResolvedValue(null),
@@ -320,7 +355,6 @@ describe('register routes', () => {
         token: 'some-token',
       },
     })
-
     expect(response.statusCode).toBe(500)
     expect(response.json()).toEqual({ error: 'Ошибка регистрации' })
     expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')

@@ -409,6 +409,44 @@ describe('PUT /api/user/profile', () => {
     expect(response.json()).toEqual({ error: 'Кошелек уже есть в системе' })
   })
 
+  it('returns 409 with generic field label when P2002 message has no backtick field', async () => {
+    const regularUser = {
+      id: 1,
+      email: 'user@example.com',
+      role: UserRole.Candidate,
+    }
+
+    const p2002NoFieldError = Object.assign(new Error('Constraint violation'), {
+      code: 'P2002',
+    })
+
+    const { app } = await createApp(
+      {
+        getUser: vi.fn().mockResolvedValue(regularUser),
+      },
+      {
+        user: {
+          update: vi.fn().mockRejectedValue(p2002NoFieldError),
+        },
+      },
+    )
+    apps.push(app)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/user/profile',
+      payload: {
+        firstName: 'John',
+        lastName: 'Doe',
+        phone: '+375291234567',
+        memberId: '1234',
+      },
+    })
+
+    expect(response.statusCode).toBe(409)
+    expect(response.json()).toEqual({ error: 'Поле уже есть в системе' })
+  })
+
   it('returns 500 on unexpected database error', async () => {
     const regularUser = {
       id: 1,
