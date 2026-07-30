@@ -62,7 +62,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'John',
         lastName: 'Doe',
         phone: '+375291234567',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
       },
     })
 
@@ -89,7 +89,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'John',
         lastName: 'Doe',
         phone: '+375291234567',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
       },
     })
 
@@ -115,7 +115,7 @@ describe('PUT /api/user/profile', () => {
       payload: {
         lastName: 'Doe',
         phone: '+375291234567',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
       },
     })
 
@@ -140,7 +140,7 @@ describe('PUT /api/user/profile', () => {
       payload: {
         firstName: 'John',
         phone: '+375291234567',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
       },
     })
 
@@ -165,7 +165,7 @@ describe('PUT /api/user/profile', () => {
       payload: {
         firstName: 'John',
         lastName: 'Doe',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
       },
     })
 
@@ -216,7 +216,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'John',
         lastName: 'Doe',
         phone: 'invalid-phone',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
       },
     })
 
@@ -242,7 +242,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'John',
         lastName: 'Doe',
         phone: '+375291234567',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
         wallet: 'invalid-wallet',
       },
     })
@@ -307,7 +307,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'John',
         lastName: 'Doe',
         phone: '+375291234567',
-        memberId: '1111',
+        memberId: 'DOM-00000000-1111',
       },
     })
 
@@ -345,7 +345,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'John',
         lastName: 'Doe',
         phone: '+375291234567',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
         nick: 'existing-nick',
       },
     })
@@ -384,7 +384,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'John',
         lastName: 'Doe',
         phone: '+375291234567',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
         wallet: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       },
     })
@@ -422,7 +422,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'John',
         lastName: 'Doe',
         phone: '+375291234567',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
       },
     })
 
@@ -455,7 +455,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'John',
         lastName: 'Doe',
         phone: '+375291234567',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
       },
     })
 
@@ -475,7 +475,7 @@ describe('PUT /api/user/profile', () => {
       firstName: 'Jane',
       lastName: 'Smith',
       phone: '+375297654321',
-      memberId: '4567',
+      memberId: 'DOM-00000000-4567',
       nick: 'janesmith',
       wallet: '0x1234567890abcdef1234567890abcdef12345678',
     }
@@ -498,7 +498,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'Jane',
         lastName: 'Smith',
         phone: '+375297654321',
-        memberId: '4567',
+        memberId: 'DOM-00000000-4567',
         nick: 'janesmith',
         wallet: '0x1234567890abcdef1234567890abcdef12345678',
       },
@@ -515,7 +515,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'Jane',
         lastName: 'Smith',
         phone: '+375297654321',
-        memberId: '4567',
+        memberId: 'DOM-00000000-4567',
         nick: 'janesmith',
         wallet: '0x1234567890abcdef1234567890abcdef12345678',
       },
@@ -534,7 +534,7 @@ describe('PUT /api/user/profile', () => {
       firstName: 'Jane',
       lastName: 'Smith',
       phone: '+375297654321',
-      memberId: '4567',
+      memberId: 'DOM-00000000-4567',
       nick: null,
       wallet: null,
     }
@@ -557,7 +557,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'Jane',
         lastName: 'Smith',
         phone: '+375297654321',
-        memberId: '4567',
+        memberId: 'DOM-00000000-4567',
       },
     })
 
@@ -572,7 +572,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'Jane',
         lastName: 'Smith',
         phone: '+375297654321',
-        memberId: '4567',
+        memberId: 'DOM-00000000-4567',
         nick: null,
         wallet: null,
       },

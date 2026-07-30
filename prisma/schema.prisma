@@ -13,6 +13,20 @@ enum UserRole {
   Consultant
 }
 
+enum OrderStatus {
+  Pending
+  Paid
+  Canceled
+}
+
+enum PaymentStatus {
+  Pending
+  Completed
+  ToCancel
+  Canceled
+  Failed
+}
+
 model Company {
   id              Int      @id @default(autoincrement())
   name            String   @unique
@@ -20,6 +34,7 @@ model Company {
   secondaryWallet String?
   users           User[]
   serviceWallets  ServiceWallet[]
+  payments        Payment[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -47,6 +62,8 @@ model User {
   children        User[]   @relation("UserParent")
   wallet          String?
   confirmationCode String?
+  orders          Order[]
+  payments        Payment[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -59,4 +76,46 @@ model ServiceWallet {
   company   Company  @relation(fields: [companyId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  userId      Int
+  user        User        @relation(fields: [userId], references: [id])
+  quantity    Int
+  totalAmount Decimal     @db.Decimal(12, 2)
+  status      OrderStatus @default(Pending)
+  payment     Payment?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Payment {
+  id                Int           @id @default(autoincrement())
+  orderId           Int           @unique
+  order             Order         @relation(fields: [orderId], references: [id])
+  userId            Int
+  user              User          @relation(fields: [userId], references: [id])
+  companyId         Int
+  company           Company       @relation(fields: [companyId], references: [id])
+  amount            Decimal       @db.Decimal(12, 2)
+  tokenSymbol       String        @default("USDT")
+  tokenContract     String
+  tokenDecimals     Int
+  chainId           Int
+  txHash            String?       @unique
+  fromWallet        String?
+  toWallet          String
+  status            PaymentStatus @default(Pending)
+  cancelRequestedAt DateTime?
+  canceledAt        DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }

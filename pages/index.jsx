@@ -3,6 +3,7 @@ import { useRouteContext } from '@fastify/react/client'
 import { UserRole } from '@/generated/prisma/enums'
 import UserProfile from '@/components/UserProfile'
 import InvitationModal from '@/components/InvitationModal'
+import Payments from '@/components/Payments'
 import styles from './index.module.css'
 
 export const getData = async ({ server, req, reply }) => {
@@ -20,6 +21,8 @@ export const getData = async ({ server, req, reply }) => {
   // Generate CSRF token for logout form
   const csrfToken = reply.generateCsrf()
 
+  const payments = await server.payment.getPayments(user)
+
   return {
     profile: {
       nick: user.nick,
@@ -30,9 +33,11 @@ export const getData = async ({ server, req, reply }) => {
       memberId: user.memberId,
       wallet: user.wallet,
       companyName: user.company?.name ?? null,
+      companyPrimaryWallet: user.company?.primaryWallet ?? null,
       parent: user.parent,
       role: user.role,
     },
+    payments,
     csrfToken,
   }
 }
@@ -44,7 +49,7 @@ const TABS = [
 
 const Index = () => {
   const { data } = useRouteContext()
-  const { profile = {}, csrfToken = '' } = data
+  const { profile = {}, payments = [], csrfToken = '' } = data
   const [activeTab, setActiveTab] = useState('profile')
   const [invitationOpen, setInvitationOpen] = useState(false)
   const [profileData, setProfileData] = useState(profile)
@@ -100,7 +105,9 @@ const Index = () => {
         {activeTab === 'profile' && (
           <UserProfile profile={profileData} csrfToken={csrfToken} onUpdate={handleUpdateProfile} />
         )}
-        {activeTab === 'payments' && <div>Payments</div>}
+        {activeTab === 'payments' && (
+          <Payments profile={profileData} initialPayments={payments} csrfToken={csrfToken} />
+        )}
       </div>
     </div>
   )

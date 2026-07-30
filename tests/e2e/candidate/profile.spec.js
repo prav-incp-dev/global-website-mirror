@@ -14,7 +14,7 @@ test.describe('consultant manages own profile', () => {
     await expect(page.getByText('User')).toBeVisible()
     await expect(page.getByText('candidate@example.com')).toBeVisible()
     await expect(page.getByText('+375290000033')).toBeVisible()
-    await expect(page.getByText('0003', { exact: true })).toBeVisible()
+    await expect(page.getByText('DOM-00000000-0003')).toBeVisible()
 
     // Verify inviter field
     await expect(page.getByText('Ваш пригласитель:')).toBeVisible()
@@ -43,8 +43,8 @@ test.describe('consultant manages own profile', () => {
     // Email should still be present (not on edit form, so unchanged)
     await expect(page.getByText('candidate@example.com')).toBeVisible()
 
-    // --- Navigate to Платежи tab and back to Профиль ---
-    await page.getByRole('button', { name: 'Платежи' }).click()
+    // --- Navigate to Покупки tab and back to Профиль ---
+    await page.getByRole('button', { name: 'Покупки' }).click()
     await page.getByRole('button', { name: 'Профиль' }).click()
 
     // --- Verify data persisted after tab switch ---
