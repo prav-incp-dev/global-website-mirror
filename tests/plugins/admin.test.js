@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
+import { beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { buildBackendApp } from '../../backend.js'
 
 const SESSION_SECRET = 'test-secret-key-for-testing-purposes'
@@ -8,10 +8,15 @@ beforeAll(() => {
 })
 
 const createApp = async (authOverrides = {}, prismaOverrides = {}) => {
-  const app = await buildBackendApp({ logger: false })
-
-  // Override CSRF protection with a no-op so we don't need tokens in tests
-  app.csrfProtection = (req, reply, next) => next()
+  const app = await buildBackendApp({
+    logger: false,
+    auth: {
+      enableCsrf: false,
+    },
+  })
+  onTestFinished(async () => {
+    await app.close()
+  })
 
   // Mock prisma decorator
   const defaultPrisma = {
@@ -44,15 +49,6 @@ const createApp = async (authOverrides = {}, prismaOverrides = {}) => {
 }
 
 describe('admin plugin', () => {
-  const apps = []
-
-  afterEach(async () => {
-    while (apps.length > 0) {
-      const app = apps.pop()
-      await app.close()
-    }
-  })
-
   it('getCompany returns null when user has no company', async () => {
     const adminUser = {
       id: 1,
@@ -64,7 +60,6 @@ describe('admin plugin', () => {
     const { app } = await createApp({
       getUser: vi.fn().mockResolvedValue(adminUser),
     })
-    apps.push(app)
 
     const company = await app.admin.getCompany(adminUser)
 
@@ -75,7 +70,6 @@ describe('admin plugin', () => {
     const { app } = await createApp({
       getUser: vi.fn().mockResolvedValue(null),
     })
-    apps.push(app)
 
     const company = await app.admin.getCompany(null)
 
@@ -107,7 +101,6 @@ describe('admin plugin', () => {
         },
       },
     )
-    apps.push(app)
 
     const company = await app.admin.getCompany(adminUser)
 

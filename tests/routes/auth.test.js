@@ -1,20 +1,18 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import fs from 'fs'
 import path from 'path'
 import { buildBackendApp } from '../../backend.js'
 
-const toCookieHeader = (setCookieHeader) => {
-  if (!setCookieHeader) {
-    return ''
-  }
-
-  const values = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader]
-
-  return values.map((cookieValue) => cookieValue.split(';')[0]).join('; ')
-}
-
 const createApp = async (authOverrides = {}) => {
-  const app = await buildBackendApp({ logger: false })
+  const app = await buildBackendApp({
+    logger: false,
+    auth: {
+      enableCsrf: false,
+    },
+  })
+  onTestFinished(async () => {
+    await app.close()
+  })
 
   // Mock auth functions
   for (const key in app.auth) {
@@ -29,51 +27,16 @@ const createApp = async (authOverrides = {}) => {
     }
   }
 
-  // Add a test route for CSRF token generation
-  app.get('/test/csrf', async (_req, reply) => {
-    return { csrfToken: reply.generateCsrf() }
-  })
-
   return { app: app, auth: app.auth }
 }
 
-const getCsrfContext = async (app) => {
-  const csrfRes = await app.inject({
-    method: 'GET',
-    url: '/test/csrf',
-  })
-
-  const { csrfToken } = csrfRes.json()
-  const cookieHeader = toCookieHeader(csrfRes.headers['set-cookie'])
-
-  return {
-    csrfToken,
-    cookieHeader,
-  }
-}
-
 describe('auth routes', () => {
-  const apps = []
-
-  afterEach(async () => {
-    while (apps.length > 0) {
-      const app = apps.pop()
-      await app.close()
-    }
-  })
-
   it('POST /api/auth/login returns 400 when email or password is missing', async () => {
     const { app, auth } = await createApp()
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: { email: '' },
     })
 
@@ -86,16 +49,10 @@ describe('auth routes', () => {
     const { app, auth } = await createApp({
       login: vi.fn().mockResolvedValue(null),
     })
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: {
         email: 'admin@example.com',
         password: 'wrong-password',
@@ -122,16 +79,10 @@ describe('auth routes', () => {
       createTwoFactorCode: vi.fn().mockResolvedValue('123456'),
       signPendingAuth: vi.fn().mockReturnValue('mock-jwt-token'),
     })
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: {
         email: 'admin@example.com',
         password: 'password',
@@ -156,16 +107,10 @@ describe('auth routes', () => {
 
   it('POST /api/auth/confirm returns 400 when token or code is missing', async () => {
     const { app } = await createApp()
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/auth/confirm',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: { code: '123456' },
     })
 
@@ -177,16 +122,10 @@ describe('auth routes', () => {
     const { app, auth } = await createApp({
       verifyPendingAuth: vi.fn().mockReturnValue(null),
     })
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/auth/confirm',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: { token: 'invalid-token', code: '123456' },
     })
 
@@ -204,16 +143,10 @@ describe('auth routes', () => {
       verifyPendingAuth: vi.fn().mockReturnValue(1),
       verifyTwoFactorCode: vi.fn().mockResolvedValue(false),
     })
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/auth/confirm',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: { token: 'valid-token', code: 'wrong-code' },
     })
 
@@ -230,16 +163,10 @@ describe('auth routes', () => {
       verifyPendingAuth: vi.fn().mockReturnValue(1),
       verifyTwoFactorCode: vi.fn().mockResolvedValue(true),
     })
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/auth/confirm',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: { token: 'valid-token', code: '123456' },
     })
 
@@ -255,16 +182,10 @@ describe('auth routes', () => {
 
   it('POST /api/auth/resend returns 400 when token is missing', async () => {
     const { app } = await createApp()
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/auth/resend',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: {},
     })
 
@@ -276,16 +197,10 @@ describe('auth routes', () => {
     const { app } = await createApp({
       verifyPendingAuth: vi.fn().mockReturnValue(null),
     })
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/auth/resend',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: { token: 'invalid-token' },
     })
 
@@ -299,8 +214,6 @@ describe('auth routes', () => {
     const { app, auth } = await createApp({
       verifyPendingAuth: vi.fn().mockReturnValue(1),
     })
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     // Mock fastify.prisma.user.findUnique to return null, simulating a non-existent user
     app.prisma = {
@@ -312,10 +225,6 @@ describe('auth routes', () => {
     const response = await app.inject({
       method: 'POST',
       url: '/api/auth/resend',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: { token: 'valid-token' },
     })
 
@@ -335,8 +244,6 @@ describe('auth routes', () => {
       verifyPendingAuth: vi.fn().mockReturnValue(1),
       createTwoFactorCode: vi.fn().mockResolvedValue('654321'),
     })
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     // Mock fastify.prisma.user.findUnique to return a user
     app.prisma = {
@@ -348,10 +255,6 @@ describe('auth routes', () => {
     const response = await app.inject({
       method: 'POST',
       url: '/api/auth/resend',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: { token: 'valid-token' },
     })
 
@@ -365,16 +268,10 @@ describe('auth routes', () => {
 
   it('POST /api/auth/logout returns 200 and clears session', async () => {
     const { app, auth } = await createApp()
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/auth/logout',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
     })
 
     expect(response.statusCode).toBe(200)

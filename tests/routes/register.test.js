@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import { buildBackendApp } from '../../backend.js'
 import fs from 'fs'
 import path from 'path'
@@ -7,33 +7,16 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const lastEmailFixturePath = path.join(__dirname, '../fixtures/last-email.json')
 
-const toCookieHeader = (setCookieHeader) => {
-  if (!setCookieHeader) {
-    return ''
-  }
-
-  const values = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader]
-
-  return values.map((cookieValue) => cookieValue.split(';')[0]).join('; ')
-}
-
-const getCsrfContext = async (app) => {
-  const csrfRes = await app.inject({
-    method: 'GET',
-    url: '/test/csrf',
-  })
-
-  const { csrfToken } = csrfRes.json()
-  const cookieHeader = toCookieHeader(csrfRes.headers['set-cookie'])
-
-  return {
-    csrfToken,
-    cookieHeader,
-  }
-}
-
 const createApp = async (overrides = {}) => {
-  const app = await buildBackendApp({ logger: false })
+  const app = await buildBackendApp({
+    logger: false,
+    auth: {
+      enableCsrf: false,
+    },
+  })
+  onTestFinished(async () => {
+    await app.close()
+  })
 
   // Mock auth functions
   for (const key in app.auth) {
@@ -62,36 +45,16 @@ const createApp = async (overrides = {}) => {
     },
   }
 
-  // Add a test route for CSRF token generation
-  app.get('/test/csrf', async (_req, reply) => {
-    return { csrfToken: reply.generateCsrf() }
-  })
-
   return { app: app, auth: app.auth }
 }
 
 describe('register routes', () => {
-  const apps = []
-
-  afterEach(async () => {
-    while (apps.length > 0) {
-      const app = apps.pop()
-      await app.close()
-    }
-  })
-
   it('POST /api/register returns 400 when required fields are missing', async () => {
     const { app } = await createApp()
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/register',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: {
         email: 'new.user@example.com',
       },
@@ -104,16 +67,10 @@ describe('register routes', () => {
 
   it('POST /api/register returns 400 for invalid email format', async () => {
     const { app } = await createApp()
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/register',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: {
         email: 'invalid-email',
         firstName: 'New',
@@ -130,16 +87,10 @@ describe('register routes', () => {
 
   it('POST /api/register returns 400 for invalid phone number', async () => {
     const { app } = await createApp()
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/register',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: {
         email: 'another.unique.user@example.com',
         firstName: 'New',
@@ -163,16 +114,10 @@ describe('register routes', () => {
     const { app, auth } = await createApp({
       createUser: vi.fn().mockRejectedValue(duplicateEmailError),
     })
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/register',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: {
         email: 'admin@example.com',
         firstName: 'Another',
@@ -199,16 +144,10 @@ describe('register routes', () => {
     const { app, auth } = await createApp({
       createUser: vi.fn().mockRejectedValue(duplicatePhoneError),
     })
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/register',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: {
         email: 'new.user@example.com',
         firstName: 'New',
@@ -235,16 +174,10 @@ describe('register routes', () => {
     const { app, auth } = await createApp({
       createUser: vi.fn().mockRejectedValue(duplicateCodeError),
     })
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/register',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: {
         email: 'new.user@example.com',
         firstName: 'New',
@@ -271,16 +204,10 @@ describe('register routes', () => {
     const { app, auth } = await createApp({
       createUser: vi.fn().mockRejectedValue(unknownFieldError),
     })
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/register',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: {
         email: 'new.user@example.com',
         firstName: 'New',
@@ -306,16 +233,10 @@ describe('register routes', () => {
     const { app, auth } = await createApp({
       createUser: vi.fn().mockRejectedValue(p2002NoFieldError),
     })
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/register',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: {
         email: 'user@example.com',
         firstName: 'New',
@@ -337,16 +258,10 @@ describe('register routes', () => {
     const { app, auth } = await createApp({
       createUser: vi.fn().mockResolvedValue(null),
     })
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/register',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: {
         email: 'new.user@example.com',
         firstName: 'New',
@@ -369,16 +284,10 @@ describe('register routes', () => {
     const { app, auth } = await createApp({
       createUser: vi.fn().mockRejectedValue(foreignKeyError),
     })
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/register',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: {
         email: 'new.user@example.com',
         firstName: 'New',
@@ -398,16 +307,10 @@ describe('register routes', () => {
     const { app, auth } = await createApp({
       createUser: vi.fn().mockRejectedValue(new Error('Database connection error')),
     })
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/register',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload: {
         email: 'new.user@example.com',
         firstName: 'New',
@@ -433,8 +336,6 @@ describe('register routes', () => {
         firstName: 'New',
       }),
     })
-    apps.push(app)
-    const { csrfToken, cookieHeader } = await getCsrfContext(app)
 
     const payload = {
       email: 'new.user@example.com',
@@ -447,10 +348,6 @@ describe('register routes', () => {
     const response = await app.inject({
       method: 'POST',
       url: '/api/register',
-      headers: {
-        cookie: cookieHeader,
-        'x-csrf-token': csrfToken,
-      },
       payload,
     })
 
