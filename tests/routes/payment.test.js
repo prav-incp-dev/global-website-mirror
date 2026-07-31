@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { buildBackendApp } from '../../backend.js'
 import { PaymentStatus, UserRole } from '../../src/generated/prisma/client'
-import { PAYMENT_WINDOW_MS } from '@/plugins/payment'
+import { PAYMENT_WINDOW_MS } from '@/lib/payment.js'
 
 const SESSION_SECRET = 'test-secret-key-for-testing-purposes'
 

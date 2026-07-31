@@ -1,5 +1,5 @@
 import { PaymentStatus, UserRole } from '../generated/prisma/client'
-import { canCancelPayment, serializePayment, verifyPaymentOnChain } from '../plugins/payment'
+import { canCancelPayment, serializePayment, verifyPaymentOnChain } from '../lib/payment'
 import { PRICE_MAP } from '../lib/pricing'
 
 export default async (fastify) => {
