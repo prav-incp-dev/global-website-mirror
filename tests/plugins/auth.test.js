@@ -1,56 +1,50 @@
-import { test, beforeAll, afterEach, afterAll, vi } from 'vitest'
-import Fastify from 'fastify'
-import authPlugin, { parseUserId } from '@/plugins/auth'
+import { beforeAll, describe, it, onTestFinished, vi } from 'vitest'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
-
-// Mock csrf-protection as a noop to prevent double-decoration conflicts across describe blocks
-vi.mock('@fastify/csrf-protection', () => ({
-  default: async () => {},
-}))
+import { parseUserId } from '@/plugins/auth'
+import { buildBackendApp } from '../../backend.js'
 
 const SESSION_SECRET = 'supersecret'
 
-let fastifyInstance
-let onRequestHook
-let csrfProtectionMock
-
-beforeAll(async () => {
+beforeAll(() => {
   vi.stubEnv('SESSION_SECRET', SESSION_SECRET)
 })
 
-afterEach(() => {
-  vi.clearAllMocks()
-})
+const createApp = async () => {
+  const app = await buildBackendApp({
+    logger: false,
+    auth: { enableCsrf: false },
+  })
+  onTestFinished(async () => {
+    await app.close()
+  })
 
-afterAll(async () => {
-  if (fastifyInstance) {
-    await fastifyInstance.close()
+  const mockPrisma = {
+    user: { findUnique: vi.fn(), update: vi.fn(), create: vi.fn() },
+    company: { findFirst: vi.fn() },
   }
-})
+  app.prisma = mockPrisma
+
+  return { app, prisma: mockPrisma }
+}
+
+const createCsrfApp = async () => {
+  const app = await buildBackendApp({
+    logger: false,
+    auth: { enableCsrf: true },
+  })
+  onTestFinished(async () => {
+    await app.close()
+  })
+
+  app.csrfProtection = vi.fn((_req, _reply, next) => next())
+
+  return { app, csrfProtection: app.csrfProtection }
+}
 
 describe('auth plugin core functionality', () => {
-  beforeAll(async () => {
-    fastifyInstance = Fastify()
-    fastifyInstance.decorate('prisma', {
-      user: {
-        findUnique: vi.fn(),
-        update: vi.fn(),
-        create: vi.fn(),
-      },
-      company: {
-        findFirst: vi.fn(),
-      },
-    })
-    await fastifyInstance.register(authPlugin)
-  })
-
-  afterAll(async () => {
-    await fastifyInstance.close()
-  })
-
-  test('parseUserId returns null for invalid input', ({ expect }) => {
+  it('parseUserId returns null for invalid input', ({ expect }) => {
     expect(parseUserId('abc')).toBeNull()
     expect(parseUserId('0')).toBeNull()
     expect(parseUserId('-1')).toBeNull()
@@ -58,38 +52,46 @@ describe('auth plugin core functionality', () => {
     expect(parseUserId(undefined)).toBeNull()
   })
 
-  test('parseUserId returns userId for valid input', ({ expect }) => {
+  it('parseUserId returns userId for valid input', ({ expect }) => {
     expect(parseUserId('123')).toBe(123)
     expect(parseUserId(123)).toBe(123)
   })
 
-  test('login returns null for non-existent user', async ({ expect }) => {
-    fastifyInstance.prisma.user.findUnique.mockResolvedValue(null)
-    const user = await fastifyInstance.auth.login('test@example.com', 'password')
+  it('login returns null for non-existent user', async ({ expect }) => {
+    const { app, prisma } = await createApp()
+
+    prisma.user.findUnique.mockResolvedValue(null)
+    const user = await app.auth.login('test@example.com', 'password')
     expect(user).toBeNull()
   })
 
-  test('login returns null for invalid password', async ({ expect }) => {
-    fastifyInstance.prisma.user.findUnique.mockResolvedValue({
+  it('login returns null for invalid password', async ({ expect }) => {
+    const { app, prisma } = await createApp()
+
+    prisma.user.findUnique.mockResolvedValue({
       password: await bcrypt.hash('wrongpassword', 10),
     })
-    const user = await fastifyInstance.auth.login('test@example.com', 'password')
+    const user = await app.auth.login('test@example.com', 'password')
     expect(user).toBeNull()
   })
 
-  test('login returns user for valid credentials', async ({ expect }) => {
+  it('login returns user for valid credentials', async ({ expect }) => {
+    const { app, prisma } = await createApp()
+
     const hashedPassword = await bcrypt.hash('password', 10)
     const mockUser = { id: 1, email: 'test@example.com', password: hashedPassword, company: { name: 'Test Company' } }
-    fastifyInstance.prisma.user.findUnique.mockResolvedValue(mockUser)
-    const user = await fastifyInstance.auth.login('test@example.com', 'password')
+    prisma.user.findUnique.mockResolvedValue(mockUser)
+    const user = await app.auth.login('test@example.com', 'password')
     expect(user).toEqual({ id: 1, email: 'test@example.com', company: { name: 'Test Company' } })
   })
 
-  test('setSession sets the session cookie', async ({ expect }) => {
+  it('setSession sets the session cookie', async ({ expect }) => {
+    const { app } = await createApp()
+
     const replyMock = {
       setCookie: vi.fn(),
     }
-    fastifyInstance.auth.setSession(replyMock, 1)
+    app.auth.setSession(replyMock, 1)
     expect(replyMock.setCookie).toHaveBeenCalledWith(
       'session',
       '1',
@@ -104,51 +106,63 @@ describe('auth plugin core functionality', () => {
     )
   })
 
-  test('clearSession clears the session cookie', async ({ expect }) => {
+  it('clearSession clears the session cookie', async ({ expect }) => {
+    const { app } = await createApp()
+
     const replyMock = {
       clearCookie: vi.fn(),
     }
-    fastifyInstance.auth.clearSession(replyMock)
+    app.auth.clearSession(replyMock)
     expect(replyMock.clearCookie).toHaveBeenCalledWith('session', { path: '/' })
   })
 
-  test('getUser returns null if no session cookie', async ({ expect }) => {
+  it('getUser returns null if no session cookie', async ({ expect }) => {
+    const { app } = await createApp()
+
     const reqMock = { cookies: {} }
-    const user = await fastifyInstance.auth.getUser(reqMock)
+    const user = await app.auth.getUser(reqMock)
     expect(user).toBeNull()
   })
 
-  test('getUser returns null if session cookie is invalid', async ({ expect }) => {
+  it('getUser returns null if session cookie is invalid', async ({ expect }) => {
+    const { app } = await createApp()
+
     const reqMock = {
       cookies: { session: 'invalid' },
       unsignCookie: vi.fn(() => ({ valid: false, value: null })),
     }
-    const user = await fastifyInstance.auth.getUser(reqMock)
+    const user = await app.auth.getUser(reqMock)
     expect(user).toBeNull()
   })
 
-  test('getUser returns null if user does not exist', async ({ expect }) => {
+  it('getUser returns null if user does not exist', async ({ expect }) => {
+    const { app, prisma } = await createApp()
+
     const reqMock = {
       cookies: { session: '1' },
       unsignCookie: vi.fn(() => ({ valid: true, value: '1' })),
     }
-    fastifyInstance.prisma.user.findUnique.mockResolvedValue(null)
-    const user = await fastifyInstance.auth.getUser(reqMock)
+    prisma.user.findUnique.mockResolvedValue(null)
+    const user = await app.auth.getUser(reqMock)
     expect(user).toBeNull()
   })
 
-  test('getUser returns user if session cookie is valid and user exists', async ({ expect }) => {
+  it('getUser returns user if session cookie is valid and user exists', async ({ expect }) => {
+    const { app, prisma } = await createApp()
+
     const reqMock = {
       cookies: { session: '1' },
       unsignCookie: vi.fn(() => ({ valid: true, value: '1' })),
     }
     const mockUser = { id: 1, email: 'test@example.com', password: 'hashedpassword', company: { name: 'Test Company' } }
-    fastifyInstance.prisma.user.findUnique.mockResolvedValue(mockUser)
-    const user = await fastifyInstance.auth.getUser(reqMock)
+    prisma.user.findUnique.mockResolvedValue(mockUser)
+    const user = await app.auth.getUser(reqMock)
     expect(user).toEqual({ id: 1, email: 'test@example.com', company: { name: 'Test Company' } })
   })
 
-  test('getUser returns user with parent info when parent exists', async ({ expect }) => {
+  it('getUser returns user with parent info when parent exists', async ({ expect }) => {
+    const { app, prisma } = await createApp()
+
     const reqMock = {
       cookies: { session: '1' },
       unsignCookie: vi.fn(() => ({ valid: true, value: '1' })),
@@ -160,8 +174,8 @@ describe('auth plugin core functionality', () => {
       company: { name: 'Test Company' },
       parent: { id: 1, nick: 'parentNick', firstName: 'Parent', lastName: 'User' },
     }
-    fastifyInstance.prisma.user.findUnique.mockResolvedValue(mockUser)
-    const user = await fastifyInstance.auth.getUser(reqMock)
+    prisma.user.findUnique.mockResolvedValue(mockUser)
+    const user = await app.auth.getUser(reqMock)
     expect(user).toEqual({
       id: 2,
       email: 'test@example.com',
@@ -170,7 +184,9 @@ describe('auth plugin core functionality', () => {
     })
   })
 
-  test('getUser returns user with null parent when no parent exists', async ({ expect }) => {
+  it('getUser returns user with null parent when no parent exists', async ({ expect }) => {
+    const { app, prisma } = await createApp()
+
     const reqMock = {
       cookies: { session: '1' },
       unsignCookie: vi.fn(() => ({ valid: true, value: '1' })),
@@ -182,8 +198,8 @@ describe('auth plugin core functionality', () => {
       company: { name: 'Test Company' },
       parent: null,
     }
-    fastifyInstance.prisma.user.findUnique.mockResolvedValue(mockUser)
-    const user = await fastifyInstance.auth.getUser(reqMock)
+    prisma.user.findUnique.mockResolvedValue(mockUser)
+    const user = await app.auth.getUser(reqMock)
     expect(user).toEqual({
       id: 2,
       email: 'test@example.com',
@@ -192,124 +208,119 @@ describe('auth plugin core functionality', () => {
     })
   })
 
-  test('createTwoFactorCode generates and stores a code', async ({ expect }) => {
+  it('createTwoFactorCode generates and stores a code', async ({ expect }) => {
+    const { app, prisma } = await createApp()
+
     vi.spyOn(crypto, 'randomInt').mockReturnValue(123456)
     const mockUser = { id: 1 }
-    fastifyInstance.prisma.user.update.mockResolvedValue(mockUser)
-    const code = await fastifyInstance.auth.createTwoFactorCode(mockUser)
+    prisma.user.update.mockResolvedValue(mockUser)
+    const code = await app.auth.createTwoFactorCode(mockUser)
     expect(code).toBe('123456')
-    expect(fastifyInstance.prisma.user.update).toHaveBeenCalledWith({
+    expect(prisma.user.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: { confirmationCode: '123456' },
     })
   })
 
-  test('verifyTwoFactorCode returns false for invalid userId', async ({ expect }) => {
-    const result = await fastifyInstance.auth.verifyTwoFactorCode('abc', '123456')
+  it('verifyTwoFactorCode returns false for invalid userId', async ({ expect }) => {
+    const { app } = await createApp()
+
+    const result = await app.auth.verifyTwoFactorCode('abc', '123456')
     expect(result).toBe(false)
   })
 
-  test('verifyTwoFactorCode returns false if user not found', async ({ expect }) => {
-    fastifyInstance.prisma.user.findUnique.mockResolvedValue(null)
-    const result = await fastifyInstance.auth.verifyTwoFactorCode(1, '123456')
+  it('verifyTwoFactorCode returns false if user not found', async ({ expect }) => {
+    const { app, prisma } = await createApp()
+
+    prisma.user.findUnique.mockResolvedValue(null)
+    const result = await app.auth.verifyTwoFactorCode(1, '123456')
     expect(result).toBe(false)
   })
 
-  test('verifyTwoFactorCode returns false if no confirmationCode', async ({ expect }) => {
-    fastifyInstance.prisma.user.findUnique.mockResolvedValue({ id: 1, confirmationCode: null })
-    const result = await fastifyInstance.auth.verifyTwoFactorCode(1, '123456')
+  it('verifyTwoFactorCode returns false if no confirmationCode', async ({ expect }) => {
+    const { app, prisma } = await createApp()
+
+    prisma.user.findUnique.mockResolvedValue({ id: 1, confirmationCode: null })
+    const result = await app.auth.verifyTwoFactorCode(1, '123456')
     expect(result).toBe(false)
   })
 
-  test('verifyTwoFactorCode returns false for incorrect code', async ({ expect }) => {
-    fastifyInstance.prisma.user.findUnique.mockResolvedValue({ id: 1, confirmationCode: '654321' })
-    const result = await fastifyInstance.auth.verifyTwoFactorCode(1, '123456')
+  it('verifyTwoFactorCode returns false for incorrect code', async ({ expect }) => {
+    const { app, prisma } = await createApp()
+
+    prisma.user.findUnique.mockResolvedValue({ id: 1, confirmationCode: '654321' })
+    const result = await app.auth.verifyTwoFactorCode(1, '123456')
     expect(result).toBe(false)
   })
 
-  test('verifyTwoFactorCode returns true for correct code and clears it', async ({ expect }) => {
-    fastifyInstance.prisma.user.findUnique.mockResolvedValue({ id: 1, confirmationCode: '123456' })
-    fastifyInstance.prisma.user.update.mockResolvedValue({ id: 1, confirmationCode: null })
-    const result = await fastifyInstance.auth.verifyTwoFactorCode(1, '123456')
+  it('verifyTwoFactorCode returns true for correct code and clears it', async ({ expect }) => {
+    const { app, prisma } = await createApp()
+
+    prisma.user.findUnique.mockResolvedValue({ id: 1, confirmationCode: '123456' })
+    prisma.user.update.mockResolvedValue({ id: 1, confirmationCode: null })
+    const result = await app.auth.verifyTwoFactorCode(1, '123456')
     expect(result).toBe(true)
-    expect(fastifyInstance.prisma.user.update).toHaveBeenCalledWith({
+    expect(prisma.user.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: { confirmationCode: null },
     })
   })
 
-  test('signPendingAuth signs a JWT with userId and expiry', async ({ expect }) => {
-    const token = fastifyInstance.auth.signPendingAuth(1)
+  it('signPendingAuth signs a JWT with userId and expiry', async ({ expect }) => {
+    const { app } = await createApp()
+
+    const token = app.auth.signPendingAuth(1)
     const decoded = jwt.verify(token, SESSION_SECRET)
     expect(decoded.userId).toBe(1)
     expect(decoded.exp).toBeDefined()
   })
 
-  test('verifyPendingAuth returns userId for valid token', async ({ expect }) => {
+  it('verifyPendingAuth returns userId for valid token', async ({ expect }) => {
+    const { app } = await createApp()
+
     const token = jwt.sign({ userId: 1 }, SESSION_SECRET, { expiresIn: '10m' })
-    const userId = fastifyInstance.auth.verifyPendingAuth(token)
+    const userId = app.auth.verifyPendingAuth(token)
     expect(userId).toBe(1)
   })
 
-  test('verifyPendingAuth returns null for invalid token', async ({ expect }) => {
-    const userId = fastifyInstance.auth.verifyPendingAuth('invalidtoken')
+  it('verifyPendingAuth returns null for invalid token', async ({ expect }) => {
+    const { app } = await createApp()
+
+    const userId = app.auth.verifyPendingAuth('invalidtoken')
     expect(userId).toBeNull()
   })
 
-  test('verifyPendingAuth returns null for expired token', async ({ expect }) => {
+  it('verifyPendingAuth returns null for expired token', async ({ expect }) => {
+    const { app } = await createApp()
+
     const token = jwt.sign({ userId: 1 }, SESSION_SECRET, { expiresIn: '0s' })
     // Wait for the token to expire
     await new Promise((resolve) => setTimeout(resolve, 1000))
-    const userId = fastifyInstance.auth.verifyPendingAuth(token)
+    const userId = app.auth.verifyPendingAuth(token)
     expect(userId).toBeNull()
   })
 })
 
 describe('csrfProtection hook', () => {
-  beforeAll(async () => {
-    fastifyInstance = Fastify()
-    fastifyInstance.decorate('prisma', {
-      user: {
-        findUnique: vi.fn(),
-        update: vi.fn(),
-      },
-    })
+  it('does not block GET requests', async ({ expect }) => {
+    const { app, csrfProtection } = await createCsrfApp()
 
-    csrfProtectionMock = vi.fn((req, reply, next) => next())
-    fastifyInstance.decorate('csrfProtection', csrfProtectionMock)
+    app.get('/csrf-test', async (_req, reply) => reply.send({ ok: true }))
 
-    fastifyInstance.addHook = vi.fn((hookName, handler) => {
-      if (hookName === 'onRequest') {
-        onRequestHook = handler
-      }
-    })
+    const res = await app.inject({ method: 'GET', url: '/csrf-test' })
 
-    await fastifyInstance.register(authPlugin)
+    expect(res.statusCode).toBe(200)
+    expect(csrfProtection).not.toHaveBeenCalled()
   })
 
-  afterAll(async () => {
-    await fastifyInstance.close()
-  })
+  it('invokes csrfProtection for POST requests', async ({ expect }) => {
+    const { app, csrfProtection } = await createCsrfApp()
 
-  test('csrfProtection hook calls next for safe methods', async ({ expect }) => {
-    const nextMock = vi.fn()
-    const reqMock = { method: 'GET' }
-    const replyMock = {}
+    app.post('/csrf-test', async (_req, reply) => reply.send({ ok: true }))
 
-    await onRequestHook(reqMock, replyMock, nextMock)
+    const res = await app.inject({ method: 'POST', url: '/csrf-test' })
 
-    expect(nextMock).toHaveBeenCalledOnce()
-    expect(csrfProtectionMock).not.toHaveBeenCalled()
-  })
-
-  test('csrfProtection hook calls csrfProtection for unsafe methods', async ({ expect }) => {
-    const nextMock = vi.fn()
-    const reqMock = { method: 'POST' }
-    const replyMock = {}
-
-    await onRequestHook(reqMock, replyMock, nextMock)
-
-    expect(csrfProtectionMock).toHaveBeenCalledWith(reqMock, replyMock, nextMock)
-    expect(nextMock).toHaveBeenCalledOnce()
+    expect(csrfProtection).toHaveBeenCalled()
+    expect(res.statusCode).toBe(200)
   })
 })

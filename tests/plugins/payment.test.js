@@ -1,44 +1,46 @@
-import { test, beforeAll, afterAll, vi } from 'vitest'
-import Fastify from 'fastify'
+import { describe, it, onTestFinished, vi } from 'vitest'
+import { buildBackendApp } from '../../backend.js'
 import { PaymentStatus } from '@/generated/prisma/enums'
-import paymentPlugin from '@/plugins/payment'
+
+const createApp = async () => {
+  const app = await buildBackendApp({
+    logger: false,
+  })
+  onTestFinished(async () => {
+    await app.close()
+  })
+
+  const mockPrisma = {
+    payment: {
+      findMany: vi.fn(),
+    },
+  }
+
+  app.prisma = mockPrisma
+
+  return { app, prisma: mockPrisma }
+}
 
 describe('payment plugin', () => {
-  let fastifyInstance
+  it('getPayments returns empty array when user has no payments', async ({ expect }) => {
+    const { app, prisma } = await createApp()
 
-  beforeAll(async () => {
-    fastifyInstance = Fastify()
-    fastifyInstance.decorate('prisma', {
-      payment: {
-        findMany: vi.fn(),
-      },
-    })
-    await fastifyInstance.register(paymentPlugin)
-  })
-
-  afterAll(async () => {
-    await fastifyInstance.close()
-  })
-
-  afterEach(() => {
-    vi.clearAllMocks()
-  })
-
-  test('getPayments returns empty array when user has no payments', async ({ expect }) => {
-    fastifyInstance.prisma.payment.findMany.mockResolvedValue([])
+    prisma.payment.findMany.mockResolvedValue([])
 
     const user = { id: 1 }
-    const result = await fastifyInstance.payment.getPayments(user)
+    const result = await app.payment.getPayments(user)
 
     expect(result).toEqual([])
-    expect(fastifyInstance.prisma.payment.findMany).toHaveBeenCalledWith({
+    expect(prisma.payment.findMany).toHaveBeenCalledWith({
       where: { userId: 1 },
       include: { order: true },
       orderBy: { createdAt: 'desc' },
     })
   })
 
-  test('getPayments returns serialized payments when user has payments', async ({ expect }) => {
+  it('getPayments returns serialized payments when user has payments', async ({ expect }) => {
+    const { app, prisma } = await createApp()
+
     const mockPayments = [
       {
         id: 1,
@@ -78,10 +80,10 @@ describe('payment plugin', () => {
       },
     ]
 
-    fastifyInstance.prisma.payment.findMany.mockResolvedValue(mockPayments)
+    prisma.payment.findMany.mockResolvedValue(mockPayments)
 
     const user = { id: 1 }
-    const result = await fastifyInstance.payment.getPayments(user)
+    const result = await app.payment.getPayments(user)
 
     expect(result).toHaveLength(2)
     expect(result[0].id).toBe(1)
@@ -91,7 +93,7 @@ describe('payment plugin', () => {
     expect(result[1].amountUsd).toBe(200)
     expect(result[1].quantity).toBeNull()
 
-    expect(fastifyInstance.prisma.payment.findMany).toHaveBeenCalledWith({
+    expect(prisma.payment.findMany).toHaveBeenCalledWith({
       where: { userId: 1 },
       include: { order: true },
       orderBy: { createdAt: 'desc' },
