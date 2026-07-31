@@ -44,7 +44,7 @@ export const getData = async ({ server, req, reply }) => {
 
 const TABS = [
   { key: 'profile', label: 'Профиль' },
-  { key: 'payments', label: 'Платежи' },
+  { key: 'payments', label: 'Покупки' },
 ]
 
 const Index = () => {

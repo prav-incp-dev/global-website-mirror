@@ -75,6 +75,7 @@ const EditProfile = ({ company, csrfToken, onUpdate, onCancel }) => {
           <input
             id="primaryWallet"
             type="text"
+            placeholder="0x..."
             className={styles.input}
             {...register('primaryWallet', {
               pattern: {
@@ -93,6 +94,7 @@ const EditProfile = ({ company, csrfToken, onUpdate, onCancel }) => {
           <input
             id="secondaryWallet"
             type="text"
+            placeholder="0x..."
             className={styles.input}
             {...register('secondaryWallet', {
               pattern: {

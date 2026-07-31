@@ -10,7 +10,7 @@ const ViewProfile = ({ profile, onEdit }) => {
   const parent = getParent()
 
   const walletPreview = () => {
-    if (!profile.wallet) return '-'
+    if (!profile.wallet) return '—'
 
     return `${profile.wallet.slice(0, 10)}...${profile.wallet.slice(-8)}`
   }
@@ -42,8 +42,8 @@ const ViewProfile = ({ profile, onEdit }) => {
         <span className={styles.value}>{profile.nick || '—'}</span>
       </div>
       <div className={styles.row}>
-        <span className={styles.label}>Кошелек:</span>
-        <span className={`${styles.value} ${styles.wallet}`} title={profile.wallet || '-'}>
+        <span className={styles.label}>Номер кошелька в сети BNB:</span>
+        <span className={`${styles.value} ${styles.wallet}`} title={profile.wallet || '—'}>
           {walletPreview()}
         </span>
       </div>

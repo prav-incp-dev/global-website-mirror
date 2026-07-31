@@ -2,8 +2,6 @@ import { test, expect } from '../fixtures.js'
 import { getPrisma } from '../db.js'
 
 test.describe('admin manages company profile', () => {
-  const validWallet = '0x1234567890abcdef1234567890abcdef12345678'
-  const validWallet2 = '0xabcdef1234567890abcdef1234567890abcdef12'
   const updatedName = 'Updated Company Name'
 
   const navigateToCompanyTab = async (page) => {
@@ -19,14 +17,14 @@ test.describe('admin manages company profile', () => {
 
     // Update all fields
     await page.locator('#name').fill(updatedName)
-    await page.locator('#primaryWallet').fill(validWallet)
-    await page.locator('#secondaryWallet').fill(validWallet2)
+    await page.locator('#primaryWallet').fill('0x1234567890abcdef1234567890abcdef12345678')
+    await page.locator('#secondaryWallet').fill('0xabcdef1234567890abcdef1234567890abcdef12')
     await page.getByRole('button', { name: 'Сохранить' }).click()
 
     // Verify view mode shows updated data
     await expect(page.getByText(updatedName)).toBeVisible()
-    await expect(page.getByText(validWallet)).toBeVisible()
-    await expect(page.getByText(validWallet2)).toBeVisible()
+    await expect(page.getByText('0x12345678...12345678')).toBeVisible()
+    await expect(page.getByText('0xabcdef12...abcdef12')).toBeVisible()
 
     // Clear wallets
     await page.getByRole('button', { name: 'Редактировать' }).click()

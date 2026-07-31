@@ -112,6 +112,7 @@ const EditProfile = ({ profile, csrfToken, onUpdate, onCancel }) => {
           <input
             type="text"
             id="memberId"
+            placeholder="DOM-XXXXXXXX-XXXX"
             className={styles.input}
             {...register('memberId', {
               required: 'Обязательное поле',
@@ -128,17 +129,18 @@ const EditProfile = ({ profile, csrfToken, onUpdate, onCancel }) => {
           <label htmlFor="nick" className={styles.label}>
             Ник в Телеграм
           </label>
-          <input type="text" id="nick" className={styles.input} {...register('nick')} />
+          <input type="text" id="nick" className={styles.input} placeholder="@..." {...register('nick')} />
           {errors.nick && <span className={styles.fieldError}>{errors.nick.message}</span>}
         </div>
 
         <div className={styles.formField}>
           <label htmlFor="primaryWallet" className={styles.label}>
-            Кошелек
+            Номер кошелька в сети BNB
           </label>
           <input
             id="wallet"
             type="text"
+            placeholder="0x..."
             className={styles.input}
             {...register('wallet', {
               pattern: {
