@@ -1,26 +1,13 @@
-import { beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 import jwt from 'jsonwebtoken'
-import { buildBackendApp } from '../../backend'
 import { UserRole } from '@/generated/prisma/client'
+import { createNoCsrfApp as createApp } from '../helpers'
 
 const SESSION_SECRET = 'test-secret-key-for-testing-purposes'
 
 beforeAll(() => {
   vi.stubEnv('SESSION_SECRET', SESSION_SECRET)
 })
-
-const createApp = async () => {
-  const app = await buildBackendApp({
-    logger: false,
-    auth: {
-      enableCsrf: false,
-    },
-  })
-  onTestFinished(async () => {
-    await app.close()
-  })
-  return app
-}
 
 describe('POST /api/invitation/generate', () => {
   it('returns 401 when user is not authenticated', async () => {

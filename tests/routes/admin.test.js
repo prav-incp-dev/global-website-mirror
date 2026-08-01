@@ -1,62 +1,10 @@
-import { beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest'
-import { buildBackendApp } from '../../backend.js'
-
-const SESSION_SECRET = 'test-secret-key-for-testing-purposes'
-
-beforeAll(() => {
-  vi.stubEnv('SESSION_SECRET', SESSION_SECRET)
-})
-
-const createApp = async (authOverrides = {}, prismaOverrides = {}) => {
-  const app = await buildBackendApp({
-    logger: false,
-    auth: {
-      enableCsrf: false,
-    },
-  })
-  onTestFinished(async () => {
-    await app.close()
-  })
-
-  // Mock prisma decorator
-  const defaultPrisma = {
-    company: {
-      findUnique: vi.fn(),
-      update: vi.fn(),
-    },
-    user: {
-      findUnique: vi.fn(),
-      update: vi.fn(),
-    },
-  }
-
-  app.prisma = { ...defaultPrisma, ...prismaOverrides }
-
-  // Mock auth functions
-  const defaultAuth = {
-    getUser: vi.fn().mockResolvedValue(null),
-    register: vi.fn(),
-    login: vi.fn(),
-    setSession: vi.fn(),
-    clearSession: vi.fn(),
-    createTwoFactorCode: vi.fn(),
-    verifyTwoFactorCode: vi.fn(),
-    signPendingAuth: vi.fn(),
-    verifyPendingAuth: vi.fn(),
-  }
-
-  for (const key in defaultAuth) {
-    app.auth[key] = authOverrides[key] || defaultAuth[key]
-  }
-
-  return { app, auth: app.auth }
-}
+import { describe, expect, it, vi } from 'vitest'
+import { createNoCsrfApp as createApp } from '../helpers'
 
 describe('PUT /api/admin/profile', () => {
   it('returns 403 when user is not authenticated', async () => {
-    const { app, auth } = await createApp({
-      getUser: vi.fn().mockResolvedValue(null),
-    })
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
 
     const response = await app.inject({
       method: 'PUT',
@@ -69,7 +17,7 @@ describe('PUT /api/admin/profile', () => {
 
     expect(response.statusCode).toBe(403)
     expect(response.json()).toEqual({ error: 'Доступ запрещен' })
-    expect(auth.getUser).toHaveBeenCalledTimes(1)
+    expect(app.auth.getUser).toHaveBeenCalledTimes(1)
   })
 
   it('returns 403 when user is not Admin', async () => {
@@ -80,9 +28,8 @@ describe('PUT /api/admin/profile', () => {
       company: { id: 1 },
     }
 
-    const { app, auth } = await createApp({
-      getUser: vi.fn().mockResolvedValue(nonAdminUser),
-    })
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(nonAdminUser)
 
     const response = await app.inject({
       method: 'PUT',
@@ -95,7 +42,7 @@ describe('PUT /api/admin/profile', () => {
 
     expect(response.statusCode).toBe(403)
     expect(response.json()).toEqual({ error: 'Доступ запрещен' })
-    expect(auth.getUser).toHaveBeenCalledTimes(1)
+    expect(app.auth.getUser).toHaveBeenCalledTimes(1)
   })
 
   it('returns 400 when firstName is missing', async () => {
@@ -106,9 +53,8 @@ describe('PUT /api/admin/profile', () => {
       company: { id: 1 },
     }
 
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue(adminUser),
-    })
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
 
     const response = await app.inject({
       method: 'PUT',
@@ -130,9 +76,8 @@ describe('PUT /api/admin/profile', () => {
       company: { id: 1 },
     }
 
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue(adminUser),
-    })
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
 
     const response = await app.inject({
       method: 'PUT',
@@ -154,16 +99,9 @@ describe('PUT /api/admin/profile', () => {
       company: { id: 1 },
     }
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(adminUser),
-      },
-      {
-        user: {
-          update: vi.fn().mockRejectedValue(new Error('Database connection failed')),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+    vi.spyOn(app.prisma.user, 'update').mockRejectedValue(new Error('Database connection failed'))
 
     const response = await app.inject({
       method: 'PUT',
@@ -194,16 +132,9 @@ describe('PUT /api/admin/profile', () => {
       lastName: 'Smith',
     }
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(adminUser),
-      },
-      {
-        user: {
-          update: vi.fn().mockResolvedValue(updatedAdmin),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+    vi.spyOn(app.prisma.user, 'update').mockResolvedValue(updatedAdmin)
 
     const response = await app.inject({
       method: 'PUT',
@@ -235,9 +166,8 @@ describe('PUT /api/admin/profile', () => {
 
 describe('PUT /api/admin/company', () => {
   it('returns 403 when user is not authenticated', async () => {
-    const { app, auth } = await createApp({
-      getUser: vi.fn().mockResolvedValue(null),
-    })
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
 
     const response = await app.inject({
       method: 'PUT',
@@ -247,7 +177,7 @@ describe('PUT /api/admin/company', () => {
 
     expect(response.statusCode).toBe(403)
     expect(response.json()).toEqual({ error: 'Доступ запрещен' })
-    expect(auth.getUser).toHaveBeenCalledTimes(1)
+    expect(app.auth.getUser).toHaveBeenCalledTimes(1)
   })
 
   it('returns 403 when user is not Admin', async () => {
@@ -258,9 +188,8 @@ describe('PUT /api/admin/company', () => {
       company: { id: 1 },
     }
 
-    const { app, auth } = await createApp({
-      getUser: vi.fn().mockResolvedValue(nonAdminUser),
-    })
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(nonAdminUser)
 
     const response = await app.inject({
       method: 'PUT',
@@ -270,7 +199,7 @@ describe('PUT /api/admin/company', () => {
 
     expect(response.statusCode).toBe(403)
     expect(response.json()).toEqual({ error: 'Доступ запрещен' })
-    expect(auth.getUser).toHaveBeenCalledTimes(1)
+    expect(app.auth.getUser).toHaveBeenCalledTimes(1)
   })
 
   it('returns 400 when name is missing', async () => {
@@ -281,9 +210,8 @@ describe('PUT /api/admin/company', () => {
       company: { id: 1 },
     }
 
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue(adminUser),
-    })
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
 
     const response = await app.inject({
       method: 'PUT',
@@ -303,9 +231,8 @@ describe('PUT /api/admin/company', () => {
       company: { id: 1 },
     }
 
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue(adminUser),
-    })
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
 
     const response = await app.inject({
       method: 'PUT',
@@ -328,9 +255,8 @@ describe('PUT /api/admin/company', () => {
       company: { id: 1 },
     }
 
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue(adminUser),
-    })
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
 
     const response = await app.inject({
       method: 'PUT',
@@ -356,16 +282,9 @@ describe('PUT /api/admin/company', () => {
     const mockError = new Error('Unique constraint failed')
     mockError.code = 'P2002'
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(adminUser),
-      },
-      {
-        company: {
-          update: vi.fn().mockRejectedValue(mockError),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+    vi.spyOn(app.prisma.company, 'update').mockRejectedValue(mockError)
 
     const response = await app.inject({
       method: 'PUT',
@@ -385,16 +304,9 @@ describe('PUT /api/admin/company', () => {
       company: { id: 1 },
     }
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(adminUser),
-      },
-      {
-        company: {
-          update: vi.fn().mockRejectedValue(new Error('Database connection failed')),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+    vi.spyOn(app.prisma.company, 'update').mockRejectedValue(new Error('Database connection failed'))
 
     const response = await app.inject({
       method: 'PUT',
@@ -421,16 +333,9 @@ describe('PUT /api/admin/company', () => {
       secondaryWallet: null,
     }
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(adminUser),
-      },
-      {
-        company: {
-          update: vi.fn().mockResolvedValue(updatedCompany),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+    vi.spyOn(app.prisma.company, 'update').mockResolvedValue(updatedCompany)
 
     const response = await app.inject({
       method: 'PUT',
@@ -476,16 +381,9 @@ describe('PUT /api/admin/company', () => {
       secondaryWallet: null,
     }
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(adminUser),
-      },
-      {
-        company: {
-          update: vi.fn().mockResolvedValue(updatedCompany),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+    vi.spyOn(app.prisma.company, 'update').mockResolvedValue(updatedCompany)
 
     const response = await app.inject({
       method: 'PUT',
@@ -507,7 +405,6 @@ describe('PUT /api/admin/company', () => {
         secondaryWallet: null,
       },
     })
-    // Verify the handler converts empty strings to null before passing to Prisma
     expect(app.prisma.company.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: {

@@ -1,6 +1,6 @@
-import { beforeAll, describe, it, onTestFinished, vi } from 'vitest'
+import { beforeAll, describe, it, vi } from 'vitest'
 import jwt from 'jsonwebtoken'
-import { buildBackendApp } from '../../backend.js'
+import { createApp } from '../helpers'
 
 const SESSION_SECRET = 'test-secret'
 
@@ -8,44 +8,17 @@ beforeAll(() => {
   vi.stubEnv('SESSION_SECRET', SESSION_SECRET)
 })
 
-const createApp = async () => {
-  const app = await buildBackendApp({
-    logger: false,
-  })
-  onTestFinished(async () => {
-    await app.close()
-  })
-
-  const mockPrisma = {
-    company: {
-      findFirst: vi.fn(),
-    },
-    user: {
-      create: vi.fn(),
-    },
-    usedInvite: {
-      create: vi.fn(),
-      findUnique: vi.fn(),
-    },
-    $transaction: vi.fn(),
-  }
-
-  app.prisma = mockPrisma
-
-  return { app, prisma: mockPrisma }
-}
-
 describe('register plugin', () => {
   it('createUser creates a user and removes password from result', async ({ expect }) => {
-    const { app, prisma } = await createApp()
+    const app = await createApp()
 
     const mockCompany = { id: 1, name: 'Test Company' }
-    prisma.company.findFirst.mockResolvedValue(mockCompany)
+    vi.spyOn(app.prisma.company, 'findFirst').mockResolvedValue(mockCompany)
 
     let capturedUserCreateArgs = null
     let capturedUsedInviteCreateArgs = null
 
-    prisma.$transaction.mockImplementation(async (cb) => {
+    vi.spyOn(app.prisma, '$transaction').mockImplementation(async (cb) => {
       const tx = {
         user: {
           create: vi.fn().mockImplementation((args) => {
@@ -99,22 +72,22 @@ describe('register plugin', () => {
     expect(result).not.toHaveProperty('password')
     expect(result.email).toBe('new.user@example.com')
 
-    expect(prisma.company.findFirst).toHaveBeenCalledWith({
+    expect(app.prisma.company.findFirst).toHaveBeenCalledWith({
       orderBy: { id: 'asc' },
     })
   })
 
   it('createUser throws error when inviteCode is already taken', async ({ expect }) => {
-    const { app, prisma } = await createApp()
+    const app = await createApp()
 
     const mockCompany = { id: 1, name: 'Test Company' }
-    prisma.company.findFirst.mockResolvedValue(mockCompany)
+    vi.spyOn(app.prisma.company, 'findFirst').mockResolvedValue(mockCompany)
 
     const p2002Error = Object.assign(new Error('Unique constraint failed on the fields: (`code`)'), {
       code: 'P2002',
     })
 
-    prisma.$transaction.mockImplementation(async (cb) => {
+    vi.spyOn(app.prisma, '$transaction').mockImplementation(async (cb) => {
       const tx = {
         user: { create: vi.fn() },
         usedInvite: { create: vi.fn().mockRejectedValue(p2002Error) },
@@ -134,9 +107,9 @@ describe('register plugin', () => {
   })
 
   it('createUser throws error when no company found', async ({ expect }) => {
-    const { app, prisma } = await createApp()
+    const app = await createApp()
 
-    prisma.company.findFirst.mockResolvedValue(null)
+    vi.spyOn(app.prisma.company, 'findFirst').mockResolvedValue(null)
 
     await expect(
       app.registration.createUser({
@@ -150,21 +123,21 @@ describe('register plugin', () => {
   })
 
   it('verifyToken returns inviteCode and owner for valid token', async ({ expect }) => {
-    const { app, prisma } = await createApp()
+    const app = await createApp()
 
     vi.spyOn(jwt, 'verify').mockReturnValue({ inviteCode: 'abc123', owner: 1 })
-    prisma.usedInvite.findUnique.mockResolvedValue(null)
+    vi.spyOn(app.prisma.usedInvite, 'findUnique').mockResolvedValue(null)
 
     const result = await app.registration.verifyToken('valid-token')
 
     expect(result).toEqual({ inviteCode: 'abc123', owner: 1 })
-    expect(prisma.usedInvite.findUnique).toHaveBeenCalledWith({
+    expect(app.prisma.usedInvite.findUnique).toHaveBeenCalledWith({
       where: { code: 'abc123' },
     })
   })
 
   it('verifyToken throws error for invalid token (no inviteCode)', async ({ expect }) => {
-    const { app } = await createApp()
+    const app = await createApp()
 
     vi.spyOn(jwt, 'verify').mockReturnValue({ owner: '1' })
 
@@ -172,7 +145,7 @@ describe('register plugin', () => {
   })
 
   it('verifyToken throws error when jwt.verify throws', async ({ expect }) => {
-    const { app } = await createApp()
+    const app = await createApp()
 
     vi.spyOn(jwt, 'verify').mockImplementation(() => {
       throw new Error('jwt malformed')
@@ -182,10 +155,10 @@ describe('register plugin', () => {
   })
 
   it('verifyToken throws error when invite is already used', async ({ expect }) => {
-    const { app, prisma } = await createApp()
+    const app = await createApp()
 
     vi.spyOn(jwt, 'verify').mockReturnValue({ inviteCode: 'used-code', owner: '1' })
-    prisma.usedInvite.findUnique.mockResolvedValue({ code: 'used-code' })
+    vi.spyOn(app.prisma.usedInvite, 'findUnique').mockResolvedValue({ code: 'used-code' })
 
     await expect(app.registration.verifyToken('used-token')).rejects.toThrow('Invite already used')
   })

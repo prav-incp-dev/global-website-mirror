@@ -1,13 +1,7 @@
-import { beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest'
-import { buildBackendApp } from '../../backend.js'
+import { describe, expect, it, vi } from 'vitest'
+import { createNoCsrfApp as createApp } from '../helpers'
 import { PaymentStatus, UserRole } from '../../src/generated/prisma/client'
 import { PAYMENT_WINDOW_MS } from '@/lib/payment.js'
-
-const SESSION_SECRET = 'test-secret-key-for-testing-purposes'
-
-beforeAll(() => {
-  vi.stubEnv('SESSION_SECRET', SESSION_SECRET)
-})
 
 vi.mock('viem', () => {
   const getTransactionReceipt = vi.fn()
@@ -29,45 +23,6 @@ const mockGetTransactionReceipt = async () => {
   return getTransactionReceipt
 }
 
-const createApp = async (authOverrides = {}, prismaOverrides = {}) => {
-  const app = await buildBackendApp({
-    logger: false,
-    auth: {
-      enableCsrf: false,
-    },
-  })
-
-  onTestFinished(async () => {
-    await app.close()
-  })
-
-  const defaultPrisma = {
-    order: {
-      create: vi.fn(),
-      update: vi.fn(),
-    },
-    payment: {
-      findMany: vi.fn().mockResolvedValue([]),
-      findUnique: vi.fn(),
-      update: vi.fn(),
-    },
-    $transaction: vi.fn(),
-  }
-
-  app.prisma = {
-    ...defaultPrisma,
-    ...prismaOverrides,
-  }
-
-  const defaultAuth = {
-    getUser: vi.fn().mockResolvedValue(null),
-  }
-
-  app.auth.getUser = authOverrides.getUser || defaultAuth.getUser
-
-  return { app, auth: app.auth }
-}
-
 const candidateUser = {
   id: 2,
   role: UserRole.Candidate,
@@ -81,9 +36,8 @@ describe('payments routes', () => {
   // --- GET /api/payments ---
 
   it('GET /api/payments returns 403 when user is not authenticated', async () => {
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue(null),
-    })
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
 
     const response = await app.inject({
       method: 'GET',
@@ -95,9 +49,8 @@ describe('payments routes', () => {
   })
 
   it('GET /api/payments returns 403 when user is Admin', async () => {
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue({ id: 1, role: UserRole.Admin }),
-    })
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue({ id: 1, role: UserRole.Admin })
 
     const response = await app.inject({
       method: 'GET',
@@ -109,16 +62,9 @@ describe('payments routes', () => {
   })
 
   it('GET /api/payments returns empty list when user has no payments', async () => {
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findMany').mockResolvedValue([])
 
     const response = await app.inject({
       method: 'GET',
@@ -152,16 +98,9 @@ describe('payments routes', () => {
       order: { id: 7, quantity: 1 },
     }
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([mockPayment]),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findMany').mockResolvedValue([mockPayment])
 
     const response = await app.inject({
       method: 'GET',
@@ -215,16 +154,9 @@ describe('payments routes', () => {
       order: { id: 77, quantity: 1 },
     }
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([otherPayment]),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findMany').mockResolvedValue([otherPayment])
 
     const response = await app.inject({
       method: 'GET',
@@ -243,9 +175,8 @@ describe('payments routes', () => {
   // --- POST /api/payments/init ---
 
   it('POST /api/payments/init returns 403 when user is not authenticated', async () => {
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue(null),
-    })
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
 
     const response = await app.inject({
       method: 'POST',
@@ -263,9 +194,8 @@ describe('payments routes', () => {
   })
 
   it('POST /api/payments/init returns 403 when user is Admin', async () => {
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue({ id: 1, role: UserRole.Admin }),
-    })
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue({ id: 1, role: UserRole.Admin })
 
     const response = await app.inject({
       method: 'POST',
@@ -283,11 +213,10 @@ describe('payments routes', () => {
   })
 
   it('POST /api/payments/init returns 409 when company wallet is missing', async () => {
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue({
-        ...candidateUser,
-        company: { id: 1, primaryWallet: null },
-      }),
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue({
+      ...candidateUser,
+      company: { id: 1, primaryWallet: null },
     })
 
     const response = await app.inject({
@@ -313,16 +242,9 @@ describe('payments routes', () => {
       },
     }
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        order: {
-          create: vi.fn().mockResolvedValue(createdOrder),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.order, 'create').mockResolvedValue(createdOrder)
 
     const response = await app.inject({
       method: 'POST',
@@ -345,16 +267,9 @@ describe('payments routes', () => {
   })
 
   it('POST /api/payments/init returns 500 on unexpected error', async () => {
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        order: {
-          create: vi.fn().mockRejectedValue(new Error('db unavailable')),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.order, 'create').mockRejectedValue(new Error('db unavailable'))
 
     const response = await app.inject({
       method: 'POST',
@@ -374,9 +289,8 @@ describe('payments routes', () => {
   // --- POST /api/payments/:id/attach-tx ---
 
   it('POST /api/payments/:id/attach-tx returns 403 when user is not authenticated', async () => {
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue(null),
-    })
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
 
     const response = await app.inject({
       method: 'POST',
@@ -392,9 +306,8 @@ describe('payments routes', () => {
   })
 
   it('POST /api/payments/:id/attach-tx returns 403 when user is Admin', async () => {
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue({ id: 1, role: UserRole.Admin }),
-    })
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue({ id: 1, role: UserRole.Admin })
 
     const response = await app.inject({
       method: 'POST',
@@ -410,17 +323,9 @@ describe('payments routes', () => {
   })
 
   it('POST /api/payments/:id/attach-tx returns 404 when payment not found', async () => {
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue(null),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue(null)
 
     const response = await app.inject({
       method: 'POST',
@@ -436,24 +341,16 @@ describe('payments routes', () => {
   })
 
   it('POST /api/payments/:id/attach-tx returns 404 when payment belongs to another user', async () => {
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue({
-            id: 11,
-            orderId: 7,
-            userId: 999,
-            status: PaymentStatus.Pending,
-            txHash: null,
-            order: { id: 7, quantity: 1 },
-          }),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: 999,
+      status: PaymentStatus.Pending,
+      txHash: null,
+      order: { id: 7, quantity: 1 },
+    })
 
     const response = await app.inject({
       method: 'POST',
@@ -469,24 +366,16 @@ describe('payments routes', () => {
   })
 
   it('POST /api/payments/:id/attach-tx returns 409 when payment is not Pending', async () => {
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue({
-            id: 11,
-            orderId: 7,
-            userId: candidateUser.id,
-            status: PaymentStatus.Completed,
-            txHash: null,
-            order: { id: 7, quantity: 1 },
-          }),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      status: PaymentStatus.Completed,
+      txHash: null,
+      order: { id: 7, quantity: 1 },
+    })
 
     const response = await app.inject({
       method: 'POST',
@@ -502,24 +391,16 @@ describe('payments routes', () => {
   })
 
   it('POST /api/payments/:id/attach-tx returns 409 when txHash already set', async () => {
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue({
-            id: 11,
-            orderId: 7,
-            userId: candidateUser.id,
-            status: PaymentStatus.Pending,
-            txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-            order: { id: 7, quantity: 1 },
-          }),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      status: PaymentStatus.Pending,
+      txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      order: { id: 7, quantity: 1 },
+    })
 
     const response = await app.inject({
       method: 'POST',
@@ -556,25 +437,17 @@ describe('payments routes', () => {
       order: { id: 7, quantity: 1 },
     }
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue({
-            id: 11,
-            orderId: 7,
-            userId: candidateUser.id,
-            status: PaymentStatus.Pending,
-            txHash: null,
-            order: { id: 7, quantity: 1 },
-          }),
-          update: vi.fn().mockResolvedValue(updatedPayment),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      status: PaymentStatus.Pending,
+      txHash: null,
+      order: { id: 7, quantity: 1 },
+    })
+    vi.spyOn(app.prisma.payment, 'update').mockResolvedValue(updatedPayment)
 
     const response = await app.inject({
       method: 'POST',
@@ -593,25 +466,17 @@ describe('payments routes', () => {
   })
 
   it('POST /api/payments/:id/attach-tx returns 409 on duplicate txHash', async () => {
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue({
-            id: 11,
-            orderId: 7,
-            userId: candidateUser.id,
-            status: PaymentStatus.Pending,
-            txHash: null,
-            order: { id: 7, quantity: 1 },
-          }),
-          update: vi.fn().mockRejectedValue({ code: 'P2002' }),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      status: PaymentStatus.Pending,
+      txHash: null,
+      order: { id: 7, quantity: 1 },
+    })
+    vi.spyOn(app.prisma.payment, 'update').mockRejectedValue({ code: 'P2002' })
 
     const response = await app.inject({
       method: 'POST',
@@ -627,25 +492,17 @@ describe('payments routes', () => {
   })
 
   it('POST /api/payments/:id/attach-tx returns 500 on unexpected error', async () => {
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue({
-            id: 11,
-            orderId: 7,
-            userId: candidateUser.id,
-            status: PaymentStatus.Pending,
-            txHash: null,
-            order: { id: 7, quantity: 1 },
-          }),
-          update: vi.fn().mockRejectedValue(new Error('db unavailable')),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      status: PaymentStatus.Pending,
+      txHash: null,
+      order: { id: 7, quantity: 1 },
+    })
+    vi.spyOn(app.prisma.payment, 'update').mockRejectedValue(new Error('db unavailable'))
 
     const response = await app.inject({
       method: 'POST',
@@ -663,9 +520,8 @@ describe('payments routes', () => {
   // --- POST /api/payments/:id/verify ---
 
   it('POST /api/payments/:id/verify returns 403 when user is not authenticated', async () => {
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue(null),
-    })
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
 
     const response = await app.inject({
       method: 'POST',
@@ -677,9 +533,8 @@ describe('payments routes', () => {
   })
 
   it('POST /api/payments/:id/verify returns 403 when user is Admin', async () => {
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue({ id: 1, role: UserRole.Admin }),
-    })
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue({ id: 1, role: UserRole.Admin })
 
     const response = await app.inject({
       method: 'POST',
@@ -691,17 +546,9 @@ describe('payments routes', () => {
   })
 
   it('POST /api/payments/:id/verify returns 404 when payment not found', async () => {
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue(null),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue(null)
 
     const response = await app.inject({
       method: 'POST',
@@ -713,24 +560,16 @@ describe('payments routes', () => {
   })
 
   it('POST /api/payments/:id/verify returns 409 when payment is not Pending', async () => {
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue({
-            id: 11,
-            orderId: 7,
-            userId: candidateUser.id,
-            status: PaymentStatus.Completed,
-            txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-            order: { id: 7, quantity: 1 },
-          }),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      status: PaymentStatus.Completed,
+      txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      order: { id: 7, quantity: 1 },
+    })
 
     const response = await app.inject({
       method: 'POST',
@@ -742,24 +581,16 @@ describe('payments routes', () => {
   })
 
   it('POST /api/payments/:id/verify returns 409 when no txHash attached', async () => {
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue({
-            id: 11,
-            orderId: 7,
-            userId: candidateUser.id,
-            status: PaymentStatus.Pending,
-            txHash: null,
-            order: { id: 7, quantity: 1 },
-          }),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      status: PaymentStatus.Pending,
+      txHash: null,
+      order: { id: 7, quantity: 1 },
+    })
 
     const response = await app.inject({
       method: 'POST',
@@ -788,18 +619,10 @@ describe('payments routes', () => {
     const getTransactionReceipt = await mockGetTransactionReceipt()
     getTransactionReceipt.mockResolvedValueOnce(null)
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue(pendingPayment),
-          update: vi.fn().mockResolvedValue({}),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue(pendingPayment)
+    vi.spyOn(app.prisma.payment, 'update').mockResolvedValue({})
 
     const response = await app.inject({
       method: 'POST',
@@ -852,19 +675,11 @@ describe('payments routes', () => {
       updatedAt: now,
     }
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue(pendingPayment),
-          update: vi.fn().mockResolvedValue(completedPayment),
-        },
-        $transaction: vi.fn().mockResolvedValue([completedPayment]),
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue(pendingPayment)
+    vi.spyOn(app.prisma.payment, 'update').mockResolvedValue({})
+    vi.spyOn(app.prisma, '$transaction').mockResolvedValue([completedPayment])
 
     const response = await app.inject({
       method: 'POST',
@@ -890,19 +705,11 @@ describe('payments routes', () => {
       updatedAt: now,
     }
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue(pendingPayment),
-          update: vi.fn().mockResolvedValue(completedPayment),
-        },
-        $transaction: vi.fn().mockResolvedValue([completedPayment]),
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue(pendingPayment)
+    vi.spyOn(app.prisma.payment, 'update').mockResolvedValue({})
+    vi.spyOn(app.prisma, '$transaction').mockResolvedValue([completedPayment])
 
     const response = await app.inject({
       method: 'POST',
@@ -918,25 +725,17 @@ describe('payments routes', () => {
     const getTransactionReceipt = await mockGetTransactionReceipt()
     getTransactionReceipt.mockResolvedValueOnce(buildReceipt({ to: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' }))
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue({
-            id: 11,
-            orderId: 7,
-            userId: candidateUser.id,
-            status: PaymentStatus.Pending,
-            txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-            order: { id: 7, quantity: 1 },
-          }),
-          update: vi.fn().mockResolvedValue({}),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      status: PaymentStatus.Pending,
+      txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      order: { id: 7, quantity: 1 },
+    })
+    vi.spyOn(app.prisma.payment, 'update').mockResolvedValue({})
 
     const response = await app.inject({
       method: 'POST',
@@ -951,25 +750,17 @@ describe('payments routes', () => {
     const getTransactionReceipt = await mockGetTransactionReceipt()
     getTransactionReceipt.mockResolvedValueOnce(buildReceipt({ from: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' }))
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue({
-            id: 11,
-            orderId: 7,
-            userId: candidateUser.id,
-            status: PaymentStatus.Pending,
-            txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-            order: { id: 7, quantity: 1 },
-          }),
-          update: vi.fn().mockResolvedValue({}),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      status: PaymentStatus.Pending,
+      txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      order: { id: 7, quantity: 1 },
+    })
+    vi.spyOn(app.prisma.payment, 'update').mockResolvedValue({})
 
     const response = await app.inject({
       method: 'POST',
@@ -988,25 +779,17 @@ describe('payments routes', () => {
     viMod.parseEventLogs.mockReturnValueOnce([])
     viMod.parseUnits.mockReturnValueOnce(1200000000000000000000n)
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue({
-            id: 11,
-            orderId: 7,
-            userId: candidateUser.id,
-            status: PaymentStatus.Pending,
-            txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-            order: { id: 7, quantity: 1 },
-          }),
-          update: vi.fn().mockResolvedValue({}),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      status: PaymentStatus.Pending,
+      txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      order: { id: 7, quantity: 1 },
+    })
+    vi.spyOn(app.prisma.payment, 'update').mockResolvedValue({})
 
     const response = await app.inject({
       method: 'POST',
@@ -1021,25 +804,17 @@ describe('payments routes', () => {
     const getTransactionReceipt = await mockGetTransactionReceipt()
     getTransactionReceipt.mockRejectedValueOnce(new Error('Transaction not confirmed on chain'))
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue({
-            id: 11,
-            orderId: 7,
-            userId: candidateUser.id,
-            status: PaymentStatus.Pending,
-            txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-            order: { id: 7, quantity: 1 },
-          }),
-          update: vi.fn().mockResolvedValue({}),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      status: PaymentStatus.Pending,
+      txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      order: { id: 7, quantity: 1 },
+    })
+    vi.spyOn(app.prisma.payment, 'update').mockResolvedValue({})
 
     const response = await app.inject({
       method: 'POST',
@@ -1054,25 +829,16 @@ describe('payments routes', () => {
     const getTransactionReceipt = await mockGetTransactionReceipt()
     getTransactionReceipt.mockRejectedValueOnce(new Error('RPC timeout'))
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue({
-            id: 11,
-            orderId: 7,
-            userId: candidateUser.id,
-            status: PaymentStatus.Pending,
-            txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-            order: { id: 7, quantity: 1 },
-          }),
-          update: vi.fn(),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      status: PaymentStatus.Pending,
+      txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      order: { id: 7, quantity: 1 },
+    })
 
     const response = await app.inject({
       method: 'POST',
@@ -1086,9 +852,8 @@ describe('payments routes', () => {
   // --- POST /api/payments/:id/cancel ---
 
   it('POST /api/payments/:id/cancel returns 403 when user is not authenticated', async () => {
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue(null),
-    })
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
 
     const response = await app.inject({
       method: 'POST',
@@ -1101,25 +866,17 @@ describe('payments routes', () => {
 
   it('POST /api/payments/:id/cancel returns 409 for too old payment', async () => {
     const oldDate = new Date(Date.now() - PAYMENT_WINDOW_MS - 1000)
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue({
-            id: 11,
-            orderId: 7,
-            userId: candidateUser.id,
-            status: PaymentStatus.Completed,
-            createdAt: oldDate,
-            order: { id: 7, quantity: 1 },
-          }),
-          update: vi.fn(),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      status: PaymentStatus.Completed,
+      createdAt: oldDate,
+      order: { id: 7, quantity: 1 },
+    })
+    vi.spyOn(app.prisma.payment, 'update')
 
     const response = await app.inject({
       method: 'POST',
@@ -1135,54 +892,46 @@ describe('payments routes', () => {
     const createdAt = new Date(Date.now() - 2 * 60 * 60 * 1000)
     const updatedAt = new Date('2026-07-30T12:00:00.000Z')
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue({
-            id: 11,
-            orderId: 7,
-            userId: candidateUser.id,
-            amount: 1200,
-            status: PaymentStatus.Completed,
-            txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-            fromWallet: '0x2222222222222222222222222222222222222222',
-            toWallet: candidateUser.company.primaryWallet,
-            chainId: 97,
-            tokenSymbol: 'USDT',
-            tokenContract: '0x3333333333333333333333333333333333333333',
-            tokenDecimals: 18,
-            cancelRequestedAt: null,
-            canceledAt: null,
-            createdAt,
-            updatedAt: createdAt,
-            order: { id: 7, quantity: 1 },
-          }),
-          update: vi.fn().mockResolvedValue({
-            id: 11,
-            orderId: 7,
-            userId: candidateUser.id,
-            amount: 1200,
-            status: PaymentStatus.ToCancel,
-            txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-            fromWallet: '0x2222222222222222222222222222222222222222',
-            toWallet: candidateUser.company.primaryWallet,
-            chainId: 97,
-            tokenSymbol: 'USDT',
-            tokenContract: '0x3333333333333333333333333333333333333333',
-            tokenDecimals: 18,
-            cancelRequestedAt: updatedAt,
-            canceledAt: null,
-            createdAt,
-            updatedAt,
-            order: { id: 7, quantity: 1 },
-          }),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      amount: 1200,
+      status: PaymentStatus.Completed,
+      txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      fromWallet: '0x2222222222222222222222222222222222222222',
+      toWallet: candidateUser.company.primaryWallet,
+      chainId: 97,
+      tokenSymbol: 'USDT',
+      tokenContract: '0x3333333333333333333333333333333333333333',
+      tokenDecimals: 18,
+      cancelRequestedAt: null,
+      canceledAt: null,
+      createdAt,
+      updatedAt: createdAt,
+      order: { id: 7, quantity: 1 },
+    })
+    vi.spyOn(app.prisma.payment, 'update').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      amount: 1200,
+      status: PaymentStatus.ToCancel,
+      txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      fromWallet: '0x2222222222222222222222222222222222222222',
+      toWallet: candidateUser.company.primaryWallet,
+      chainId: 97,
+      tokenSymbol: 'USDT',
+      tokenContract: '0x3333333333333333333333333333333333333333',
+      tokenDecimals: 18,
+      cancelRequestedAt: updatedAt,
+      canceledAt: null,
+      createdAt,
+      updatedAt,
+      order: { id: 7, quantity: 1 },
+    })
 
     const response = await app.inject({
       method: 'POST',
@@ -1197,9 +946,8 @@ describe('payments routes', () => {
   })
 
   it('POST /api/payments/:id/cancel returns 403 when user is Admin', async () => {
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue({ id: 1, role: UserRole.Admin }),
-    })
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue({ id: 1, role: UserRole.Admin })
 
     const response = await app.inject({
       method: 'POST',
@@ -1211,18 +959,10 @@ describe('payments routes', () => {
   })
 
   it('POST /api/payments/:id/cancel returns 404 when payment not found', async () => {
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue(null),
-          update: vi.fn(),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue(null)
+    vi.spyOn(app.prisma.payment, 'update')
 
     const response = await app.inject({
       method: 'POST',
@@ -1235,25 +975,17 @@ describe('payments routes', () => {
   })
 
   it('POST /api/payments/:id/cancel returns 404 when payment belongs to another user', async () => {
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(candidateUser),
-      },
-      {
-        payment: {
-          findMany: vi.fn().mockResolvedValue([]),
-          findUnique: vi.fn().mockResolvedValue({
-            id: 11,
-            orderId: 7,
-            userId: 999,
-            status: PaymentStatus.Completed,
-            createdAt: new Date(),
-            order: { id: 7, quantity: 1 },
-          }),
-          update: vi.fn(),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: 999,
+      status: PaymentStatus.Completed,
+      createdAt: new Date(),
+      order: { id: 7, quantity: 1 },
+    })
+    vi.spyOn(app.prisma.payment, 'update')
 
     const response = await app.inject({
       method: 'POST',

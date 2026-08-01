@@ -1,56 +1,15 @@
-import { describe, expect, it, onTestFinished, vi } from 'vitest'
-import { buildBackendApp } from '../../backend.js'
+import { describe, expect, it, vi } from 'vitest'
+import { createNoCsrfApp as createApp } from '../helpers'
 import fs from 'fs'
 import path from 'path'
-import { fileURLToPath } from 'url'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const lastEmailFixturePath = path.join(__dirname, '../fixtures/last-email.json')
-
-const createApp = async (overrides = {}) => {
-  const app = await buildBackendApp({
-    logger: false,
-    auth: {
-      enableCsrf: false,
-    },
-  })
-  onTestFinished(async () => {
-    await app.close()
-  })
-
-  // Mock auth functions
-  for (const key in app.auth) {
-    if (typeof app.auth[key] === 'function' && !overrides[key]) {
-      app.auth[key] = vi.fn(app.auth[key])
-    }
-  }
-
-  for (const key in overrides) {
-    if (key !== 'createUser' && Object.prototype.hasOwnProperty.call(overrides, key)) {
-      app.auth[key] = overrides[key]
-    }
-  }
-
-  app.registration = {
-    createUser: overrides.createUser || vi.fn(app.registration.createUser),
-    verifyToken: overrides.verifyToken || vi.fn().mockResolvedValue({ inviteCode: 'test-jti', owner: null }),
-  }
-
-  app.prisma = {
-    ...app.prisma,
-    usedInvite: {
-      ...app.prisma?.usedInvite,
-      findUnique: overrides.findUsedInvite || vi.fn().mockResolvedValue(null),
-      create: overrides.createUsedInvite || vi.fn().mockResolvedValue({ id: 1, code: 'test-jti' }),
-    },
-  }
-
-  return { app: app, auth: app.auth }
-}
+const lastEmailFixturePath = path.join(import.meta.dirname, '../fixtures/last-email.json')
 
 describe('register routes', () => {
   it('POST /api/register returns 400 when required fields are missing', async () => {
-    const { app } = await createApp()
+    const app = await createApp()
+    vi.spyOn(app.auth, 'setSession')
+    vi.spyOn(app.registration, 'createUser')
 
     const response = await app.inject({
       method: 'POST',
@@ -66,7 +25,9 @@ describe('register routes', () => {
   })
 
   it('POST /api/register returns 400 for invalid email format', async () => {
-    const { app } = await createApp()
+    const app = await createApp()
+    vi.spyOn(app.auth, 'setSession')
+    vi.spyOn(app.registration, 'createUser')
 
     const response = await app.inject({
       method: 'POST',
@@ -86,7 +47,9 @@ describe('register routes', () => {
   })
 
   it('POST /api/register returns 400 for invalid phone number', async () => {
-    const { app } = await createApp()
+    const app = await createApp()
+    vi.spyOn(app.auth, 'setSession')
+    vi.spyOn(app.registration, 'createUser')
 
     const response = await app.inject({
       method: 'POST',
@@ -111,9 +74,10 @@ describe('register routes', () => {
       meta: { target: ['email'] },
     })
 
-    const { app, auth } = await createApp({
-      createUser: vi.fn().mockRejectedValue(duplicateEmailError),
-    })
+    const app = await createApp()
+    vi.spyOn(app.registration, 'verifyToken').mockResolvedValue({ inviteCode: 'test-jti', owner: null })
+    vi.spyOn(app.registration, 'createUser').mockRejectedValue(duplicateEmailError)
+    vi.spyOn(app.auth, 'setSession')
 
     const response = await app.inject({
       method: 'POST',
@@ -132,7 +96,7 @@ describe('register routes', () => {
       error: 'Электронная почта уже есть в системе',
     })
     expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
-    expect(auth.setSession).not.toHaveBeenCalled()
+    expect(app.auth.setSession).not.toHaveBeenCalled()
   })
 
   it('POST /api/register returns 409 for duplicate phone number', async () => {
@@ -141,9 +105,10 @@ describe('register routes', () => {
       meta: { target: ['phone'] },
     })
 
-    const { app, auth } = await createApp({
-      createUser: vi.fn().mockRejectedValue(duplicatePhoneError),
-    })
+    const app = await createApp()
+    vi.spyOn(app.registration, 'verifyToken').mockResolvedValue({ inviteCode: 'test-jti', owner: null })
+    vi.spyOn(app.registration, 'createUser').mockRejectedValue(duplicatePhoneError)
+    vi.spyOn(app.auth, 'setSession')
 
     const response = await app.inject({
       method: 'POST',
@@ -151,7 +116,7 @@ describe('register routes', () => {
       payload: {
         email: 'new.user@example.com',
         firstName: 'New',
-        phone: '+375291234569', // Duplicate phone
+        phone: '+375291234569',
         password: 'password123',
         token: 'some-token',
       },
@@ -162,7 +127,7 @@ describe('register routes', () => {
       error: 'Номер телефона уже есть в системе',
     })
     expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
-    expect(auth.setSession).not.toHaveBeenCalled()
+    expect(app.auth.setSession).not.toHaveBeenCalled()
   })
 
   it('POST /api/register returns 409 for duplicate invite code', async () => {
@@ -171,9 +136,10 @@ describe('register routes', () => {
       meta: { target: ['code'] },
     })
 
-    const { app, auth } = await createApp({
-      createUser: vi.fn().mockRejectedValue(duplicateCodeError),
-    })
+    const app = await createApp()
+    vi.spyOn(app.registration, 'verifyToken').mockResolvedValue({ inviteCode: 'test-jti', owner: null })
+    vi.spyOn(app.registration, 'createUser').mockRejectedValue(duplicateCodeError)
+    vi.spyOn(app.auth, 'setSession')
 
     const response = await app.inject({
       method: 'POST',
@@ -192,7 +158,7 @@ describe('register routes', () => {
       error: 'Приглашенный уже есть в системе',
     })
     expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
-    expect(auth.setSession).not.toHaveBeenCalled()
+    expect(app.auth.setSession).not.toHaveBeenCalled()
   })
 
   it('POST /api/register returns 409 with raw field name for unknown P2002 field', async () => {
@@ -201,9 +167,10 @@ describe('register routes', () => {
       meta: { target: ['wallet'] },
     })
 
-    const { app, auth } = await createApp({
-      createUser: vi.fn().mockRejectedValue(unknownFieldError),
-    })
+    const app = await createApp()
+    vi.spyOn(app.registration, 'verifyToken').mockResolvedValue({ inviteCode: 'test-jti', owner: null })
+    vi.spyOn(app.registration, 'createUser').mockRejectedValue(unknownFieldError)
+    vi.spyOn(app.auth, 'setSession')
 
     const response = await app.inject({
       method: 'POST',
@@ -222,7 +189,7 @@ describe('register routes', () => {
       error: 'wallet уже есть в системе',
     })
     expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
-    expect(auth.setSession).not.toHaveBeenCalled()
+    expect(app.auth.setSession).not.toHaveBeenCalled()
   })
 
   it('POST /api/register returns 409 with generic field label when P2002 message has no backtick field', async () => {
@@ -230,9 +197,10 @@ describe('register routes', () => {
       code: 'P2002',
     })
 
-    const { app, auth } = await createApp({
-      createUser: vi.fn().mockRejectedValue(p2002NoFieldError),
-    })
+    const app = await createApp()
+    vi.spyOn(app.registration, 'verifyToken').mockResolvedValue({ inviteCode: 'test-jti', owner: null })
+    vi.spyOn(app.registration, 'createUser').mockRejectedValue(p2002NoFieldError)
+    vi.spyOn(app.auth, 'setSession')
 
     const response = await app.inject({
       method: 'POST',
@@ -251,13 +219,14 @@ describe('register routes', () => {
       error: 'Поле уже есть в системе',
     })
     expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
-    expect(auth.setSession).not.toHaveBeenCalled()
+    expect(app.auth.setSession).not.toHaveBeenCalled()
   })
 
   it('POST /api/register returns 500 when createUser returns falsy', async () => {
-    const { app, auth } = await createApp({
-      createUser: vi.fn().mockResolvedValue(null),
-    })
+    const app = await createApp()
+    vi.spyOn(app.registration, 'verifyToken').mockResolvedValue({ inviteCode: 'test-jti', owner: null })
+    vi.spyOn(app.registration, 'createUser').mockResolvedValue(null)
+    vi.spyOn(app.auth, 'setSession')
 
     const response = await app.inject({
       method: 'POST',
@@ -273,7 +242,7 @@ describe('register routes', () => {
     expect(response.statusCode).toBe(500)
     expect(response.json()).toEqual({ error: 'Ошибка регистрации' })
     expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
-    expect(auth.setSession).not.toHaveBeenCalled()
+    expect(app.auth.setSession).not.toHaveBeenCalled()
   })
 
   it('POST /api/register returns 500 when parentId does not point to an existing user', async () => {
@@ -281,9 +250,10 @@ describe('register routes', () => {
       code: 'P2003',
     })
 
-    const { app, auth } = await createApp({
-      createUser: vi.fn().mockRejectedValue(foreignKeyError),
-    })
+    const app = await createApp()
+    vi.spyOn(app.registration, 'verifyToken').mockResolvedValue({ inviteCode: 'test-jti', owner: null })
+    vi.spyOn(app.registration, 'createUser').mockRejectedValue(foreignKeyError)
+    vi.spyOn(app.auth, 'setSession')
 
     const response = await app.inject({
       method: 'POST',
@@ -300,13 +270,14 @@ describe('register routes', () => {
     expect(response.statusCode).toBe(500)
     expect(response.json()).toEqual({ error: 'Foreign key constraint failed on the field: parentId' })
     expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
-    expect(auth.setSession).not.toHaveBeenCalled()
+    expect(app.auth.setSession).not.toHaveBeenCalled()
   })
 
   it('POST /api/register returns 500 with error message on non-P2002 error', async () => {
-    const { app, auth } = await createApp({
-      createUser: vi.fn().mockRejectedValue(new Error('Database connection error')),
-    })
+    const app = await createApp()
+    vi.spyOn(app.registration, 'verifyToken').mockResolvedValue({ inviteCode: 'test-jti', owner: null })
+    vi.spyOn(app.registration, 'createUser').mockRejectedValue(new Error('Database connection error'))
+    vi.spyOn(app.auth, 'setSession')
 
     const response = await app.inject({
       method: 'POST',
@@ -323,19 +294,20 @@ describe('register routes', () => {
     expect(response.statusCode).toBe(500)
     expect(response.json()).toEqual({ error: 'Database connection error' })
     expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
-    expect(auth.setSession).not.toHaveBeenCalled()
+    expect(app.auth.setSession).not.toHaveBeenCalled()
   })
 
   it('POST /api/register returns 200 with success message on success', async () => {
     if (fs.existsSync(lastEmailFixturePath)) fs.unlinkSync(lastEmailFixturePath)
 
-    const { app, auth } = await createApp({
-      createUser: vi.fn().mockResolvedValue({
-        id: 42,
-        email: 'new.user@example.com',
-        firstName: 'New',
-      }),
+    const app = await createApp()
+    vi.spyOn(app.registration, 'verifyToken').mockResolvedValue({ inviteCode: 'test-jti', owner: null })
+    vi.spyOn(app.registration, 'createUser').mockResolvedValue({
+      id: 42,
+      email: 'new.user@example.com',
+      firstName: 'New',
     })
+    vi.spyOn(app.auth, 'setSession')
 
     const payload = {
       email: 'new.user@example.com',
@@ -365,7 +337,7 @@ describe('register routes', () => {
       inviteCode: 'test-jti',
     })
     expect(app.registration.verifyToken).toHaveBeenCalledWith('some-token')
-    expect(auth.setSession).not.toHaveBeenCalled()
+    expect(app.auth.setSession).not.toHaveBeenCalled()
 
     expect(fs.existsSync(lastEmailFixturePath)).toBe(true)
     const emailContent = JSON.parse(fs.readFileSync(lastEmailFixturePath, 'utf-8'))

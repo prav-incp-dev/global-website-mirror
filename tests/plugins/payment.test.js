@@ -1,37 +1,18 @@
-import { describe, it, onTestFinished, vi } from 'vitest'
-import { buildBackendApp } from '../../backend.js'
+import { describe, it, vi } from 'vitest'
+import { createApp } from '../helpers'
 import { PaymentStatus } from '@/generated/prisma/enums'
-
-const createApp = async () => {
-  const app = await buildBackendApp({
-    logger: false,
-  })
-  onTestFinished(async () => {
-    await app.close()
-  })
-
-  const mockPrisma = {
-    payment: {
-      findMany: vi.fn(),
-    },
-  }
-
-  app.prisma = mockPrisma
-
-  return { app, prisma: mockPrisma }
-}
 
 describe('payment plugin', () => {
   it('getPayments returns empty array when user has no payments', async ({ expect }) => {
-    const { app, prisma } = await createApp()
+    const app = await createApp()
 
-    prisma.payment.findMany.mockResolvedValue([])
+    vi.spyOn(app.prisma.payment, 'findMany').mockResolvedValue([])
 
     const user = { id: 1 }
     const result = await app.payment.getPayments(user)
 
     expect(result).toEqual([])
-    expect(prisma.payment.findMany).toHaveBeenCalledWith({
+    expect(app.prisma.payment.findMany).toHaveBeenCalledWith({
       where: { userId: 1 },
       include: { order: true },
       orderBy: { createdAt: 'desc' },
@@ -39,7 +20,7 @@ describe('payment plugin', () => {
   })
 
   it('getPayments returns serialized payments when user has payments', async ({ expect }) => {
-    const { app, prisma } = await createApp()
+    const app = await createApp()
 
     const mockPayments = [
       {
@@ -80,7 +61,7 @@ describe('payment plugin', () => {
       },
     ]
 
-    prisma.payment.findMany.mockResolvedValue(mockPayments)
+    vi.spyOn(app.prisma.payment, 'findMany').mockResolvedValue(mockPayments)
 
     const user = { id: 1 }
     const result = await app.payment.getPayments(user)
@@ -93,7 +74,7 @@ describe('payment plugin', () => {
     expect(result[1].amountUsd).toBe(200)
     expect(result[1].quantity).toBeNull()
 
-    expect(prisma.payment.findMany).toHaveBeenCalledWith({
+    expect(app.prisma.payment.findMany).toHaveBeenCalledWith({
       where: { userId: 1 },
       include: { order: true },
       orderBy: { createdAt: 'desc' },

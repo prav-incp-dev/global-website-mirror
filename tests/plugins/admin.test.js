@@ -1,5 +1,5 @@
-import { beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest'
-import { buildBackendApp } from '../../backend.js'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
+import { createApp } from '../helpers'
 
 const SESSION_SECRET = 'test-secret-key-for-testing-purposes'
 
@@ -7,49 +7,10 @@ beforeAll(() => {
   vi.stubEnv('SESSION_SECRET', SESSION_SECRET)
 })
 
-const createApp = async (authOverrides = {}, prismaOverrides = {}) => {
-  const app = await buildBackendApp({
-    logger: false,
-    auth: {
-      enableCsrf: false,
-    },
-  })
-  onTestFinished(async () => {
-    await app.close()
-  })
-
-  // Mock prisma decorator
-  const defaultPrisma = {
-    company: {
-      findUnique: vi.fn(),
-      update: vi.fn(),
-    },
-  }
-
-  app.prisma = { ...defaultPrisma, ...prismaOverrides }
-
-  // Mock auth functions
-  const defaultAuth = {
-    getUser: vi.fn().mockResolvedValue(null),
-    register: vi.fn(),
-    login: vi.fn(),
-    setSession: vi.fn(),
-    clearSession: vi.fn(),
-    createTwoFactorCode: vi.fn(),
-    verifyTwoFactorCode: vi.fn(),
-    signPendingAuth: vi.fn(),
-    verifyPendingAuth: vi.fn(),
-  }
-
-  for (const key in defaultAuth) {
-    app.auth[key] = authOverrides[key] || defaultAuth[key]
-  }
-
-  return { app, auth: app.auth }
-}
-
 describe('admin plugin', () => {
   it('getCompany returns null when user has no company', async () => {
+    const app = await createApp()
+
     const adminUser = {
       id: 1,
       email: 'admin@example.com',
@@ -57,19 +18,13 @@ describe('admin plugin', () => {
       company: null,
     }
 
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue(adminUser),
-    })
-
     const company = await app.admin.getCompany(adminUser)
 
     expect(company).toBeNull()
   })
 
   it('getCompany returns null when user is null', async () => {
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue(null),
-    })
+    const app = await createApp()
 
     const company = await app.admin.getCompany(null)
 
@@ -91,16 +46,8 @@ describe('admin plugin', () => {
       secondaryWallet: null,
     }
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(adminUser),
-      },
-      {
-        company: {
-          findUnique: vi.fn().mockResolvedValue(foundCompany),
-        },
-      },
-    )
+    const app = await createApp()
+    vi.spyOn(app.prisma.company, 'findUnique').mockResolvedValue(foundCompany)
 
     const company = await app.admin.getCompany(adminUser)
 
