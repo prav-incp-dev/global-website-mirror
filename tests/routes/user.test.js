@@ -1,64 +1,11 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
-import { buildBackendApp } from '../../backend.js'
+import { describe, expect, it, vi } from 'vitest'
+import { createNoCsrfApp as createApp } from '../helpers'
 import { UserRole } from '../../src/generated/prisma/client'
 
-const SESSION_SECRET = 'test-secret-key-for-testing-purposes'
-
-beforeAll(() => {
-  vi.stubEnv('SESSION_SECRET', SESSION_SECRET)
-})
-
-const createApp = async (authOverrides = {}, prismaOverrides = {}) => {
-  const app = await buildBackendApp({ logger: false })
-
-  // Override CSRF protection with a no-op so we don't need tokens in tests
-  app.csrfProtection = (req, reply, next) => next()
-
-  // Mock prisma decorator
-  const defaultPrisma = {
-    user: {
-      findUnique: vi.fn(),
-      update: vi.fn(),
-    },
-  }
-
-  app.prisma = { ...defaultPrisma, ...prismaOverrides }
-
-  // Mock auth functions
-  const defaultAuth = {
-    getUser: vi.fn().mockResolvedValue(null),
-    register: vi.fn(),
-    login: vi.fn(),
-    setSession: vi.fn(),
-    clearSession: vi.fn(),
-    createTwoFactorCode: vi.fn(),
-    verifyTwoFactorCode: vi.fn(),
-    signPendingAuth: vi.fn(),
-    verifyPendingAuth: vi.fn(),
-  }
-
-  for (const key in defaultAuth) {
-    app.auth[key] = authOverrides[key] || defaultAuth[key]
-  }
-
-  return { app, auth: app.auth }
-}
-
 describe('PUT /api/user/profile', () => {
-  const apps = []
-
-  afterEach(async () => {
-    while (apps.length > 0) {
-      const app = apps.pop()
-      await app.close()
-    }
-  })
-
   it('returns 403 when user is not authenticated', async () => {
-    const { app, auth } = await createApp({
-      getUser: vi.fn().mockResolvedValue(null),
-    })
-    apps.push(app)
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
 
     const response = await app.inject({
       method: 'PUT',
@@ -67,13 +14,13 @@ describe('PUT /api/user/profile', () => {
         firstName: 'John',
         lastName: 'Doe',
         phone: '+375291234567',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
       },
     })
 
     expect(response.statusCode).toBe(403)
     expect(response.json()).toEqual({ error: 'Доступ запрещен' })
-    expect(auth.getUser).toHaveBeenCalledTimes(1)
+    expect(app.auth.getUser).toHaveBeenCalledTimes(1)
   })
 
   it('returns 403 when user is an Admin', async () => {
@@ -83,10 +30,8 @@ describe('PUT /api/user/profile', () => {
       role: UserRole.Admin,
     }
 
-    const { app, auth } = await createApp({
-      getUser: vi.fn().mockResolvedValue(adminUser),
-    })
-    apps.push(app)
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
 
     const response = await app.inject({
       method: 'PUT',
@@ -95,13 +40,13 @@ describe('PUT /api/user/profile', () => {
         firstName: 'John',
         lastName: 'Doe',
         phone: '+375291234567',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
       },
     })
 
     expect(response.statusCode).toBe(403)
     expect(response.json()).toEqual({ error: 'Доступ запрещен' })
-    expect(auth.getUser).toHaveBeenCalledTimes(1)
+    expect(app.auth.getUser).toHaveBeenCalledTimes(1)
   })
 
   it('returns 400 when firstName is missing', async () => {
@@ -111,10 +56,8 @@ describe('PUT /api/user/profile', () => {
       role: UserRole.Candidate,
     }
 
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue(regularUser),
-    })
-    apps.push(app)
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(regularUser)
 
     const response = await app.inject({
       method: 'PUT',
@@ -122,7 +65,7 @@ describe('PUT /api/user/profile', () => {
       payload: {
         lastName: 'Doe',
         phone: '+375291234567',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
       },
     })
 
@@ -137,10 +80,8 @@ describe('PUT /api/user/profile', () => {
       role: UserRole.Candidate,
     }
 
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue(regularUser),
-    })
-    apps.push(app)
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(regularUser)
 
     const response = await app.inject({
       method: 'PUT',
@@ -148,7 +89,7 @@ describe('PUT /api/user/profile', () => {
       payload: {
         firstName: 'John',
         phone: '+375291234567',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
       },
     })
 
@@ -163,10 +104,8 @@ describe('PUT /api/user/profile', () => {
       role: UserRole.Candidate,
     }
 
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue(regularUser),
-    })
-    apps.push(app)
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(regularUser)
 
     const response = await app.inject({
       method: 'PUT',
@@ -174,7 +113,7 @@ describe('PUT /api/user/profile', () => {
       payload: {
         firstName: 'John',
         lastName: 'Doe',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
       },
     })
 
@@ -189,10 +128,8 @@ describe('PUT /api/user/profile', () => {
       role: UserRole.Candidate,
     }
 
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue(regularUser),
-    })
-    apps.push(app)
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(regularUser)
 
     const response = await app.inject({
       method: 'PUT',
@@ -215,10 +152,8 @@ describe('PUT /api/user/profile', () => {
       role: UserRole.Candidate,
     }
 
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue(regularUser),
-    })
-    apps.push(app)
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(regularUser)
 
     const response = await app.inject({
       method: 'PUT',
@@ -227,7 +162,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'John',
         lastName: 'Doe',
         phone: 'invalid-phone',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
       },
     })
 
@@ -242,10 +177,8 @@ describe('PUT /api/user/profile', () => {
       role: UserRole.Candidate,
     }
 
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue(regularUser),
-    })
-    apps.push(app)
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(regularUser)
 
     const response = await app.inject({
       method: 'PUT',
@@ -254,7 +187,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'John',
         lastName: 'Doe',
         phone: '+375291234567',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
         wallet: 'invalid-wallet',
       },
     })
@@ -270,10 +203,8 @@ describe('PUT /api/user/profile', () => {
       role: UserRole.Candidate,
     }
 
-    const { app } = await createApp({
-      getUser: vi.fn().mockResolvedValue(regularUser),
-    })
-    apps.push(app)
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(regularUser)
 
     const response = await app.inject({
       method: 'PUT',
@@ -302,17 +233,9 @@ describe('PUT /api/user/profile', () => {
       meta: { target: ['memberId'] },
     })
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(regularUser),
-      },
-      {
-        user: {
-          update: vi.fn().mockRejectedValue(duplicateMemberIdError),
-        },
-      },
-    )
-    apps.push(app)
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(regularUser)
+    vi.spyOn(app.prisma.user, 'update').mockRejectedValue(duplicateMemberIdError)
 
     const response = await app.inject({
       method: 'PUT',
@@ -321,7 +244,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'John',
         lastName: 'Doe',
         phone: '+375291234567',
-        memberId: '1111',
+        memberId: 'DOM-00000000-1111',
       },
     })
 
@@ -341,17 +264,9 @@ describe('PUT /api/user/profile', () => {
       meta: { target: ['nick'] },
     })
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(regularUser),
-      },
-      {
-        user: {
-          update: vi.fn().mockRejectedValue(duplicateNickError),
-        },
-      },
-    )
-    apps.push(app)
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(regularUser)
+    vi.spyOn(app.prisma.user, 'update').mockRejectedValue(duplicateNickError)
 
     const response = await app.inject({
       method: 'PUT',
@@ -360,7 +275,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'John',
         lastName: 'Doe',
         phone: '+375291234567',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
         nick: 'existing-nick',
       },
     })
@@ -381,17 +296,9 @@ describe('PUT /api/user/profile', () => {
       meta: { target: ['wallet'] },
     })
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(regularUser),
-      },
-      {
-        user: {
-          update: vi.fn().mockRejectedValue(duplicateWalletError),
-        },
-      },
-    )
-    apps.push(app)
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(regularUser)
+    vi.spyOn(app.prisma.user, 'update').mockRejectedValue(duplicateWalletError)
 
     const response = await app.inject({
       method: 'PUT',
@@ -400,7 +307,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'John',
         lastName: 'Doe',
         phone: '+375291234567',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
         wallet: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       },
     })
@@ -420,17 +327,9 @@ describe('PUT /api/user/profile', () => {
       code: 'P2002',
     })
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(regularUser),
-      },
-      {
-        user: {
-          update: vi.fn().mockRejectedValue(p2002NoFieldError),
-        },
-      },
-    )
-    apps.push(app)
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(regularUser)
+    vi.spyOn(app.prisma.user, 'update').mockRejectedValue(p2002NoFieldError)
 
     const response = await app.inject({
       method: 'PUT',
@@ -439,7 +338,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'John',
         lastName: 'Doe',
         phone: '+375291234567',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
       },
     })
 
@@ -454,17 +353,9 @@ describe('PUT /api/user/profile', () => {
       role: UserRole.Candidate,
     }
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(regularUser),
-      },
-      {
-        user: {
-          update: vi.fn().mockRejectedValue(new Error('Database connection failed')),
-        },
-      },
-    )
-    apps.push(app)
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(regularUser)
+    vi.spyOn(app.prisma.user, 'update').mockRejectedValue(new Error('Database connection failed'))
 
     const response = await app.inject({
       method: 'PUT',
@@ -473,7 +364,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'John',
         lastName: 'Doe',
         phone: '+375291234567',
-        memberId: '1234',
+        memberId: 'DOM-00000000-1234',
       },
     })
 
@@ -493,22 +384,14 @@ describe('PUT /api/user/profile', () => {
       firstName: 'Jane',
       lastName: 'Smith',
       phone: '+375297654321',
-      memberId: '4567',
+      memberId: 'DOM-00000000-4567',
       nick: 'janesmith',
       wallet: '0x1234567890abcdef1234567890abcdef12345678',
     }
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(regularUser),
-      },
-      {
-        user: {
-          update: vi.fn().mockResolvedValue(updatedUser),
-        },
-      },
-    )
-    apps.push(app)
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(regularUser)
+    vi.spyOn(app.prisma.user, 'update').mockResolvedValue(updatedUser)
 
     const response = await app.inject({
       method: 'PUT',
@@ -517,7 +400,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'Jane',
         lastName: 'Smith',
         phone: '+375297654321',
-        memberId: '4567',
+        memberId: 'DOM-00000000-4567',
         nick: 'janesmith',
         wallet: '0x1234567890abcdef1234567890abcdef12345678',
       },
@@ -534,7 +417,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'Jane',
         lastName: 'Smith',
         phone: '+375297654321',
-        memberId: '4567',
+        memberId: 'DOM-00000000-4567',
         nick: 'janesmith',
         wallet: '0x1234567890abcdef1234567890abcdef12345678',
       },
@@ -553,22 +436,14 @@ describe('PUT /api/user/profile', () => {
       firstName: 'Jane',
       lastName: 'Smith',
       phone: '+375297654321',
-      memberId: '4567',
+      memberId: 'DOM-00000000-4567',
       nick: null,
       wallet: null,
     }
 
-    const { app } = await createApp(
-      {
-        getUser: vi.fn().mockResolvedValue(regularUser),
-      },
-      {
-        user: {
-          update: vi.fn().mockResolvedValue(updatedUser),
-        },
-      },
-    )
-    apps.push(app)
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(regularUser)
+    vi.spyOn(app.prisma.user, 'update').mockResolvedValue(updatedUser)
 
     const response = await app.inject({
       method: 'PUT',
@@ -577,7 +452,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'Jane',
         lastName: 'Smith',
         phone: '+375297654321',
-        memberId: '4567',
+        memberId: 'DOM-00000000-4567',
       },
     })
 
@@ -592,7 +467,7 @@ describe('PUT /api/user/profile', () => {
         firstName: 'Jane',
         lastName: 'Smith',
         phone: '+375297654321',
-        memberId: '4567',
+        memberId: 'DOM-00000000-4567',
         nick: null,
         wallet: null,
       },

@@ -1,0 +1,187 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  padding: 20px;
+}
+
+.modal {
+  width: 100%;
+  max-width: 420px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #222 100%);
+  border: 1px solid rgba(91, 155, 213, 0.15);
+  border-radius: 16px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(91, 155, 213, 0.05);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  padding: 20px 24px 0;
+  margin-bottom: 24px;
+}
+
+.closeButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  color: #999;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+  color: #f5f5f5;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.body {
+  padding: 0 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Stepper */
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.stepperButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: transparent;
+  border: 1.5px solid rgba(91, 155, 213, 0.3);
+  border-radius: 12px;
+  color: #5b9bd5;
+  font-size: 1.25rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.stepperButton:hover {
+  background: rgba(91, 155, 213, 0.1);
+  border-color: #5b9bd5;
+}
+
+.stepperButton:disabled {
+  border-color: #333;
+  color: #555;
+  cursor: not-allowed;
+  background: transparent;
+}
+
+.stepperValue {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #f5f5f5;
+  min-width: 48px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Price */
+.priceRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: rgba(91, 155, 213, 0.05);
+  border: 1px solid rgba(91, 155, 213, 0.1);
+  border-radius: 10px;
+}
+
+.priceLabel {
+  font-size: 0.875rem;
+  color: #999;
+}
+
+.priceValue {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #5b9bd5;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pay button */
+.payButton {
+  width: 100%;
+  padding: 14px 24px;
+  background: #5b9bd5;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.payButton:hover {
+  background: #6eaade;
+  box-shadow: 0 0 28px rgba(91, 155, 213, 0.4);
+  transform: translateY(-1px);
+}
+
+.payButton:active {
+  transform: translateY(0);
+}
+
+.payButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.errorText {
+  margin: 0;
+  color: #ff8b8b;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 480px) {
+  .overlay {
+    padding: 16px;
+  }
+
+  .modal {
+    border-radius: 12px;
+  }
+
+  .header {
+    padding: 16px 16px 0;
+  }
+
+  .body {
+    padding: 0 16px 16px;
+  }
+}

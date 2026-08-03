@@ -29,6 +29,14 @@
   line-height: 1.5;
 }
 
+.wallet {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  display: block;
+}
+
 .editButton {
   display: block;
   width: 100%;
