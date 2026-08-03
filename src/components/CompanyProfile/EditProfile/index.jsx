@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { WALLET_REGEXP } from '@/lib/regexps.js'
+import { trimFormData } from '@/lib/forms'
 import styles from './index.module.css'
 import ErrorIcon from '@/assets/icons/ErrorIcon.svg?react'
 
@@ -22,6 +23,8 @@ const EditProfile = ({ company, csrfToken, onUpdate, onCancel }) => {
   const onSubmit = async (formData) => {
     setError('')
 
+    const trimmedData = trimFormData(formData)
+
     try {
       const res = await fetch('/api/admin/company', {
         method: 'PUT',
@@ -29,7 +32,7 @@ const EditProfile = ({ company, csrfToken, onUpdate, onCancel }) => {
           'Content-Type': 'application/json',
           'x-csrf-token': csrfToken,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(trimmedData),
       })
 
       const result = await res.json()

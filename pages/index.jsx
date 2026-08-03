@@ -4,6 +4,7 @@ import { UserRole } from '@/generated/prisma/enums'
 import UserProfile from '@/components/UserProfile'
 import InvitationModal from '@/components/InvitationModal'
 import Payments from '@/components/Payments'
+import StatsDashboard from '@/components/StatsDashboard'
 import styles from './index.module.css'
 
 export const getData = async ({ server, req, reply }) => {
@@ -22,6 +23,7 @@ export const getData = async ({ server, req, reply }) => {
   const csrfToken = reply.generateCsrf()
 
   const payments = await server.payment.getPayments(user)
+  const stats = user.role === UserRole.Consultant && (await server.consultant.getStats(user))
 
   return {
     profile: {
@@ -32,24 +34,34 @@ export const getData = async ({ server, req, reply }) => {
       phone: user.phone,
       memberId: user.memberId,
       wallet: user.wallet,
-      companyName: user.company?.name ?? null,
-      companyPrimaryWallet: user.company?.primaryWallet ?? null,
       parent: user.parent,
       role: user.role,
+      level: user.level,
+      score: user.score,
+      groupScore: user.groupScore,
+      companyName: user.company?.name ?? null,
+      companyPrimaryWallet: user.company?.primaryWallet ?? null,
     },
     payments,
     csrfToken,
+    stats,
   }
 }
 
-const TABS = [
-  { key: 'profile', label: 'Профиль' },
-  { key: 'payments', label: 'Покупки' },
-]
+const TABS = (role) => {
+  const tabs = [
+    { key: 'profile', label: 'Профиль' },
+    { key: 'payments', label: 'Покупки' },
+  ]
+
+  if (role === UserRole.Consultant) tabs.push({ key: 'stats', label: 'Статистика' })
+
+  return tabs
+}
 
 const Index = () => {
   const { data } = useRouteContext()
-  const { profile = {}, payments = [], csrfToken = '' } = data
+  const { profile = {}, payments = [], csrfToken = '', stats = null } = data
   const [activeTab, setActiveTab] = useState('profile')
   const [invitationOpen, setInvitationOpen] = useState(false)
   const [profileData, setProfileData] = useState(profile)
@@ -90,7 +102,7 @@ const Index = () => {
         </>
       )}
       <div className={styles.tabs}>
-        {TABS.map((tab) => (
+        {TABS(profileData.role).map((tab) => (
           <button
             key={tab.key}
             className={`${styles.tab} ${activeTab === tab.key ? styles.tabActive : ''}`}
@@ -108,6 +120,7 @@ const Index = () => {
         {activeTab === 'payments' && (
           <Payments profile={profileData} initialPayments={payments} csrfToken={csrfToken} />
         )}
+        {activeTab === 'stats' && <StatsDashboard profile={profileData} stats={stats} />}
       </div>
     </div>
   )

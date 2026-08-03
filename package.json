@@ -28,7 +28,7 @@
     "@fastify/cookie": "^11.1.1",
     "@fastify/csrf-protection": "^8.0.0",
     "@fastify/react": "^1.1.8",
-    "@fastify/vite": "^9.1.1",
+    "@fastify/vite": "^10.0.0",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.9.0",
     "ajv": "^8.20.0",

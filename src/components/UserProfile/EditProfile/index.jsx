@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { trimFormData } from '@/lib/forms'
 import styles from './index.module.css'
 import ErrorIcon from '@/assets/icons/ErrorIcon.svg?react'
 import { PHONE_REGEXP, WALLET_REGEXP, MEMBER_REGEXP } from '@/lib/regexps.js'
@@ -25,6 +26,8 @@ const EditProfile = ({ profile, csrfToken, onUpdate, onCancel }) => {
   const onSubmit = async (formData) => {
     setError('')
 
+    const trimmedData = trimFormData(formData)
+
     try {
       const res = await fetch('/api/user/profile', {
         method: 'PUT',
@@ -32,7 +35,7 @@ const EditProfile = ({ profile, csrfToken, onUpdate, onCancel }) => {
           'Content-Type': 'application/json',
           'x-csrf-token': csrfToken,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(trimmedData),
       })
 
       const result = await res.json()
