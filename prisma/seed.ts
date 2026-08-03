@@ -2,6 +2,9 @@ import 'dotenv/config'
 import bcrypt from 'bcryptjs'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '../src/generated/prisma/client'
+import { UserRole } from '../src/generated/prisma/enums'
+import { OrderStatus } from '../src/generated/prisma/enums'
+import { PaymentStatus } from '../src/generated/prisma/enums'
 
 const connectionString = process.env.DATABASE_URL
 const passwordHashRounds = 12
@@ -16,74 +19,83 @@ const prisma = new PrismaClient({ adapter })
 try {
   const passwordHash = await bcrypt.hash('password', passwordHashRounds)
 
+  const companyData = {
+    name: 'Our House MLM',
+    primaryWallet: '0x1111111111111111111111111111111111111111',
+  }
+
   const company = await prisma.company.upsert({
-    where: { name: 'Our House MLM' },
+    where: { name: companyData.name },
     update: {
-      primaryWallet: '0x1111111111111111111111111111111111111111',
+      primaryWallet: companyData.primaryWallet,
     },
-    create: {
-      name: 'Our House MLM',
-      primaryWallet: '0x1111111111111111111111111111111111111111',
-    },
+    create: companyData,
   })
-  const companyPrimaryWallet = company.primaryWallet || '0x1111111111111111111111111111111111111111'
+  const companyPrimaryWallet = company.primaryWallet || companyData.primaryWallet
+
+  const adminData = {
+    password: passwordHash,
+    role: UserRole.Admin,
+    nick: 'admin',
+    firstName: 'Alice',
+    lastName: 'Admin',
+    phone: '+10000000001',
+    memberId: 'DOM-00000000-0001',
+    wallet: '0xABCDEF1234567890',
+  }
 
   const user = await prisma.user.upsert({
     where: { email: 'admin@example.com' },
-    update: {
-      password: passwordHash,
-      role: 'Admin',
-      companyId: company.id,
-      nick: 'admin',
-      firstName: 'Alice',
-      lastName: 'Admin',
-      phone: '+10000000001',
-      memberId: 'DOM-00000000-OOO1',
-      wallet: '0xABCDEF1234567890',
-    },
+    update: adminData,
     create: {
       email: 'admin@example.com',
-      password: passwordHash,
-      role: 'Admin',
-      nick: 'admin',
-      firstName: 'Alice',
-      lastName: 'Admin',
-      phone: '+10000000001',
-      memberId: 'DOM-00000000-0001',
-      wallet: '0xABCDEF1234567890',
-      company: {
-        connect: { id: company.id },
-      },
+      ...adminData,
+      company: { connect: { id: company.id } },
     },
   })
 
   console.log(`Seeded company: ${company.name}`)
   console.log(`Seeded admin user: ${user.email}`)
 
+  const candidateData = {
+    password: passwordHash,
+    role: UserRole.Candidate,
+    nick: '@candidate',
+    firstName: 'Test',
+    lastName: 'Candidate',
+    phone: '+10000000002',
+    memberId: 'DOM-00000000-0002',
+    wallet: '0x2222222222222222222222222222222222222222',
+  }
+
   const candidate = await prisma.user.upsert({
     where: { email: 'candidate@example.com' },
-    update: {
-      password: passwordHash,
-      role: 'Candidate',
-      companyId: company.id,
-      nick: '@candidate',
-      firstName: 'Test',
-      lastName: 'Candidate',
-      phone: '+10000000002',
-      memberId: 'DOM-00000000-0002',
-      wallet: '0x2222222222222222222222222222222222222222',
-    },
+    update: candidateData,
     create: {
       email: 'candidate@example.com',
-      password: passwordHash,
-      role: 'Candidate',
+      ...candidateData,
       companyId: company.id,
-      nick: '@candidate',
-      firstName: 'Test',
-      lastName: 'Candidate',
-      phone: '+10000000002',
-      memberId: 'DOM-00000000-0002',
-      wallet: '0x2222222222222222222222222222222222222222',
+    },
+  })
+
+  const consultantData = {
+    password: passwordHash,
+    role: UserRole.Consultant,
+    nick: '@consultant',
+    firstName: 'Test',
+    lastName: 'Consultant',
+    phone: '+10000000003',
+    memberId: 'DOM-00000000-0003',
+    wallet: '0x3333333333333333333333333333333333333333',
+  }
+
+  const consultant = await prisma.user.upsert({
+    where: { email: 'consultant@example.com' },
+    update: consultantData,
+    create: {
+      email: 'consultant@example.com',
+      ...consultantData,
+      companyId: company.id,
     },
   })
 
@@ -100,7 +112,7 @@ try {
         userId: candidate.id,
         quantity: 1,
         totalAmount: 1200,
-        status: 'Paid',
+        status: OrderStatus.Paid,
         payment: {
           create: {
             userId: candidate.id,
@@ -113,7 +125,7 @@ try {
             txHash: sampleTxHash,
             fromWallet: '0x2222222222222222222222222222222222222222',
             toWallet: companyPrimaryWallet,
-            status: 'Completed',
+            status: PaymentStatus.Completed,
           },
         },
       },
@@ -123,6 +135,7 @@ try {
   }
 
   console.log(`Seeded candidate user: ${candidate.email}`)
+  console.log(`Seeded consultant user: ${consultant.email}`)
   console.log(`Seeded sample payment: ${seededPaymentHash}`)
 } finally {
   await prisma.$disconnect()
