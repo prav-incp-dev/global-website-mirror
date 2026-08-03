@@ -25,6 +25,10 @@ const EditProfile = ({ profile, csrfToken, onUpdate, onCancel }) => {
   const onSubmit = async (formData) => {
     setError('')
 
+    const trimmedData = Object.fromEntries(
+      Object.entries(formData).map(([k, v]) => [k, typeof v === 'string' ? v.trim() : v])
+    )
+
     try {
       const res = await fetch('/api/user/profile', {
         method: 'PUT',
@@ -32,7 +36,7 @@ const EditProfile = ({ profile, csrfToken, onUpdate, onCancel }) => {
           'Content-Type': 'application/json',
           'x-csrf-token': csrfToken,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(trimmedData),
       })
 
       const result = await res.json()

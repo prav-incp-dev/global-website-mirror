@@ -1,3 +1,4 @@
+import { UserRole } from '@/generated/prisma/enums'
 import styles from './index.module.css'
 
 const ViewProfile = ({ profile, onEdit }) => {
@@ -51,7 +52,7 @@ const ViewProfile = ({ profile, onEdit }) => {
         <span className={styles.label}>Компания:</span>
         <span className={styles.value}>{profile.companyName || '—'}</span>
       </div>
-      {!!parent && (
+      {!!parent && profile.role === UserRole.Candidate && (
         <div className={styles.row}>
           <span className={styles.label}>Ваш пригласитель:</span>
           <span className={styles.value}>{parent}</span>

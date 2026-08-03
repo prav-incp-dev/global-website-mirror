@@ -59,9 +59,9 @@ const Register = () => {
           'x-csrf-token': csrfToken,
         },
         body: JSON.stringify({
-          email: formData.email,
-          firstName: formData.firstName,
-          phone: formData.phone,
+          email: formData.email.trim(),
+          firstName: formData.firstName.trim(),
+          phone: formData.phone.trim(),
           password: formData.password,
           token,
         }),

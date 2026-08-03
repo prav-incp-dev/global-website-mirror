@@ -1,0 +1,85 @@
+.section {
+  margin-bottom: 30px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+  text-align: center;
+}
+
+.section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.sectionTitle {
+  margin: 0 0 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #d4af37;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+
+.row:last-child {
+  margin-bottom: 0;
+}
+
+.label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #d4af37;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
+}
+
+.value {
+  font-size: 0.95rem;
+  color: #f5f5f5;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.table th {
+  padding: 10px 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #d4af37;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-align: center;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.table td {
+  padding: 10px 8px;
+  font-size: 0.95rem;
+  color: #f5f5f5;
+  font-weight: 400;
+  text-align: center;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.levelCol {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.nameCol {
+  text-align: left !important;
+}
