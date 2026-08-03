@@ -86,7 +86,7 @@ try {
     lastName: 'Consultant',
     phone: '+10000000003',
     memberId: 'DOM-00000000-0003',
-    level: 1, 
+    level: 1,
     wallet: '0x3333333333333333333333333333333333333333',
   }
 

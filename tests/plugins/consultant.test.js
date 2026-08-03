@@ -22,9 +22,7 @@ describe('consultant plugin', () => {
   it('getStats returns children and parent when user has parentId', async ({ expect }) => {
     const app = await createApp()
 
-    const mockChildren = [
-      { id: 2, firstName: 'Child', lastName: 'One', nick: null, level: 1 },
-    ]
+    const mockChildren = [{ id: 2, firstName: 'Child', lastName: 'One', nick: null, level: 1 }]
     const mockParent = { id: 5, firstName: 'Parent', lastName: 'User', nick: null, level: 3 }
 
     vi.spyOn(app.prisma.user, 'findMany').mockResolvedValue(mockChildren)

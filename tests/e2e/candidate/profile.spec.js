@@ -16,6 +16,11 @@ test.describe('consultant manages own profile', () => {
     await expect(page.getByText('+375290000033')).toBeVisible()
     await expect(page.getByText('DOM-00000000-0003')).toBeVisible()
 
+    // --- Verify balance button is visible (candidate has wallet)
+    await expect(page.getByRole('button', { name: 'Проверить баланс' })).toBeVisible()
+    await page.getByRole('button', { name: 'Проверить баланс' }).click()
+    await expect(page.getByText('Не удалось получить баланс')).toBeVisible()
+
     // Verify inviter field
     await expect(page.getByText('Ваш пригласитель:')).toBeVisible()
     await expect(page.getByText('@inviter')).toBeVisible()
