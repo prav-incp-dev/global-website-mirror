@@ -62,6 +62,30 @@ export const sendTwoFactorCode = async (user, code) => {
 }
 
 /**
+ * Sends a password reset email with a link containing the JWT token.
+ */
+export const sendPasswordResetEmail = async (user, token) => {
+  const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@ourhouse.app'
+  const transport = createTransport()
+  const link = `${process.env.BASE_URL}/reset?token=${token}`
+
+  const info = await transport.sendMail({
+    from: `"Наш Дом" <${fromEmail}>`,
+    to: user.email,
+    subject: 'Сброс пароля',
+    text: `Здравствуйте ${user.firstName || 'уважаемый пользователь'}!\n\nВы запросили сброс пароля. Для установки нового пароля перейдите по ссылке:\n${link}\n\nСсылка действительна в течение 1 часа. Если вы не запрашивали сброс пароля, просто проигнорируйте это письмо.\n\n— Наш Дом`,
+    html: `<p>Здравствуйте ${user.firstName || 'уважаемый пользователь'}!</p>
+          <p>Вы запросили сброс пароля. Для установки нового пароля <a href="${link}">нажмите здесь</a>.</p>
+          <p>Ссылка действительна в течение 1 часа. Если вы не запрашивали сброс пароля, просто проигнорируйте это письмо.</p>
+          <p>— Наш Дом</p>`,
+  })
+
+  processMailResult(info, user)
+
+  return info
+}
+
+/**
  * Sends a registration confirmation email to the user.
  */
 export const sendRegistrationConfirmation = async (user) => {

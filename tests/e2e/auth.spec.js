@@ -17,7 +17,7 @@ const getConfirmationCode = async () => {
   if (match) return match[1]
 }
 
-test.describe('consultant login flow with 2FA', () => {
+test.describe('login flow with 2FA', () => {
   test('logs in with email + password, enters confirmation code, and redirects to profile page', async ({ page }) => {
     await page.goto('/auth')
     await page.waitForLoadState('networkidle')
@@ -189,5 +189,111 @@ test.describe('consultant login flow with 2FA', () => {
     // Navigate to homepage / profile, check that we get redirected to /auth again because we are logged out
     await page.goto('/')
     await expect(page).toHaveURL('http://127.0.0.1:3101/auth')
+  })
+})
+
+test.describe('forgot password flow', () => {
+  test('user requests reset, gets email, resets password, and logs in with new password', async ({
+    page,
+  }) => {
+    await page.goto('/auth')
+    await page.waitForLoadState('networkidle')
+
+    // Click "Забыли пароль?" link
+    await page.getByRole('button', { name: 'Забыли пароль?' }).click()
+
+    // Should show the forgot password form
+    await expect(page.getByRole('heading', { name: 'Забыли пароль?' })).toBeVisible()
+    await expect(page).toHaveURL('http://127.0.0.1:3101/forgot')
+
+    // Enter email and submit
+    const emailInput = page.locator('#email')
+    await emailInput.fill('admin@example.com')
+    await page.getByRole('button', { name: 'Отправить ссылку' }).click()
+
+    // Should show success message
+    await expect(page.getByText('Ссылка для сброса пароля отправлена на ваш email.')).toBeVisible()
+
+    // Read the reset token from the email fixture file
+    const emailContent = JSON.parse(fs.readFileSync(fixturePath, 'utf-8'))
+    const tokenMatch = emailContent.text?.match(/token=([^\s&]+)/)
+    expect(tokenMatch).toBeTruthy()
+    const resetToken = tokenMatch[1]
+
+    // Navigate to the reset password page with the token
+    await page.goto(`/reset?token=${resetToken}`)
+    await page.waitForLoadState('networkidle')
+
+    // Should show the reset password form
+    await expect(page.getByRole('heading', { name: 'Новый пароль' })).toBeVisible()
+    await expect(page).toHaveURL(`http://127.0.0.1:3101/reset?token=${resetToken}`)
+
+    // Enter new password
+    const passwordInput = page.locator('#password')
+    const confirmPasswordInput = page.locator('#confirmPassword')
+    await passwordInput.fill('newpassword123')
+    await confirmPasswordInput.fill('newpassword123')
+    await page.getByRole('button', { name: 'Сохранить пароль' }).click()
+
+    // Should show success message
+    await expect(page.getByText('Пароль успешно изменён.')).toBeVisible()
+
+    // Should redirect to /auth after 3 seconds
+    await expect(page).toHaveURL('http://127.0.0.1:3101/auth')
+
+    // Login with the new password
+    await page.getByRole('heading', { name: 'Вход в систему' }).waitFor()
+    const loginEmailInput = page.locator('#email')
+    const loginPasswordInput = page.locator('#password')
+    await loginEmailInput.fill('admin@example.com')
+    await loginPasswordInput.fill('newpassword123')
+    await page.getByRole('button', { name: 'Войти' }).click()
+
+    // Should show 2FA confirmation step
+    await expect(page.getByRole('heading', { name: 'Подтверждение' })).toBeVisible()
+
+    // Read the confirmation code from email
+    const code = await getConfirmationCode()
+    const codeInput = page.locator('#code')
+    await codeInput.fill(code)
+    await page.getByRole('button', { name: 'Подтвердить' }).click()
+
+    // Should be logged in and redirected to admin panel
+    await expect(page).toHaveURL('http://127.0.0.1:3101/admin')
+    await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
+  })
+
+  test('entering non-existent email still shows success', async ({ page }) => {
+    await page.goto('/auth')
+    await page.waitForLoadState('networkidle')
+
+    // Click "Забыли пароль?" link
+    await page.getByRole('button', { name: 'Забыли пароль?' }).click()
+
+    await expect(page.getByRole('heading', { name: 'Забыли пароль?' })).toBeVisible()
+    await expect(page).toHaveURL(`http://127.0.0.1:3101/forgot`)
+
+    // Enter a non-existent email
+    const emailInput = page.locator('#email')
+    await emailInput.fill('nonexistent@example.com')
+    await page.getByRole('button', { name: 'Отправить ссылку' }).click()
+
+    // Should still show success (to prevent email enumeration)
+    await expect(page.getByText('Ссылка для сброса пароля отправлена на ваш email.')).toBeVisible()
+  })
+
+  test('invalid token shows error', async ({ page }) => {
+    await page.goto('/reset?token=invalid-token')
+    await page.waitForLoadState('networkidle')
+
+    await expect(page.getByRole('heading', { name: 'Новый пароль' })).toBeVisible()
+
+    const passwordInput = page.locator('#password')
+    const confirmPasswordInput = page.locator('#confirmPassword')
+    await passwordInput.fill('newpassword123')
+    await confirmPasswordInput.fill('newpassword123')
+    await page.getByRole('button', { name: 'Сохранить пароль' }).click()
+
+    await expect(page.getByText('Ссылка недействительна или срок её действия истёк')).toBeVisible()
   })
 })

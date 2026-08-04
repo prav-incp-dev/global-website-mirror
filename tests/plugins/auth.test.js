@@ -237,7 +237,7 @@ describe('auth plugin core functionality', () => {
   it('signPendingAuth signs a JWT with userId and expiry', async ({ expect }) => {
     const app = await createApp()
 
-    const token = app.auth.signPendingAuth(1)
+    const token = app.auth.signPendingAuth(1, 600)
     const decoded = jwt.verify(token, SESSION_SECRET)
     expect(decoded.userId).toBe(1)
     expect(decoded.exp).toBeDefined()

@@ -15,6 +15,10 @@ const Login = ({ csrfToken, onSuccess }) => {
 
   const [error, setError] = useState('')
 
+  const handleForgotPassword = () => {
+    window.location.assign('/forgot')
+  }
+
   const onSubmit = async ({ email, password }) => {
     try {
       const res = await fetch('/api/auth/login', {
@@ -92,6 +96,13 @@ const Login = ({ csrfToken, onSuccess }) => {
           style={{ cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
         >
           {isSubmitting ? 'Выполняется вход…' : 'Войти'}
+        </button>
+        <button
+          type="button"
+          className={styles.forgotLink}
+          onClick={handleForgotPassword}
+        >
+          Забыли пароль?
         </button>
       </form>
     </div>
