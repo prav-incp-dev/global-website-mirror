@@ -1,5 +1,6 @@
 import fp from 'fastify-plugin'
-import { createPublicClient, http, getAddress, formatUnits } from 'viem'
+import { getAddress, formatUnits } from 'viem'
+import { getPublicClient } from '../lib/chain.js'
 
 const erc20Abi = [
   {
@@ -24,13 +25,10 @@ export default fp(async (server) => {
       if (!wallet) return null
 
       const usdtAddress = process.env.VITE_BSC_TESTNET_USDT_ADDRESS
-      const rpcUrl = process.env.VITE_BSC_TESTNET_RPC_URL
 
-      if (!usdtAddress || !rpcUrl) return null
+      if (!usdtAddress) return null
 
-      const publicClient = createPublicClient({
-        transport: http(rpcUrl),
-      })
+      const publicClient = getPublicClient()
 
       const [rawBalance, decimals] = await Promise.all([
         publicClient.readContract({

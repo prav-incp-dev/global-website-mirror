@@ -183,9 +183,6 @@ describe('payments routes', () => {
       url: '/api/payments/init',
       payload: {
         quantity: 1,
-        chainId: 97,
-        tokenContract: '0x3333333333333333333333333333333333333333',
-        tokenDecimals: 18,
       },
     })
 
@@ -202,9 +199,6 @@ describe('payments routes', () => {
       url: '/api/payments/init',
       payload: {
         quantity: 1,
-        chainId: 97,
-        tokenContract: '0x3333333333333333333333333333333333333333',
-        tokenDecimals: 18,
       },
     })
 
@@ -224,9 +218,6 @@ describe('payments routes', () => {
       url: '/api/payments/init',
       payload: {
         quantity: 1,
-        chainId: 97,
-        tokenContract: '0x3333333333333333333333333333333333333333',
-        tokenDecimals: 18,
       },
     })
 
@@ -251,9 +242,6 @@ describe('payments routes', () => {
       url: '/api/payments/init',
       payload: {
         quantity: 1,
-        chainId: 97,
-        tokenContract: '0x3333333333333333333333333333333333333333',
-        tokenDecimals: 18,
       },
     })
 
@@ -276,9 +264,6 @@ describe('payments routes', () => {
       url: '/api/payments/init',
       payload: {
         quantity: 1,
-        chainId: 97,
-        tokenContract: '0x3333333333333333333333333333333333333333',
-        tokenDecimals: 18,
       },
     })
 
