@@ -66,9 +66,13 @@ test.describe('registration flow', () => {
     await page.locator('#password').fill('password123')
     await page.locator('#confirmPassword').fill('password123')
 
-    await page.getByRole('button', { name: 'Зарегистрироваться' }).click()
 
+    const registerButton = page.getByRole('button', { name: 'Зарегистрироваться' })
+    await registerButton.click()
+    
     await expect(page.getByText('Регистрация прошла успешно')).toBeVisible()
+    await expect(registerButton).toBeDisabled()
+
     await expect(page).toHaveURL(`${BASE_URL}/auth`)
 
     // Verify the user was created with parentId = null
@@ -95,9 +99,12 @@ test.describe('registration flow', () => {
     await page.locator('#password').fill('password123')
     await page.locator('#confirmPassword').fill('password123')
 
-    await page.getByRole('button', { name: 'Зарегистрироваться' }).click()
-
+    const registerButton = page.getByRole('button', { name: 'Зарегистрироваться' })
+    await registerButton.click()
+    
     await expect(page.getByText('Регистрация прошла успешно')).toBeVisible()
+    await expect(registerButton).toBeDisabled()
+
     await expect(page).toHaveURL(`${BASE_URL}/auth`)
 
     // Verify the user was created with parentId = null
@@ -124,9 +131,12 @@ test.describe('registration flow', () => {
     await page.locator('#password').fill('password123')
     await page.locator('#confirmPassword').fill('password123')
 
-    await page.getByRole('button', { name: 'Зарегистрироваться' }).click()
-
+    const registerButton = page.getByRole('button', { name: 'Зарегистрироваться' })
+    await registerButton.click()
+    
     await expect(page.getByText('Регистрация прошла успешно')).toBeVisible()
+    await expect(registerButton).toBeDisabled()
+
     await expect(page).toHaveURL(`${BASE_URL}/auth`)
 
     // Verify the user was created with parentId = 1
