@@ -66,10 +66,9 @@ test.describe('registration flow', () => {
     await page.locator('#password').fill('password123')
     await page.locator('#confirmPassword').fill('password123')
 
-
     const registerButton = page.getByRole('button', { name: 'Зарегистрироваться' })
     await registerButton.click()
-    
+
     await expect(page.getByText('Регистрация прошла успешно')).toBeVisible()
     await expect(registerButton).toBeDisabled()
 
@@ -101,7 +100,7 @@ test.describe('registration flow', () => {
 
     const registerButton = page.getByRole('button', { name: 'Зарегистрироваться' })
     await registerButton.click()
-    
+
     await expect(page.getByText('Регистрация прошла успешно')).toBeVisible()
     await expect(registerButton).toBeDisabled()
 
@@ -133,7 +132,7 @@ test.describe('registration flow', () => {
 
     const registerButton = page.getByRole('button', { name: 'Зарегистрироваться' })
     await registerButton.click()
-    
+
     await expect(page.getByText('Регистрация прошла успешно')).toBeVisible()
     await expect(registerButton).toBeDisabled()
 
