@@ -23,7 +23,7 @@ const UserProfile = ({ profile, csrfToken, onUpdate }) => {
       {isEditing ? (
         <EditProfile profile={profile} csrfToken={csrfToken} onUpdate={handleUpdate} onCancel={handleCancel} />
       ) : (
-        <ViewProfile profile={profile} csrfToken={csrfToken} onEdit={handleEdit} />
+        <ViewProfile profile={profile} onEdit={handleEdit} />
       )}
     </div>
   )

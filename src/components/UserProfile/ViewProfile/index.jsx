@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { UserRole } from '@/generated/prisma/enums'
 import styles from './index.module.css'
 
-const ViewProfile = ({ profile, csrfToken, onEdit }) => {
+const ViewProfile = ({ profile, onEdit }) => {
   const [balance, setBalance] = useState(null)
   const [balanceLoading, setBalanceLoading] = useState(false)
   const [balanceError, setBalanceError] = useState(null)
@@ -24,9 +24,7 @@ const ViewProfile = ({ profile, csrfToken, onEdit }) => {
     setBalanceLoading(true)
     setBalanceError('')
     try {
-      const res = await fetch('/api/user/balance', {
-        headers: { 'x-csrf-token': csrfToken },
-      })
+      const res = await fetch('/api/user/balance')
       const data = await res.json()
       if (data.success) {
         setBalance(data.balance)
