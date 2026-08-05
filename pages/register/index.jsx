@@ -177,7 +177,7 @@ const Register = () => {
           />
           {errors.confirmPassword && <span className={styles.fieldError}>{errors.confirmPassword.message}</span>}
         </div>
-        <button type="submit" disabled={isSubmitting} className={styles.submitButton}>
+        <button type="submit" disabled={isSubmitting || success} className={styles.submitButton}>
           {isSubmitting ? 'Регистрация...' : 'Зарегистрироваться'}
         </button>
       </form>

@@ -1,18 +1,16 @@
 import { PaymentStatus, UserRole } from '../generated/prisma/client'
 import { canCancelPayment, serializePayment, verifyPaymentOnChain } from '../lib/payment'
 import { PRICE_MAP } from '../lib/pricing'
+import { usdtAddress, usdtDecimals, chainId } from '../lib/chain.js'
 
 export default async (fastify) => {
   fastify.post('/api/payments/init', {
     schema: {
       body: {
         type: 'object',
-        required: ['quantity', 'chainId', 'tokenContract', 'tokenDecimals'],
+        required: ['quantity'],
         properties: {
           quantity: { type: 'integer', minimum: 0, maximum: 5 },
-          chainId: { type: 'integer', minimum: 1 },
-          tokenContract: { type: 'string', format: 'wallet' },
-          tokenDecimals: { type: 'integer', minimum: 0, maximum: 36 },
         },
       },
     },
@@ -26,7 +24,7 @@ export default async (fastify) => {
         return reply.code(409).send({ error: 'У компании не указан кошелек для приема платежей' })
       }
 
-      const { quantity, chainId, tokenContract, tokenDecimals } = req.body
+      const { quantity } = req.body
       const amountUsd = PRICE_MAP[quantity]
 
       try {
@@ -42,8 +40,8 @@ export default async (fastify) => {
                 companyId: user.company.id,
                 amount: amountUsd,
                 tokenSymbol: 'USDT',
-                tokenContract,
-                tokenDecimals,
+                tokenContract: usdtAddress,
+                tokenDecimals: usdtDecimals,
                 chainId,
                 toWallet: user.company.primaryWallet,
                 status: PaymentStatus.Pending,
@@ -161,10 +159,8 @@ export default async (fastify) => {
         return reply.code(409).send({ error: 'Транзакция ещё не привязана к платежу' })
       }
 
-      const rpcUrl = process.env.VITE_BSC_TESTNET_RPC_URL || 'https://data-seed-prebsc-1-s1.binance.org:8545'
-
       try {
-        await verifyPaymentOnChain(payment, rpcUrl)
+        await verifyPaymentOnChain(payment)
 
         const [updatedPayment] = await fastify.prisma.$transaction([
           fastify.prisma.payment.update({

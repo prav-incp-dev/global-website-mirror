@@ -3,25 +3,27 @@ import { createNoCsrfApp as createApp } from '../helpers'
 import { PaymentStatus, UserRole } from '../../src/generated/prisma/client'
 import { PAYMENT_WINDOW_MS } from '@/lib/payment.js'
 
-vi.mock('viem', () => {
-  const getTransactionReceipt = vi.fn()
+const getTransactionReceipt = vi.fn()
+const mockGetTransactionReceipt = async () => getTransactionReceipt
 
+vi.mock('viem', () => {
   return {
-    createPublicClient: vi.fn(() => ({
-      getTransactionReceipt,
-    })),
-    http: vi.fn(() => 'mock-transport'),
     getAddress: vi.fn((addr) => addr?.toLowerCase()),
     parseEventLogs: vi.fn(),
     parseUnits: vi.fn(),
-    getTransactionReceipt,
   }
 })
 
-const mockGetTransactionReceipt = async () => {
-  const { getTransactionReceipt } = await import('viem')
-  return getTransactionReceipt
-}
+vi.mock('../../src/lib/chain.js', () => ({
+  getPublicClient: vi.fn(() => ({ getTransactionReceipt })),
+  getWalletClient: vi.fn(),
+  ensureChain: vi.fn(),
+  rpcUrl: 'https://mock-rpc.example.com',
+  chainId: 97,
+  usdtAddress: '0x337610d27c682E347C9cD60BD4b3b107C9d34dDd',
+  usdtDecimals: 18,
+  erc20Abi: [],
+}))
 
 const candidateUser = {
   id: 2,
@@ -183,9 +185,6 @@ describe('payments routes', () => {
       url: '/api/payments/init',
       payload: {
         quantity: 1,
-        chainId: 97,
-        tokenContract: '0x3333333333333333333333333333333333333333',
-        tokenDecimals: 18,
       },
     })
 
@@ -202,9 +201,6 @@ describe('payments routes', () => {
       url: '/api/payments/init',
       payload: {
         quantity: 1,
-        chainId: 97,
-        tokenContract: '0x3333333333333333333333333333333333333333',
-        tokenDecimals: 18,
       },
     })
 
@@ -224,9 +220,6 @@ describe('payments routes', () => {
       url: '/api/payments/init',
       payload: {
         quantity: 1,
-        chainId: 97,
-        tokenContract: '0x3333333333333333333333333333333333333333',
-        tokenDecimals: 18,
       },
     })
 
@@ -251,9 +244,6 @@ describe('payments routes', () => {
       url: '/api/payments/init',
       payload: {
         quantity: 1,
-        chainId: 97,
-        tokenContract: '0x3333333333333333333333333333333333333333',
-        tokenDecimals: 18,
       },
     })
 
@@ -276,9 +266,6 @@ describe('payments routes', () => {
       url: '/api/payments/init',
       payload: {
         quantity: 1,
-        chainId: 97,
-        tokenContract: '0x3333333333333333333333333333333333333333',
-        tokenDecimals: 18,
       },
     })
 
@@ -644,8 +631,8 @@ describe('payments routes', () => {
   }
 
   const setupVerifyMocks = async (overrides = {}) => {
+    getTransactionReceipt.mockResolvedValueOnce(buildReceipt(overrides))
     const viMod = await import('viem')
-    viMod.getTransactionReceipt.mockResolvedValueOnce(buildReceipt(overrides))
     viMod.parseEventLogs.mockReturnValueOnce([
       {
         eventName: 'Transfer',

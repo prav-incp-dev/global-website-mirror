@@ -1,6 +1,26 @@
 import { UserRole } from '../generated/prisma/client'
 
 export default async (fastify) => {
+  fastify.get('/api/user/balance', {
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role === UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      if (!user.wallet) {
+        return reply.code(400).send({ error: 'Кошелек не указан' })
+      }
+
+      try {
+        const balance = await fastify.user.getBalance(user.wallet)
+        return reply.send({ success: true, balance })
+      } catch {
+        return reply.code(502).send({ error: 'Не удалось получить баланс' })
+      }
+    },
+  })
+
   fastify.put('/api/user/profile', {
     schema: {
       body: {

@@ -1,5 +1,6 @@
 import { PaymentStatus } from '../generated/prisma/enums'
-import { createPublicClient, http, getAddress, parseUnits, parseEventLogs } from 'viem'
+import { getAddress, parseUnits, parseEventLogs } from 'viem'
+import { getPublicClient } from './chain.js'
 
 const PAYMENT_WINDOW_MS = 24 * 60 * 60 * 1000
 
@@ -18,10 +19,8 @@ const canCancelPayment = (payment) => {
   return Date.now() - new Date(payment.createdAt).getTime() <= PAYMENT_WINDOW_MS
 }
 
-const verifyPaymentOnChain = async (payment, rpcUrl) => {
-  const publicClient = createPublicClient({
-    transport: http(rpcUrl),
-  })
+const verifyPaymentOnChain = async (payment) => {
+  const publicClient = getPublicClient()
   const receipt = await publicClient.getTransactionReceipt({ hash: payment.txHash })
   if (!receipt || receipt.status !== 'success') {
     throw new Error('Transaction not confirmed on chain')

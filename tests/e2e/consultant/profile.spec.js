@@ -72,13 +72,21 @@ test.describe('consultant profile with stats', () => {
     await expect(page.getByText('Inviter', { exact: true })).toBeVisible()
     await expect(page.getByText('consultant@example.com')).toBeVisible()
 
+    // --- Verify balance button is visible (consultant has wallet)
+    await expect(page.getByRole('button', { name: 'Проверить баланс' })).toBeVisible()
+    await page.getByRole('button', { name: 'Проверить баланс' }).click()
+    await expect(page.getByText('Не удалось получить баланс')).toBeVisible()
+
     // --- Edit profile ---
     await page.getByRole('button', { name: 'Редактировать' }).click()
     await page.locator('#firstName').fill('UpdatedConsultant')
+    await page.locator('#wallet').fill('')
     await page.getByRole('button', { name: 'Сохранить' }).click()
 
     // --- Verify updated data ---
     await expect(page.getByText('UpdatedConsultant')).toBeVisible()
+    // --- Verify balance button is no longe visible (consultant removed wallet)
+    await expect(page.getByRole('button', { name: 'Проверить баланс' })).not.toBeVisible()
 
     // --- Navigate to Покупки tab ---
     await page.getByRole('button', { name: 'Покупки' }).click()

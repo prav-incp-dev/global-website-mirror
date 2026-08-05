@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { bscTestnet } from 'viem/chains'
-import { createPublicClient, createWalletClient, custom, getAddress, http, parseUnits } from 'viem'
+import { getAddress, parseUnits } from 'viem'
+import { getPublicClient, getWalletClient, ensureChain, usdtAddress, usdtDecimals } from '@/lib/chain.js'
 import styles from './index.module.css'
 import CloseIcon from '@/assets/icons/CloseIcon.svg?react'
 import { PRICE_MAP } from '@/lib/pricing'
@@ -21,49 +21,11 @@ const ERC20_ABI = [
   },
 ]
 
-const ensureChain = async (provider, chainId, rpcUrl) => {
-  const hexChainId = `0x${chainId.toString(16)}`
-  const currentChainId = await provider.request({ method: 'eth_chainId' })
-
-  if (currentChainId?.toLowerCase() === hexChainId.toLowerCase()) {
-    return
-  }
-
-  try {
-    await provider.request({
-      method: 'wallet_switchEthereumChain',
-      params: [{ chainId: hexChainId }],
-    })
-  } catch (switchErr) {
-    if (switchErr?.code !== 4902) {
-      throw switchErr
-    }
-
-    await provider.request({
-      method: 'wallet_addEthereumChain',
-      params: [
-        {
-          chainId: hexChainId,
-          chainName: bscTestnet.name,
-          nativeCurrency: bscTestnet.nativeCurrency,
-          rpcUrls: [rpcUrl],
-          blockExplorerUrls: [bscTestnet.blockExplorers.default.url],
-        },
-      ],
-    })
-  }
-}
-
 const PurchaseModal = ({ onClose, onCreate, profile, csrfToken }) => {
   const [quantity, setQuantity] = useState(0)
   const [isPaying, setIsPaying] = useState(false)
   const [payError, setPayError] = useState('')
   const [loaderText, setLoaderText] = useState('')
-
-  const chainId = Number(import.meta.env.VITE_BSC_TESTNET_CHAIN_ID || 97)
-  const usdtAddress = import.meta.env.VITE_BSC_TESTNET_USDT_ADDRESS || ''
-  const usdtDecimals = Number(import.meta.env.VITE_BSC_TESTNET_USDT_DECIMALS || 18)
-  const rpcUrl = import.meta.env.VITE_BSC_TESTNET_RPC_URL || 'https://data-seed-prebsc-1-s1.binance.org:8545'
 
   const decrement = () => {
     setQuantity((prev) => Math.max(MIN_QTY, prev - 1))
@@ -95,12 +57,7 @@ const PurchaseModal = ({ onClose, onCreate, profile, csrfToken }) => {
           'Content-Type': 'application/json',
           'x-csrf-token': csrfToken,
         },
-        body: JSON.stringify({
-          quantity,
-          chainId,
-          tokenContract: tokenAddress,
-          tokenDecimals: usdtDecimals,
-        }),
+        body: JSON.stringify({ quantity }),
       })
 
       const initResult = await initResponse.json()
@@ -111,12 +68,9 @@ const PurchaseModal = ({ onClose, onCreate, profile, csrfToken }) => {
       const { paymentId } = initResult
 
       // Step 2: Ensure chain and get wallet account
-      await ensureChain(window.ethereum, chainId, rpcUrl)
+      await ensureChain(window.ethereum)
 
-      const walletClient = createWalletClient({
-        chain: bscTestnet,
-        transport: custom(window.ethereum),
-      })
+      const walletClient = getWalletClient(window.ethereum)
 
       const [account] = await walletClient.requestAddresses()
       if (!account) {
@@ -127,7 +81,6 @@ const PurchaseModal = ({ onClose, onCreate, profile, csrfToken }) => {
       const transferValue = parseUnits(String(price), usdtDecimals)
       const txHash = await walletClient.writeContract({
         account,
-        chain: bscTestnet,
         address: tokenAddress,
         abi: ERC20_ABI,
         functionName: 'transfer',
@@ -155,10 +108,7 @@ const PurchaseModal = ({ onClose, onCreate, profile, csrfToken }) => {
       setLoaderText('Ожидаем подтверждение сети...')
 
       // Step 5: Wait for on-chain confirmation (UI feedback only)
-      const publicClient = createPublicClient({
-        chain: bscTestnet,
-        transport: http(rpcUrl),
-      })
+      const publicClient = getPublicClient()
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash })
       if (receipt.status !== 'success') {
