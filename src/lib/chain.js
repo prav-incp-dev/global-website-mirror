@@ -15,7 +15,6 @@ const rpcUrl = getEnvVar('VITE_BSC_TESTNET_RPC_URL') || bscTestnet.rpcUrls.defau
 
 export const usdtDecimals = 18
 
-
 let client = null
 
 export const ensureChain = async (provider) => {

@@ -153,6 +153,5 @@ export default fp(async (fastify, opts) => {
         return null
       }
     },
-
   })
 })

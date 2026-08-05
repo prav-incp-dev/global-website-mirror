@@ -1,6 +1,7 @@
 import { useRouteContext } from '@fastify/react/client'
 import { useForm } from 'react-hook-form'
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { EMAIL_REGEXP } from '@/lib/regexps.js'
 import styles from './index.module.css'
 import ErrorIcon from '@/assets/icons/ErrorIcon.svg?react'
@@ -53,10 +54,6 @@ const ForgotPassword = () => {
     }
   }
 
-  const handleBack = () => {
-    window.location.assign('/auth')
-  }
-
   if (success) {
     return (
       <div className={styles.wrapper}>
@@ -66,9 +63,9 @@ const ForgotPassword = () => {
             <InfoIcon className={styles.infoIcon} />
             <span>Ссылка для сброса пароля отправлена на ваш email. Проверьте почту и перейдите по ссылке.</span>
           </div>
-          <button type="button" className={styles.backButton} onClick={handleBack}>
+          <Link to="/auth" className={styles.backButton}>
             Вернуться ко входу
-          </button>
+          </Link>
         </div>
       </div>
     )
@@ -78,9 +75,7 @@ const ForgotPassword = () => {
     <div className={styles.wrapper}>
       <div className={styles.container}>
         <h1 className={styles.title}>Забыли пароль?</h1>
-        <p className={styles.description}>
-          Укажите ваш email и мы отправим вам ссылку для сброса пароля
-        </p>
+        <p className={styles.description}>Укажите ваш email и мы отправим вам ссылку для сброса пароля</p>
         {error && (
           <div className={styles.error}>
             <ErrorIcon className={styles.errorIcon} />
@@ -116,9 +111,9 @@ const ForgotPassword = () => {
             {isSubmitting ? 'Отправка…' : 'Отправить ссылку'}
           </button>
         </form>
-        <button type="button" className={styles.backButton} onClick={handleBack}>
+        <Link to="/auth" className={styles.backButton}>
           Вернуться ко входу
-        </button>
+        </Link>
       </div>
     </div>
   )

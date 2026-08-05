@@ -1,6 +1,7 @@
 import { useRouteContext } from '@fastify/react/client'
 import { useForm, useWatch } from 'react-hook-form'
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import styles from './index.module.css'
 import ErrorIcon from '@/assets/icons/ErrorIcon.svg?react'
 import InfoIcon from '@/assets/icons/InfoIcon.svg?react'
@@ -34,6 +35,7 @@ const ResetPassword = () => {
     },
   })
 
+  const navigate = useNavigate()
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
@@ -55,7 +57,7 @@ const ResetPassword = () => {
       if (result.success) {
         setSuccess(true)
         setTimeout(() => {
-          window.location.assign('/auth')
+          navigate('/auth')
         }, 3000)
       } else {
         setError(result.error || 'Ошибка сброса пароля')

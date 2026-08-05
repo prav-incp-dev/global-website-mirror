@@ -193,14 +193,12 @@ test.describe('login flow with 2FA', () => {
 })
 
 test.describe('forgot password flow', () => {
-  test('user requests reset, gets email, resets password, and logs in with new password', async ({
-    page,
-  }) => {
+  test('user requests reset, gets email, resets password, and logs in with new password', async ({ page }) => {
     await page.goto('/auth')
     await page.waitForLoadState('networkidle')
 
     // Click "Забыли пароль?" link
-    await page.getByRole('button', { name: 'Забыли пароль?' }).click()
+    await page.getByRole('link', { name: 'Забыли пароль?' }).click()
 
     // Should show the forgot password form
     await expect(page.getByRole('heading', { name: 'Забыли пароль?' })).toBeVisible()
@@ -268,7 +266,7 @@ test.describe('forgot password flow', () => {
     await page.waitForLoadState('networkidle')
 
     // Click "Забыли пароль?" link
-    await page.getByRole('button', { name: 'Забыли пароль?' }).click()
+    await page.getByRole('link', { name: 'Забыли пароль?' }).click()
 
     await expect(page.getByRole('heading', { name: 'Забыли пароль?' })).toBeVisible()
     await expect(page).toHaveURL(`http://127.0.0.1:3101/forgot`)

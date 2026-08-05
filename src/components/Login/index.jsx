@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { useState } from 'react'
 import { EMAIL_REGEXP } from '@/lib/regexps.js'
+import { Link } from 'react-router'
 import styles from './index.module.css'
 import ErrorIcon from '@/assets/icons/ErrorIcon.svg?react'
 
@@ -14,10 +15,6 @@ const Login = ({ csrfToken, onSuccess }) => {
   })
 
   const [error, setError] = useState('')
-
-  const handleForgotPassword = () => {
-    window.location.assign('/forgot')
-  }
 
   const onSubmit = async ({ email, password }) => {
     try {
@@ -97,13 +94,9 @@ const Login = ({ csrfToken, onSuccess }) => {
         >
           {isSubmitting ? 'Выполняется вход…' : 'Войти'}
         </button>
-        <button
-          type="button"
-          className={styles.forgotLink}
-          onClick={handleForgotPassword}
-        >
+        <Link to="/forgot" className={styles.forgotLink}>
           Забыли пароль?
-        </button>
+        </Link>
       </form>
     </div>
   )

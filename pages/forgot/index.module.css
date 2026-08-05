@@ -149,6 +149,7 @@
 
 .backButton {
   width: 100%;
+  display: block;
   padding: 10px 24px;
   background: transparent;
   color: #d4af37;
@@ -159,6 +160,7 @@
   cursor: pointer;
   transition: all 0.3s ease;
   margin-top: 12px;
+  text-align: center;
 }
 
 .backButton:hover {
