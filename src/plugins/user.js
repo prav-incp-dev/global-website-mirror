@@ -1,6 +1,6 @@
 import fp from 'fastify-plugin'
 import { getAddress, formatUnits } from 'viem'
-import { getPublicClient } from '../lib/chain.js'
+import { getPublicClient, usdtAddress } from '../lib/chain.js'
 
 const erc20Abi = [
   {
@@ -23,8 +23,6 @@ export default fp(async (server) => {
   server.decorate('user', {
     getBalance: async (wallet) => {
       if (!wallet) return null
-
-      const usdtAddress = process.env.VITE_BSC_TESTNET_USDT_ADDRESS
 
       if (!usdtAddress) return null
 

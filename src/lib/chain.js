@@ -1,13 +1,20 @@
 import { createPublicClient, createWalletClient, custom, http } from 'viem'
 import { bscTestnet } from 'viem/chains'
 
-export const rpcUrl = process.env.VITE_BSC_TESTNET_RPC_URL || bscTestnet.rpcUrls.default.http[0]
+const getEnvVar = (key) => {
+  if (typeof import.meta !== 'undefined' && import.meta.env) return import.meta.env[key]
+  if (typeof process !== 'undefined' && process.env) return process.env[key]
+
+  return undefined
+}
 
 export const chainId = bscTestnet.id
 
-export const usdtAddress = process.env.VITE_BSC_TESTNET_USDT_ADDRESS || '0x337610d27c682E347C9cD60BD4b3b107C9d34dDd'
+export const usdtAddress = getEnvVar('VITE_BSC_TESTNET_USDT_ADDRESS') || '0x337610d27c682E347C9cD60BD4b3b107C9d34dDd'
+const rpcUrl = getEnvVar('VITE_BSC_TESTNET_RPC_URL') || bscTestnet.rpcUrls.default.http[0]
 
 export const usdtDecimals = 18
+
 
 let client = null
 

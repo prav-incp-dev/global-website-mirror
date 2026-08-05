@@ -1,16 +1,16 @@
 import { useMemo, useState } from 'react'
+import { usdtAddress } from '@/lib/chain.js'
 import styles from './index.module.css'
 import PaymentsList from './PaymentsList'
 import PurchaseModal from './PurchaseModal'
 
 const Payments = ({ profile, initialPayments = [], csrfToken }) => {
+  const hasTokenConfig = Boolean(usdtAddress)
+
   const [modalOpen, setModalOpen] = useState(false)
   const [payments, setPayments] = useState(initialPayments)
   const hasWallet = Boolean(profile?.wallet)
   const hasCompanyWallet = Boolean(profile?.companyPrimaryWallet)
-
-  const usdtAddress = import.meta.env.VITE_BSC_TESTNET_USDT_ADDRESS || ''
-  const hasTokenConfig = Boolean(usdtAddress)
 
   const buyDisabledReason = useMemo(() => {
     if (!hasWallet) return 'Для совершения покупок необходимо добавить кошелёк в профиле'
@@ -43,6 +43,7 @@ const Payments = ({ profile, initialPayments = [], csrfToken }) => {
           onCreate={onPaymentCreated}
           profile={profile}
           csrfToken={csrfToken}
+          usdtAddress={usdtAddress}
         />
       )}
     </div>
