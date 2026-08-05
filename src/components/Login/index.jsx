@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { useState } from 'react'
 import { EMAIL_REGEXP } from '@/lib/regexps.js'
+import { Link } from 'react-router'
 import styles from './index.module.css'
 import ErrorIcon from '@/assets/icons/ErrorIcon.svg?react'
 
@@ -93,6 +94,9 @@ const Login = ({ csrfToken, onSuccess }) => {
         >
           {isSubmitting ? 'Выполняется вход…' : 'Войти'}
         </button>
+        <Link to="/forgot" className={styles.forgotLink}>
+          Забыли пароль?
+        </Link>
       </form>
     </div>
   )

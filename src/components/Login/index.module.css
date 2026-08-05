@@ -111,6 +111,26 @@
   box-shadow: none;
 }
 
+.forgotLink {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  padding: 8px;
+  background: none;
+  border: none;
+  color: #0885be;
+  font-size: 0.875rem;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.3s ease;
+}
+
+.forgotLink:hover {
+  color: #4e9dc1;
+}
+
 @media (max-width: 480px) {
   .container {
     padding: 24px 20px;

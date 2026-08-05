@@ -8,7 +8,6 @@ import csrfProtection from '@fastify/csrf-protection'
 const SESSION_COOKIE_NAME = 'session'
 const SESSION_MAX_AGE = 7 * 24 * 60 * 60 // 7 days in seconds
 const SECURE_COOKIES = process.env.NODE_ENV === 'production'
-const PENDING_AUTH_MAX_AGE = 10 * 60 // 10 minutes in seconds
 
 export const parseUserId = (value) => {
   const userId = Number(value)
@@ -135,12 +134,11 @@ export default fp(async (fastify, opts) => {
     },
 
     /**
-     * Signs a JWT containing the userId with a 10-minute expiry.
+     * Signs a JWT containing the userId.
+     * Defaults to a 10-minute expiry.
      */
-    signPendingAuth: (userId) => {
-      return jwt.sign({ userId }, process.env.SESSION_SECRET, {
-        expiresIn: PENDING_AUTH_MAX_AGE,
-      })
+    signPendingAuth: (userId, expiresIn) => {
+      return jwt.sign({ userId }, process.env.SESSION_SECRET, { expiresIn })
     },
 
     /**
