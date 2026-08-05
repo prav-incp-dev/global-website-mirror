@@ -23,7 +23,6 @@ export const getData = async ({ server, req, reply }) => {
   const csrfToken = reply.generateCsrf()
 
   const payments = await server.payment.getPayments(user)
-  const stats = user.role === UserRole.Consultant && (await server.consultant.getStats(user))
 
   return {
     profile: {
@@ -44,7 +43,6 @@ export const getData = async ({ server, req, reply }) => {
     },
     payments,
     csrfToken,
-    stats,
   }
 }
 
@@ -61,7 +59,7 @@ const TABS = (role) => {
 
 const Index = () => {
   const { data } = useRouteContext()
-  const { profile = {}, payments = [], csrfToken = '', stats = null } = data
+  const { profile = {}, payments = [], csrfToken = '' } = data
   const [activeTab, setActiveTab] = useState('profile')
   const [invitationOpen, setInvitationOpen] = useState(false)
   const [profileData, setProfileData] = useState(profile)

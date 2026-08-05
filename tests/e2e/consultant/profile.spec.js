@@ -36,24 +36,6 @@ test.describe('consultant profile with stats', () => {
         groupScore: 60,
       },
     })
-
-    // Create child consultant
-    await prisma.user.create({
-      data: {
-        email: 'child-consultant@example.com',
-        password: testPasswordHash,
-        role: 'Consultant',
-        nick: '@childcons',
-        firstName: 'Child',
-        lastName: 'Consultant',
-        phone: '+375330000011',
-        memberId: 'DOM-00000000-0011',
-        wallet: '0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
-        companyId: 1,
-        parentId: 2,
-        level: 1,
-      },
-    })
   })
 
   test('consultant views profile, edits data, checks payments and stats', async ({ loginAs, page }) => {
@@ -105,11 +87,5 @@ test.describe('consultant profile with stats', () => {
     await expect(page.getByRole('cell', { name: '@parentcons' })).toBeVisible()
     // Parent level = 3 should be in the same row as @parentcons
     await expect(page.getByText('Пригласитель').locator('..').getByRole('cell', { name: '3' })).toBeVisible()
-
-    // --- Verify Приглашённые section ---
-    await expect(page.getByRole('heading', { name: 'Приглашённые' })).toBeVisible()
-    await expect(page.getByRole('cell', { name: '@childcons' })).toBeVisible()
-    // Child level = 1 should be in the same row as @childcons
-    await expect(page.getByText('Приглашённые').locator('..').getByRole('cell', { name: '1' })).toBeVisible()
   })
 })
