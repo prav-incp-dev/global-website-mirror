@@ -43,7 +43,7 @@ describe('user plugin', () => {
     expect(getPublicClient).toHaveBeenCalled()
   })
 
-  describe('getChildren', () => {
+  describe('getDescendants', () => {
     const baseUser = {
       password: 'hash',
       companyId: 1,
@@ -68,11 +68,11 @@ describe('user plugin', () => {
 
       const parent = await withCleanup((data) => app.prisma.user.create({ data }))({
         ...baseUser,
-        email: `getchildren-no-children-${Date.now()}@test.com`,
+        email: `getDescendants-no-children-${Date.now()}@test.com`,
         phone: `+10000001${String(Date.now()).slice(-4)}`,
       })
 
-      const children = await app.user.getChildren(parent)
+      const children = await app.user.getDescendants(parent)
       expect(children).toHaveLength(0)
     })
 
@@ -85,18 +85,18 @@ describe('user plugin', () => {
 
       const parent = await withCleanup((data) => app.prisma.user.create({ data }))({
         ...baseUser,
-        email: `getchildren-direct-parent-${Date.now()}@test.com`,
+        email: `getDescendants-direct-parent-${Date.now()}@test.com`,
         phone: `+10000002${String(Date.now()).slice(-4)}`,
       })
 
       const child = await withCleanup((data) => app.prisma.user.create({ data }))({
         ...baseUser,
-        email: `getchildren-direct-child-${Date.now()}@test.com`,
+        email: `getDescendants-direct-child-${Date.now()}@test.com`,
         phone: `+10000003${String(Date.now()).slice(-4)}`,
         parentId: parent.id,
       })
 
-      const children = await app.user.getChildren(parent)
+      const children = await app.user.getDescendants(parent)
       expect(children).toHaveLength(1)
       expect(children[0].id).toBe(child.id)
     })
@@ -110,25 +110,25 @@ describe('user plugin', () => {
 
       const parent = await withCleanup((data) => app.prisma.user.create({ data }))({
         ...baseUser,
-        email: `getchildren-recursive-parent-${Date.now()}@test.com`,
+        email: `getDescendants-recursive-parent-${Date.now()}@test.com`,
         phone: `+10000004${String(Date.now()).slice(-4)}`,
       })
 
       const child = await withCleanup((data) => app.prisma.user.create({ data }))({
         ...baseUser,
-        email: `getchildren-recursive-child-${Date.now()}@test.com`,
+        email: `getDescendants-recursive-child-${Date.now()}@test.com`,
         phone: `+10000005${String(Date.now()).slice(-4)}`,
         parentId: parent.id,
       })
 
       const grandchild = await withCleanup((data) => app.prisma.user.create({ data }))({
         ...baseUser,
-        email: `getchildren-recursive-grandchild-${Date.now()}@test.com`,
+        email: `getDescendants-recursive-grandchild-${Date.now()}@test.com`,
         phone: `+10000006${String(Date.now()).slice(-4)}`,
         parentId: child.id,
       })
 
-      const children = await app.user.getChildren(parent)
+      const children = await app.user.getDescendants(parent)
       expect(children).toHaveLength(2)
       const childIds = children.map((c) => c.id)
       expect(childIds).toContain(child.id)

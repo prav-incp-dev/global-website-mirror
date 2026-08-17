@@ -5,6 +5,7 @@ import UserProfile from '@/components/UserProfile'
 import InvitationModal from '@/components/InvitationModal'
 import Payments from '@/components/Payments'
 import StatsDashboard from '@/components/StatsDashboard'
+import Structure from '@/components/Structure'
 import styles from './index.module.css'
 
 export const getData = async ({ server, req, reply }) => {
@@ -19,10 +20,9 @@ export const getData = async ({ server, req, reply }) => {
     return reply.redirect('/admin')
   }
 
-  // Generate CSRF token for logout form
   const csrfToken = reply.generateCsrf()
-
   const payments = await server.payment.getPayments(user)
+  const descendants = user.role === UserRole.Consultant && (await server.user.getDescendants(user))
 
   return {
     profile: {
@@ -42,24 +42,27 @@ export const getData = async ({ server, req, reply }) => {
       companyPrimaryWallet: user.company?.primaryWallet ?? null,
     },
     payments,
+    descendants,
     csrfToken,
   }
 }
 
 const TABS = (role) => {
-  const tabs = [
+  const commonTabs = [
     { key: 'profile', label: 'Профиль' },
     { key: 'payments', label: 'Покупки' },
   ]
 
-  if (role === UserRole.Consultant) tabs.push({ key: 'stats', label: 'Статистика' })
-
-  return tabs
+  const consultantTabs = [
+    { key: 'stats', label: 'Статистика' },
+    { key: 'structure', label: 'Структура' },
+  ]
+  return commonTabs.concat(role === UserRole.Consultant ? consultantTabs : [])
 }
 
 const Index = () => {
   const { data } = useRouteContext()
-  const { profile = {}, payments = [], csrfToken = '' } = data
+  const { profile = {}, payments = [], descendants = [], csrfToken = '' } = data
   const [activeTab, setActiveTab] = useState('profile')
   const [invitationOpen, setInvitationOpen] = useState(false)
   const [profileData, setProfileData] = useState(profile)
@@ -118,7 +121,8 @@ const Index = () => {
         {activeTab === 'payments' && (
           <Payments profile={profileData} initialPayments={payments} csrfToken={csrfToken} />
         )}
-        {activeTab === 'stats' && <StatsDashboard profile={profileData} stats={stats} />}
+        {activeTab === 'stats' && <StatsDashboard profile={profileData} />}
+        {activeTab === 'structure' && <Structure descendants={descendants} />}
       </div>
     </div>
   )

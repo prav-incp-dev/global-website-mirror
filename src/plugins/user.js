@@ -45,7 +45,7 @@ export default fp(async (server) => {
       return formatUnits(rawBalance, decimals)
     },
 
-    getChildren: async (user) => {
+    getDescendants: async (user) => {
       const children = await server.prisma.$queryRaw`
         WITH RECURSIVE user_hierarchy AS (
           SELECT *

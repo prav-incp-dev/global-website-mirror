@@ -57,27 +57,6 @@ try {
   console.log(`Seeded company: ${company.name}`)
   console.log(`Seeded admin user: ${user.email}`)
 
-  const candidateData = {
-    password: passwordHash,
-    role: UserRole.Candidate,
-    nick: '@candidate',
-    firstName: 'Test',
-    lastName: 'Candidate',
-    phone: '+10000000002',
-    memberId: 'DOM-00000000-0002',
-    wallet: '0x2222222222222222222222222222222222222222',
-  }
-
-  const candidate = await prisma.user.upsert({
-    where: { email: 'candidate@example.com' },
-    update: candidateData,
-    create: {
-      email: 'candidate@example.com',
-      ...candidateData,
-      companyId: company.id,
-    },
-  })
-
   const consultantData = {
     password: passwordHash,
     role: UserRole.Consultant,
@@ -97,6 +76,28 @@ try {
       email: 'consultant@example.com',
       ...consultantData,
       companyId: company.id,
+    },
+  })
+
+  const candidateData = {
+    password: passwordHash,
+    role: UserRole.Candidate,
+    nick: '@candidate',
+    firstName: 'Test',
+    lastName: 'Candidate',
+    phone: '+10000000002',
+    memberId: 'DOM-00000000-0002',
+    wallet: '0x2222222222222222222222222222222222222222',
+  }
+
+  const candidate = await prisma.user.upsert({
+    where: { email: 'candidate@example.com' },
+    update: candidateData,
+    create: {
+      email: 'candidate@example.com',
+      ...candidateData,
+      companyId: company.id,
+      parentId: consultant.id,
     },
   })
 
