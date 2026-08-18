@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react'
 import TreeNode from './TreeNode'
+import styles from './index.module.css'
 
 // 1. Хелпер для сборки плоского массива в дерево за O(N)
 const buildTree = (users) => {
@@ -28,7 +29,7 @@ export default function Structure({ descendants }) {
   console.log('=======', descendants, treeData)
 
   return (
-    <div>
+    <div className={styles.container}>
       {treeData.map((rootNode) => (
         <TreeNode key={rootNode.id} node={rootNode} />
       ))}

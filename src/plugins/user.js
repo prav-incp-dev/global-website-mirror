@@ -65,10 +65,18 @@ export default fp(async (server) => {
           FROM "Interaction"
           WHERE "status" = 'Closed'
           GROUP BY "targetId"
+        ),
+        next_interactions AS (
+          SELECT
+            "targetId",
+            "plannedAt"
+          FROM "Interaction"
+          WHERE "status" = 'Open'
         )
-        SELECT uh.*, li."lastInteractionDate"
+        SELECT uh.*, li."lastInteractionDate", ni."plannedAt" AS "nextInteractionDate"
         FROM user_hierarchy uh
         LEFT JOIN last_interactions li ON li."targetId" = uh.id
+        LEFT JOIN next_interactions ni ON ni."targetId" = uh.id
       `
 
       return children

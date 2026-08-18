@@ -1,20 +1,35 @@
 import { useState } from 'react'
+import { UserRole } from '@/generated/prisma/enums'
+import InfoIcon from '@/assets/icons/InfoIcon.svg?react'
+import UserInfoModal from '../UserInfoModal'
 import styles from './index.module.css'
 
 const TreeNode = ({ node }) => {
   const [isOpen, setIsOpen] = useState(false)
+  const [showInfoModal, setShowInfoModal] = useState(false)
   const hasChildren = node.children && node.children.length > 0
+  const status = node.role === UserRole.Candidate ? 'Кандидат' : 'Консультант'
+
+  const handleInfoClick = (e) => {
+    e.stopPropagation()
+    setShowInfoModal(true)
+  }
 
   return (
     <div className={styles.container}>
       <div onClick={() => hasChildren && setIsOpen(!isOpen)} className={hasChildren ? styles.row : styles.rowLeaf}>
-        {hasChildren ? (
+        {hasChildren && (
           <span className={`${styles.arrow} ${isOpen ? styles.arrowOpen : ''}`}>▶</span>
-        ) : (
-          <span className={styles.bullet}>•</span>
         )}
 
-        <span>{node.firstName}</span>
+        <div className={styles.userTable}>
+          <div className={styles.cell}>{node.firstName}</div>
+          <div className={styles.cell}>{status}</div>
+          <div className={styles.cell}>{node.lastInteractionDate?.toLocaleDateString('ru-RU') || '-'}</div>
+          <div className={styles.cell}>
+            <InfoIcon className={styles.infoIcon} onClick={handleInfoClick} />
+          </div>
+        </div>
       </div>
 
       {isOpen && hasChildren && (
@@ -23,6 +38,10 @@ const TreeNode = ({ node }) => {
             <TreeNode key={child.id} node={child} />
           ))}
         </div>
+      )}
+
+      {showInfoModal && (
+        <UserInfoModal data={{ ...node, status }} onClose={() => setShowInfoModal(false)} />
       )}
     </div>
   )

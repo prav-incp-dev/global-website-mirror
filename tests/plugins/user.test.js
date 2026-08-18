@@ -113,6 +113,7 @@ describe('user plugin', () => {
       expect(children).toHaveLength(1)
       expect(children[0].id).toBe(child.id)
       expect(children[0].lastInteractionDate).toBeNull()
+      expect(children[0].nextInteractionDate).toBeNull()
     })
 
     it('returns all descendants recursively', async ({ expect }) => {
@@ -201,7 +202,46 @@ describe('user plugin', () => {
       const grandchildResult = children.find((c) => c.id === grandchild.id)
 
       expect(childResult.lastInteractionDate).toEqual(closedDate)
+      expect(childResult.nextInteractionDate).toBeNull()
       expect(grandchildResult.lastInteractionDate).toBeNull()
+      expect(grandchildResult.nextInteractionDate).toEqual(new Date('2026-08-02T10:00:00Z'))
+    })
+
+    it('returns nextInteractionDate for open interactions only', async ({ expect }) => {
+      const app = await createApp()
+      onTestFinished(async () => {
+        await deleteAllCreated(app)
+      })
+
+      const parent = await withCleanup((data) => app.prisma.user.create({ data }))({
+        ...baseUser,
+        email: `getDescendants-next-interaction-parent-${Date.now()}@test.com`,
+        phone: `+10000012${String(Date.now()).slice(-4)}`,
+      })
+
+      const child = await withCleanup((data) => app.prisma.user.create({ data }))({
+        ...baseUser,
+        email: `getDescendants-next-interaction-child-${Date.now()}@test.com`,
+        phone: `+10000013${String(Date.now()).slice(-4)}`,
+        parentId: parent.id,
+      })
+
+      const plannedDate = new Date('2026-09-01T14:00:00Z')
+
+      await withInteractionCleanup((data) => app.prisma.interaction.create({ data }))({
+        status: 'Open',
+        plannedAt: plannedDate,
+        completedAt: null,
+        description: 'Planned interaction',
+        initiatorId: parent.id,
+        targetId: child.id,
+      })
+
+      const children = await app.user.getDescendants(parent)
+      expect(children).toHaveLength(1)
+      expect(children[0].id).toBe(child.id)
+      expect(children[0].lastInteractionDate).toBeNull()
+      expect(children[0].nextInteractionDate).toEqual(plannedDate)
     })
 
     it('returns latest completedAt for multiple closed interactions', async ({ expect }) => {
@@ -249,6 +289,7 @@ describe('user plugin', () => {
 
       expect(children[0].id).toBe(child.id)
       expect(children[0].lastInteractionDate).toEqual(laterDate)
+      expect(children[0].nextInteractionDate).toBeNull()
     })
   })
 })
