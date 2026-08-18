@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { getAddress, parseUnits } from 'viem'
 import { getPublicClient, getWalletClient, ensureChain, usdtAddress, usdtDecimals } from '@/lib/chain.js'
+import Modal from '../../Modal'
 import styles from './index.module.css'
-import CloseIcon from '@/assets/icons/CloseIcon.svg?react'
 import { PRICE_MAP } from '@/lib/pricing'
 
 const MIN_QTY = 0
@@ -138,55 +138,41 @@ const PurchaseModal = ({ onClose, onCreate, profile, csrfToken }) => {
     }
   }
 
-  const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose()
-    }
-  }
-
   return (
-    <div className={styles.overlay} onClick={handleOverlayClick}>
-      <div className={styles.modal}>
-        <div className={styles.header}>
-          <button className={styles.closeButton} onClick={onClose} aria-label="Закрыть">
-            <CloseIcon />
+    <Modal isOpen onClose={onClose} className={styles.purchaseModal}>
+      <div className={styles.purchaseModalBody}>
+        <div className={styles.stepper}>
+          <button
+            className={styles.stepperButton}
+            onClick={decrement}
+            disabled={quantity <= MIN_QTY}
+            aria-label="Уменьшить"
+          >
+            −
+          </button>
+          <span className={styles.stepperValue}>{quantity}</span>
+          <button
+            className={styles.stepperButton}
+            onClick={increment}
+            disabled={quantity >= MAX_QTY}
+            aria-label="Увеличить"
+          >
+            +
           </button>
         </div>
 
-        <div className={styles.body}>
-          <div className={styles.stepper}>
-            <button
-              className={styles.stepperButton}
-              onClick={decrement}
-              disabled={quantity <= MIN_QTY}
-              aria-label="Уменьшить"
-            >
-              −
-            </button>
-            <span className={styles.stepperValue}>{quantity}</span>
-            <button
-              className={styles.stepperButton}
-              onClick={increment}
-              disabled={quantity >= MAX_QTY}
-              aria-label="Увеличить"
-            >
-              +
-            </button>
-          </div>
-
-          <div className={styles.priceRow}>
-            <span className={styles.priceLabel}>Сумма</span>
-            <span className={styles.priceValue}>{price} USD</span>
-          </div>
-
-          <button className={styles.payButton} onClick={handlePay} disabled={isPaying}>
-            {isPaying ? loaderText || 'Ожидаем подтверждение...' : 'Оплатить'}
-          </button>
-
-          {payError && <p className={styles.errorText}>{payError}</p>}
+        <div className={styles.priceRow}>
+          <span className={styles.priceLabel}>Сумма</span>
+          <span className={styles.priceValue}>{price} USD</span>
         </div>
+
+        <button className={styles.payButton} onClick={handlePay} disabled={isPaying}>
+          {isPaying ? loaderText || 'Ожидаем подтверждение...' : 'Оплатить'}
+        </button>
+
+        {payError && <p className={styles.errorText}>{payError}</p>}
       </div>
-    </div>
+    </Modal>
   )
 }
 

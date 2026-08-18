@@ -6,6 +6,7 @@ import InvitationModal from '@/components/InvitationModal'
 import Payments from '@/components/Payments'
 import StatsDashboard from '@/components/StatsDashboard'
 import Structure from '@/components/Structure'
+import { DescendantsProvider } from '@/components/Structure/DescendantsContext'
 import styles from './index.module.css'
 
 export const getData = async ({ server, req, reply }) => {
@@ -86,45 +87,47 @@ const Index = () => {
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.headerTitle}>Профиль</h1>
-        <button className={styles.logoutButton} onClick={handleLogout}>
-          Выйти
-        </button>
-      </div>
-      {profileData.role === UserRole.Consultant && (
-        <>
-          <button className={styles.inviteButton} onClick={() => setInvitationOpen(true)}>
-            Сгенерировать пригласительную ссылку
+    <DescendantsProvider descendants={descendants}>
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <h1 className={styles.headerTitle}>Профиль</h1>
+          <button className={styles.logoutButton} onClick={handleLogout}>
+            Выйти
           </button>
+        </div>
+        {profileData.role === UserRole.Consultant && (
+          <>
+            <button className={styles.inviteButton} onClick={() => setInvitationOpen(true)}>
+              Сгенерировать пригласительную ссылку
+            </button>
 
-          <InvitationModal isOpen={invitationOpen} onClose={() => setInvitationOpen(false)} csrfToken={csrfToken} />
-        </>
-      )}
-      <div className={styles.tabs}>
-        {TABS(profileData.role).map((tab) => (
-          <button
-            key={tab.key}
-            className={`${styles.tab} ${activeTab === tab.key ? styles.tabActive : ''}`}
-            onClick={() => setActiveTab(tab.key)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+            <InvitationModal isOpen={invitationOpen} onClose={() => setInvitationOpen(false)} csrfToken={csrfToken} />
+          </>
+        )}
+        <div className={styles.tabs}>
+          {TABS(profileData.role).map((tab) => (
+            <button
+              key={tab.key}
+              className={`${styles.tab} ${activeTab === tab.key ? styles.tabActive : ''}`}
+              onClick={() => setActiveTab(tab.key)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-      <div className={styles.content}>
-        {activeTab === 'profile' && (
-          <UserProfile profile={profileData} csrfToken={csrfToken} onUpdate={handleUpdateProfile} />
-        )}
-        {activeTab === 'payments' && (
-          <Payments profile={profileData} initialPayments={payments} csrfToken={csrfToken} />
-        )}
-        {activeTab === 'stats' && <StatsDashboard profile={profileData} />}
-        {activeTab === 'structure' && <Structure descendants={descendants} />}
+        <div className={styles.content}>
+          {activeTab === 'profile' && (
+            <UserProfile profile={profileData} csrfToken={csrfToken} onUpdate={handleUpdateProfile} />
+          )}
+          {activeTab === 'payments' && (
+            <Payments profile={profileData} initialPayments={payments} csrfToken={csrfToken} />
+          )}
+          {activeTab === 'stats' && <StatsDashboard profile={profileData} />}
+          {activeTab === 'structure' && <Structure csrfToken={csrfToken} />}
+        </div>
       </div>
-    </div>
+    </DescendantsProvider>
   )
 }
 

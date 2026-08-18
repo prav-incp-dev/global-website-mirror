@@ -1,67 +1,3 @@
-.overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
-  padding: 20px;
-}
-
-.modal {
-  width: 100%;
-  max-width: 420px;
-  background: linear-gradient(135deg, #1a1a1a 0%, #222 100%);
-  border: 1px solid rgba(212, 175, 55, 0.15);
-  border-radius: 16px;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(212, 175, 55, 0.05);
-  overflow: hidden;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px 0;
-  margin-bottom: 20px;
-}
-
-.title {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #d4af37;
-}
-
-.closeButton {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  color: #999;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.closeButton:hover {
-  color: #f5f5f5;
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-.body {
-  padding: 0 24px 24px;
-}
-
 .infoTable {
   display: flex;
   flex-direction: column;
@@ -110,7 +46,7 @@
   margin-top: 20px;
 }
 
-.markButton {
+.completeButton {
   width: 100%;
   padding: 12px 24px;
   background: linear-gradient(135deg, #d4af37 0%, #c9a832 100%);
@@ -124,13 +60,13 @@
   letter-spacing: 0.02em;
 }
 
-.markButton:hover {
+.completeButton:hover {
   background: linear-gradient(135deg, #f0d060 0%, #d4af37 100%);
   box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
   transform: translateY(-1px);
 }
 
-.markButton:active {
+.completeButton:active {
   transform: translateY(0);
 }
 
@@ -154,26 +90,6 @@
 }
 
 @media (max-width: 480px) {
-  .overlay {
-    padding: 16px;
-  }
-
-  .modal {
-    border-radius: 12px;
-  }
-
-  .header {
-    padding: 16px 16px 0;
-  }
-
-  .body {
-    padding: 0 16px 16px;
-  }
-
-  .title {
-    font-size: 1.125rem;
-  }
-
   .infoRow {
     flex-direction: column;
     align-items: flex-start;

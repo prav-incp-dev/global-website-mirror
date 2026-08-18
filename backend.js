@@ -11,6 +11,7 @@ import invitationRoutes from './src/routes/invitation'
 import adminRoutes from './src/routes/admin'
 import userRoutes from './src/routes/user'
 import paymentRoutes from './src/routes/payment'
+import interactionRoutes from './src/routes/interaction'
 import { WALLET_REGEXP, PHONE_REGEXP, MEMBER_REGEXP } from './src/lib/regexps.js'
 
 export const buildBackendApp = async (opts = {}) => {
@@ -42,6 +43,7 @@ export const buildBackendApp = async (opts = {}) => {
   await backend.register(adminRoutes)
   await backend.register(userRoutes)
   await backend.register(paymentRoutes)
+  await backend.register(interactionRoutes)
 
   return backend
 }

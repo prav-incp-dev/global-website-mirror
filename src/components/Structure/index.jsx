@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react'
 import TreeNode from './TreeNode'
+import { useDescendantsContext } from './DescendantsContext'
 import styles from './index.module.css'
 
 // 1. Хелпер для сборки плоского массива в дерево за O(N)
@@ -16,7 +17,7 @@ const buildTree = (users) => {
     if (user.parentId && map[user.parentId]) {
       map[user.parentId].children.push(node)
     } else {
-      roots.push(node) // Верхний уровень (parentId === null или отсутствует)
+      roots.push(node) // Верхний уровень (parentId === null || отсутствует)
     }
   })
 
@@ -24,14 +25,14 @@ const buildTree = (users) => {
 }
 
 // 2. Главный компонент, принимающий плоский список с Fastify API
-export default function Structure({ descendants }) {
+export default function Structure({ csrfToken }) {
+  const { descendants } = useDescendantsContext()
   const treeData = useMemo(() => buildTree(descendants), [descendants])
-  console.log('=======', descendants, treeData)
 
   return (
     <div className={styles.container}>
       {treeData.map((rootNode) => (
-        <TreeNode key={rootNode.id} node={rootNode} />
+        <TreeNode key={rootNode.id} node={rootNode} csrfToken={csrfToken} />
       ))}
     </div>
   )

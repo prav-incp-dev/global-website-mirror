@@ -2,7 +2,6 @@
   margin-left: 16px;
   font-family: inherit;
   font-size: 14px;
-  user-select: none;
 }
 
 .row {
@@ -38,27 +37,19 @@
 }
 
 .userTable {
-  display: flex; /* Выстраивает блоки в один ряд по умолчанию */
-  border: 1px solid #d4af3726;
-  border-radius: 4px;
+  display: flex;
 }
 
 .cell {
-  flex: 1; /* Распределяет место между ячейками поровну */
+  flex: 1;
   padding: 7px;
-  border: 1px solid #d4af3726;
   text-align: center;
-}
-
-.cell:last-child {
-  border-right: none; /* Убираем лишнюю границу у последней ячейки */
 }
 
 .infoIcon {
   width: 20px;
   height: 20px;
   display: block;
-  margin: 0 auto;
   cursor: pointer;
   color: #42bbe7cc;
   transition: color 0.15s;
@@ -66,4 +57,11 @@
 
 .infoIcon:hover {
   color: #42bbe7;
+}
+
+.attentionIcon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  color: #e8a317;
 }

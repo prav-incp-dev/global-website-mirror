@@ -1,0 +1,80 @@
+.field {
+  margin-bottom: 16px;
+}
+
+.label {
+  display: block;
+  font-size: 0.8125rem;
+  color: #999;
+  margin-bottom: 6px;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 8px;
+  color: #f5f5f5;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  border-color: #d4af37;
+}
+
+.input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+  opacity: 1;
+}
+
+.fieldError {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.8125rem;
+  color: #ff6b6b;
+}
+
+.error {
+  padding: 10px 12px;
+  background: rgba(255, 77, 77, 0.1);
+  border: 1px solid rgba(255, 77, 77, 0.3);
+  border-radius: 8px;
+  color: #ff6b6b;
+  font-size: 0.8125rem;
+  margin-bottom: 16px;
+}
+
+.submitButton {
+  width: 100%;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #d4af37 0%, #c9a832 100%);
+  color: #0d0d0d;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.02em;
+}
+
+.submitButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f0d060 0%, #d4af37 100%);
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+  transform: translateY(-1px);
+}
+
+.submitButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
