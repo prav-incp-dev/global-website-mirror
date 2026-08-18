@@ -44,6 +44,17 @@ export default fp(async (fastify) => {
           data: { code: inviteCode },
         })
 
+        await tx.interaction.create({
+          data: {
+            status: 'Closed',
+            plannedAt: new Date(),
+            completedAt: new Date(),
+            description: 'Registration',
+            initiatorId: parentId,
+            targetId: newUser.id,
+          },
+        })
+
         return newUser
       })
 

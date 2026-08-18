@@ -17,6 +17,7 @@ describe('register plugin', () => {
 
     let capturedUserCreateArgs = null
     let capturedUsedInviteCreateArgs = null
+    let capturedInteractionCreateArgs = null
 
     vi.spyOn(app.prisma, '$transaction').mockImplementation(async (cb) => {
       const tx = {
@@ -44,6 +45,12 @@ describe('register plugin', () => {
             return { id: 1, code: args.data.code }
           }),
         },
+        interaction: {
+          create: vi.fn().mockImplementation((args) => {
+            capturedInteractionCreateArgs = args
+            return { id: 1 }
+          }),
+        },
       }
       return cb(tx)
     })
@@ -69,6 +76,15 @@ describe('register plugin', () => {
 
     expect(capturedUsedInviteCreateArgs.data).toEqual({ code: 'test-invite' })
 
+    expect(capturedInteractionCreateArgs.data).toMatchObject({
+      status: 'Closed',
+      description: 'Registration',
+      targetId: 1,
+      initiatorId: null,
+    })
+    expect(capturedInteractionCreateArgs.data.plannedAt).toBeInstanceOf(Date)
+    expect(capturedInteractionCreateArgs.data.completedAt).toBeInstanceOf(Date)
+
     expect(result).not.toHaveProperty('password')
     expect(result.email).toBe('new.user@example.com')
 
@@ -91,6 +107,7 @@ describe('register plugin', () => {
       const tx = {
         user: { create: vi.fn() },
         usedInvite: { create: vi.fn().mockRejectedValue(p2002Error) },
+        interaction: { create: vi.fn() },
       }
       return cb(tx)
     })

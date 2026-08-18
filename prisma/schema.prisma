@@ -136,8 +136,8 @@ model Interaction {
   plannedAt   DateTime
   completedAt DateTime?
   description String
-  initiatorId Int
-  initiator   User              @relation("InitiatorInteractions", fields: [initiatorId], references: [id])
+  initiatorId Int?
+  initiator   User?             @relation("InitiatorInteractions", fields: [initiatorId], references: [id])
   targetId    Int
   target      User              @relation("TargetInteractions", fields: [targetId], references: [id])
   createdAt   DateTime          @default(now())

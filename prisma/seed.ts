@@ -44,7 +44,7 @@ try {
     wallet: '0xABCDEF1234567890',
   }
 
-  const user = await prisma.user.upsert({
+  const admin = await prisma.user.upsert({
     where: { email: 'admin@example.com' },
     update: adminData,
     create: {
@@ -55,7 +55,7 @@ try {
   })
 
   console.log(`Seeded company: ${company.name}`)
-  console.log(`Seeded admin user: ${user.email}`)
+  console.log(`Seeded admin user: ${admin.email}`)
 
   const consultantData = {
     password: passwordHash,
@@ -135,6 +135,28 @@ try {
 
     seededPaymentHash = sampleTxHash
   }
+
+  await prisma.interaction.create({
+    data: {
+      status: 'Closed',
+      plannedAt: new Date(),
+      completedAt: new Date(),
+      description: 'Registration',
+      initiatorId: null,
+      targetId: consultant.id,
+    },
+  })
+
+  await prisma.interaction.create({
+    data: {
+      status: 'Closed',
+      plannedAt: new Date(),
+      completedAt: new Date(),
+      description: 'Registration',
+      initiatorId: consultant.id,
+      targetId: candidate.id,
+    },
+  })
 
   console.log(`Seeded candidate user: ${candidate.email}`)
   console.log(`Seeded consultant user: ${consultant.email}`)

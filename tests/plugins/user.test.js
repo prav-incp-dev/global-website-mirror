@@ -51,6 +51,7 @@ describe('user plugin', () => {
     }
 
     let createdIds = []
+    let createdInteractionIds = []
     const withCleanup = (createFn) => {
       return async (...args) => {
         const result = await createFn(...args)
@@ -58,12 +59,25 @@ describe('user plugin', () => {
         return result
       }
     }
+    const withInteractionCleanup = (createFn) => {
+      return async (...args) => {
+        const result = await createFn(...args)
+        createdInteractionIds.push(result.id)
+        return result
+      }
+    }
+
+    const deleteAllCreated = async (app) => {
+      await app.prisma.interaction.deleteMany({ where: { id: { in: createdInteractionIds } } })
+      await app.prisma.user.deleteMany({ where: { id: { in: createdIds } } })
+      createdIds = []
+      createdInteractionIds = []
+    }
 
     it('returns empty array when user has no children', async ({ expect }) => {
       const app = await createApp()
       onTestFinished(async () => {
-        await app.prisma.user.deleteMany({ where: { id: { in: createdIds } } })
-        createdIds = []
+        await deleteAllCreated(app)
       })
 
       const parent = await withCleanup((data) => app.prisma.user.create({ data }))({
@@ -79,8 +93,7 @@ describe('user plugin', () => {
     it('returns direct children only', async ({ expect }) => {
       const app = await createApp()
       onTestFinished(async () => {
-        await app.prisma.user.deleteMany({ where: { id: { in: createdIds } } })
-        createdIds = []
+        await deleteAllCreated(app)
       })
 
       const parent = await withCleanup((data) => app.prisma.user.create({ data }))({
@@ -99,13 +112,13 @@ describe('user plugin', () => {
       const children = await app.user.getDescendants(parent)
       expect(children).toHaveLength(1)
       expect(children[0].id).toBe(child.id)
+      expect(children[0].lastInteractionDate).toBeNull()
     })
 
     it('returns all descendants recursively', async ({ expect }) => {
       const app = await createApp()
       onTestFinished(async () => {
-        await app.prisma.user.deleteMany({ where: { id: { in: createdIds } } })
-        createdIds = []
+        await deleteAllCreated(app)
       })
 
       const parent = await withCleanup((data) => app.prisma.user.create({ data }))({
@@ -133,6 +146,109 @@ describe('user plugin', () => {
       const childIds = children.map((c) => c.id)
       expect(childIds).toContain(child.id)
       expect(childIds).toContain(grandchild.id)
+    })
+
+    it('returns lastInteractionDate for closed interactions only', async ({ expect }) => {
+      const app = await createApp()
+      onTestFinished(async () => {
+        await deleteAllCreated(app)
+      })
+
+      const parent = await withCleanup((data) => app.prisma.user.create({ data }))({
+        ...baseUser,
+        email: `getDescendants-interaction-parent-${Date.now()}@test.com`,
+        phone: `+10000007${String(Date.now()).slice(-4)}`,
+      })
+
+      const child = await withCleanup((data) => app.prisma.user.create({ data }))({
+        ...baseUser,
+        email: `getDescendants-interaction-child-${Date.now()}@test.com`,
+        phone: `+10000008${String(Date.now()).slice(-4)}`,
+        parentId: parent.id,
+      })
+
+      const grandchild = await withCleanup((data) => app.prisma.user.create({ data }))({
+        ...baseUser,
+        email: `getDescendants-interaction-grandchild-${Date.now()}@test.com`,
+        phone: `+10000009${String(Date.now()).slice(-4)}`,
+        parentId: child.id,
+      })
+
+      const closedDate = new Date('2026-08-01T10:00:00Z')
+
+      await withInteractionCleanup((data) => app.prisma.interaction.create({ data }))({
+        status: 'Closed',
+        plannedAt: new Date('2026-07-28T10:00:00Z'),
+        completedAt: closedDate,
+        description: 'Closed interaction for child',
+        initiatorId: parent.id,
+        targetId: child.id,
+      })
+
+      await withInteractionCleanup((data) => app.prisma.interaction.create({ data }))({
+        status: 'Open',
+        plannedAt: new Date('2026-08-02T10:00:00Z'),
+        completedAt: null,
+        description: 'Open interaction for grandchild',
+        initiatorId: parent.id,
+        targetId: grandchild.id,
+      })
+
+      const children = await app.user.getDescendants(parent)
+      expect(children).toHaveLength(2)
+
+      const childResult = children.find((c) => c.id === child.id)
+      const grandchildResult = children.find((c) => c.id === grandchild.id)
+
+      expect(childResult.lastInteractionDate).toEqual(closedDate)
+      expect(grandchildResult.lastInteractionDate).toBeNull()
+    })
+
+    it('returns latest completedAt for multiple closed interactions', async ({ expect }) => {
+      const app = await createApp()
+      onTestFinished(async () => {
+        await deleteAllCreated(app)
+      })
+
+      const parent = await withCleanup((data) => app.prisma.user.create({ data }))({
+        ...baseUser,
+        email: `getDescendants-latest-parent-${Date.now()}@test.com`,
+        phone: `+10000010${String(Date.now()).slice(-4)}`,
+      })
+
+      const child = await withCleanup((data) => app.prisma.user.create({ data }))({
+        ...baseUser,
+        email: `getDescendants-latest-child-${Date.now()}@test.com`,
+        phone: `+10000011${String(Date.now()).slice(-4)}`,
+        parentId: parent.id,
+      })
+
+      const earlierDate = new Date('2026-07-01T10:00:00Z')
+      const laterDate = new Date('2026-08-15T10:00:00Z')
+
+      await withInteractionCleanup((data) => app.prisma.interaction.create({ data }))({
+        status: 'Closed',
+        plannedAt: new Date('2026-06-28T10:00:00Z'),
+        completedAt: earlierDate,
+        description: 'Earlier closed interaction',
+        initiatorId: parent.id,
+        targetId: child.id,
+      })
+
+      await withInteractionCleanup((data) => app.prisma.interaction.create({ data }))({
+        status: 'Closed',
+        plannedAt: new Date('2026-08-01T10:00:00Z'),
+        completedAt: laterDate,
+        description: 'Later closed interaction',
+        initiatorId: parent.id,
+        targetId: child.id,
+      })
+
+      const children = await app.user.getDescendants(parent)
+      expect(children).toHaveLength(1)
+
+      expect(children[0].id).toBe(child.id)
+      expect(children[0].lastInteractionDate).toEqual(laterDate)
     })
   })
 })

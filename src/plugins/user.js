@@ -57,8 +57,18 @@ export default fp(async (server) => {
           SELECT u.*
           FROM "User" u
           INNER JOIN user_hierarchy uh ON u."parentId" = uh.id
+        ),
+        last_interactions AS (
+          SELECT
+            "targetId",
+            MAX("completedAt") AS "lastInteractionDate"
+          FROM "Interaction"
+          WHERE "status" = 'Closed'
+          GROUP BY "targetId"
         )
-        SELECT * FROM user_hierarchy
+        SELECT uh.*, li."lastInteractionDate"
+        FROM user_hierarchy uh
+        LEFT JOIN last_interactions li ON li."targetId" = uh.id
       `
 
       return children

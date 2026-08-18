@@ -173,7 +173,7 @@ CREATE TABLE "Interaction" (
     "plannedAt" TIMESTAMP(3) NOT NULL,
     "completedAt" TIMESTAMP(3),
     "description" TEXT NOT NULL,
-    "initiatorId" INTEGER NOT NULL,
+    "initiatorId" INTEGER,
     "targetId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -191,7 +191,7 @@ CREATE INDEX "Interaction_targetId_idx" ON "Interaction"("targetId");
 CREATE INDEX "Interaction_completedAt_idx" ON "Interaction"("completedAt");
 
 -- AddForeignKey
-ALTER TABLE "Interaction" ADD CONSTRAINT "Interaction_initiatorId_fkey" FOREIGN KEY ("initiatorId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Interaction" ADD CONSTRAINT "Interaction_initiatorId_fkey" FOREIGN KEY ("initiatorId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Interaction" ADD CONSTRAINT "Interaction_targetId_fkey" FOREIGN KEY ("targetId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
