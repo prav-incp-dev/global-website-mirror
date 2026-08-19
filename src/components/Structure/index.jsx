@@ -3,7 +3,7 @@ import TreeNode from './TreeNode'
 import { useDescendantsContext } from './DescendantsContext'
 import styles from './index.module.css'
 
-// 1. Хелпер для сборки плоского массива в дерево за O(N)
+// 1. Helper to build a tree from a flat array in O(N)
 const buildTree = (users) => {
   const map = {}
   const roots = []
@@ -17,14 +17,14 @@ const buildTree = (users) => {
     if (user.parentId && map[user.parentId]) {
       map[user.parentId].children.push(node)
     } else {
-      roots.push(node) // Верхний уровень (parentId === null || отсутствует)
+      roots.push(node) // Root level (parentId === null || missing)
     }
   })
 
   return roots
 }
 
-// 2. Пост-обход для отметки isStale и hasStaleDescendant на каждом узле
+// 2. Post-order traversal to mark isStale and hasStaleDescendant on each node
 const markStaleNodes = (nodes, staleDays) => {
   const deadline = Date.now() - staleDays * 24 * 60 * 60 * 1000
 
@@ -37,9 +37,9 @@ const markStaleNodes = (nodes, staleDays) => {
   }
 }
 
-// 3. Главный компонент, принимающий плоский список с Fastify API
+// 3. Main component receiving flat list from Fastify API
 export default function Structure({ csrfToken }) {
-  const { descendants, staleDays } = useDescendantsContext()
+  const { descendants, staleDays, currentUserId } = useDescendantsContext()
   const treeData = useMemo(() => {
     const tree = buildTree(descendants)
     markStaleNodes(tree, staleDays)
@@ -49,7 +49,7 @@ export default function Structure({ csrfToken }) {
   return (
     <div className={styles.container}>
       {treeData.map((rootNode) => (
-        <TreeNode key={rootNode.id} node={rootNode} csrfToken={csrfToken} />
+        <TreeNode key={rootNode.id} node={rootNode} csrfToken={csrfToken} currentUserId={currentUserId} />
       ))}
     </div>
   )

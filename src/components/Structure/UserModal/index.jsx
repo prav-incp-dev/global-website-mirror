@@ -4,9 +4,10 @@ import CompleteInteractionModal from '../CompleteInteractionModal'
 import ScheduleInteractionModal from '../ScheduleInteractionModal'
 import styles from './index.module.css'
 
-const UserModal = ({ data, csrfToken, onClose }) => {
+const UserModal = ({ data, csrfToken, currentUserId, onClose }) => {
   const [showCompleteModal, setShowCompleteModal] = useState(false)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
+  const isDirectChild = data.parentId === currentUserId
 
   return (
     <Modal isOpen title="Информация о пользователе" onClose={onClose}>
@@ -61,14 +62,16 @@ const UserModal = ({ data, csrfToken, onClose }) => {
         </div>
       </div>
 
-      <div className={styles.actions}>
-        <button className={styles.completeButton} onClick={() => setShowCompleteModal(true)}>
-          Отметить взаимодействие
-        </button>
-        <button className={styles.scheduleButton} onClick={() => setShowScheduleModal(true)}>
-          Запланировать взаимодействие
-        </button>
-      </div>
+      {isDirectChild && (
+        <div className={styles.actions}>
+          <button className={styles.completeButton} onClick={() => setShowCompleteModal(true)}>
+            Отметить взаимодействие
+          </button>
+          <button className={styles.scheduleButton} onClick={() => setShowScheduleModal(true)}>
+            Запланировать взаимодействие
+          </button>
+        </div>
+      )}
 
       {showCompleteModal && (
         <CompleteInteractionModal

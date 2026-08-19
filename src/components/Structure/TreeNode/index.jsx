@@ -5,7 +5,7 @@ import AttentionIcon from '@/assets/icons/AttentionIcon.svg?react'
 import UserModal from '../UserModal'
 import styles from './index.module.css'
 
-const TreeNode = ({ node, csrfToken }) => {
+const TreeNode = ({ node, csrfToken, currentUserId }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [showInfoModal, setShowInfoModal] = useState(false)
   const hasChildren = node.children && node.children.length > 0
@@ -46,13 +46,13 @@ const TreeNode = ({ node, csrfToken }) => {
       {isOpen && hasChildren && (
         <div className={styles.childrenContainer}>
           {node.children.map((child) => (
-            <TreeNode key={child.id} node={child} csrfToken={csrfToken} />
+            <TreeNode key={child.id} node={child} csrfToken={csrfToken} currentUserId={currentUserId} />
           ))}
         </div>
       )}
 
       {showInfoModal && (
-        <UserModal data={{ ...node, status }} csrfToken={csrfToken} onClose={() => setShowInfoModal(false)} />
+        <UserModal data={{ ...node, status }} csrfToken={csrfToken} currentUserId={currentUserId} onClose={() => setShowInfoModal(false)} />
       )}
     </div>
   )

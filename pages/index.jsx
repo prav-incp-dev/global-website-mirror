@@ -25,6 +25,7 @@ export const getData = async ({ server, req, reply }) => {
   const payments = await server.payment.getPayments(user)
   const descendants = user.role === UserRole.Consultant && (await server.user.getDescendants(user))
   const staleDays = parseInt(process.env.STALE_INTERACTION_DAYS, 30)
+  const currentUserId = user.id
 
   return {
     profile: {
@@ -43,6 +44,7 @@ export const getData = async ({ server, req, reply }) => {
       companyName: user.company?.name ?? null,
       companyPrimaryWallet: user.company?.primaryWallet ?? null,
     },
+    currentUserId,
     payments,
     descendants,
     staleDays,
@@ -65,7 +67,7 @@ const TABS = (role) => {
 
 const Index = () => {
   const { data } = useRouteContext()
-  const { profile = {}, payments = [], descendants = [], staleDays = 30, csrfToken = '' } = data
+  const { profile = {}, currentUserId, payments = [], descendants = [], staleDays = 30, csrfToken = '' } = data
   const [activeTab, setActiveTab] = useState('profile')
   const [invitationOpen, setInvitationOpen] = useState(false)
   const [profileData, setProfileData] = useState(profile)
@@ -89,7 +91,7 @@ const Index = () => {
   }
 
   return (
-    <DescendantsProvider descendants={descendants} staleDays={staleDays}>
+    <DescendantsProvider descendants={descendants} staleDays={staleDays} currentUserId={currentUserId}>
       <div className={styles.container}>
         <div className={styles.header}>
           <h1 className={styles.headerTitle}>Профиль</h1>

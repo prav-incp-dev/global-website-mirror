@@ -22,7 +22,7 @@ const updateDescendant = (descendants, userId, updates) => {
   })
 }
 
-export const DescendantsProvider = ({ descendants: initialDescendants, staleDays, children }) => {
+export const DescendantsProvider = ({ descendants: initialDescendants, staleDays, currentUserId, children }) => {
   const [descendants, setDescendants] = useState(initialDescendants)
 
   const updateDescendantData = useCallback((userId, updates) => {
@@ -30,7 +30,7 @@ export const DescendantsProvider = ({ descendants: initialDescendants, staleDays
   }, [])
 
   return (
-    <DescendantsContext.Provider value={{ descendants, updateDescendantData, staleDays }}>
+    <DescendantsContext.Provider value={{ descendants, updateDescendantData, staleDays, currentUserId }}>
       {children}
     </DescendantsContext.Provider>
   )
