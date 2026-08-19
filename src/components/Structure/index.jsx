@@ -24,10 +24,27 @@ const buildTree = (users) => {
   return roots
 }
 
-// 2. Главный компонент, принимающий плоский список с Fastify API
+// 2. Пост-обход для отметки isStale и hasStaleDescendant на каждом узле
+const markStaleNodes = (nodes, staleDays) => {
+  const deadline = Date.now() - staleDays * 24 * 60 * 60 * 1000
+
+  for (const node of nodes) {
+    if (node.children?.length) markStaleNodes(node.children, staleDays)
+
+    const lastInteractionTime = node.lastInteractionDate ? new Date(node.lastInteractionDate).getTime() : 0
+    node.isStale = lastInteractionTime < deadline
+    node.hasStaleDescendant = node.children?.some((c) => c.isStale || c.hasStaleDescendant) ?? false
+  }
+}
+
+// 3. Главный компонент, принимающий плоский список с Fastify API
 export default function Structure({ csrfToken }) {
-  const { descendants } = useDescendantsContext()
-  const treeData = useMemo(() => buildTree(descendants), [descendants])
+  const { descendants, staleDays } = useDescendantsContext()
+  const treeData = useMemo(() => {
+    const tree = buildTree(descendants)
+    markStaleNodes(tree, staleDays)
+    return tree
+  }, [descendants, staleDays])
 
   return (
     <div className={styles.container}>

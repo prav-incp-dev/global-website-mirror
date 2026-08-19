@@ -10,6 +10,7 @@ const TreeNode = ({ node, csrfToken }) => {
   const [showInfoModal, setShowInfoModal] = useState(false)
   const hasChildren = node.children && node.children.length > 0
   const status = node.role === UserRole.Candidate ? 'Кандидат' : 'Консультант'
+  const isStaleBranch = node.isStale || node.hasStaleDescendant
 
   const isNextInteractionToday =
     node.nextInteractionDate && new Date(node.nextInteractionDate).toDateString() === new Date().toDateString()
@@ -21,7 +22,10 @@ const TreeNode = ({ node, csrfToken }) => {
 
   return (
     <div className={styles.container}>
-      <div onClick={() => hasChildren && setIsOpen(!isOpen)} className={hasChildren ? styles.row : styles.rowLeaf}>
+      <div
+        onClick={() => hasChildren && setIsOpen(!isOpen)}
+        className={`${hasChildren ? styles.row : styles.rowLeaf} ${isStaleBranch ? styles.stale : ''}`}
+      >
         {hasChildren && <span className={`${styles.arrow} ${isOpen ? styles.arrowOpen : ''}`}>▶</span>}
 
         <div className={styles.userTable}>
@@ -29,7 +33,7 @@ const TreeNode = ({ node, csrfToken }) => {
           <div className={styles.cell}>{status}</div>
           <div className={styles.cell}>{node.lastInteractionDate?.toLocaleDateString('ru-RU') || '-'}</div>
           <div className={styles.cell} title="Данные пользователя">
-              <InfoIcon className={styles.infoIcon} onClick={handleInfoClick} />
+            <InfoIcon className={styles.infoIcon} onClick={handleInfoClick} />
           </div>
           {isNextInteractionToday && (
             <div className={styles.cell} title="Взаимодействие сегодня">
