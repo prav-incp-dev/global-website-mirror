@@ -87,7 +87,7 @@ const ScheduleInteractionModal = ({ targetId, nextInteractionDate, csrfToken, on
         {error && <div className={styles.error}>{error}</div>}
 
         <button className={styles.submitButton} type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Сохранение...' : 'Запланировать'}
+          {isSubmitting ? 'Сохранение...' : 'Продолжить'}
         </button>
       </form>
     </Modal>

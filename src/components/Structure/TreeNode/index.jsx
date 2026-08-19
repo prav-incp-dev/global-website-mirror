@@ -12,8 +12,8 @@ const TreeNode = ({ node, csrfToken, currentUserId }) => {
   const status = node.role === UserRole.Candidate ? 'Кандидат' : 'Консультант'
   const isStaleBranch = node.isStale || node.hasStaleDescendant
 
-  const isNextInteractionToday =
-    node.nextInteractionDate && new Date(node.nextInteractionDate).toDateString() === new Date().toDateString()
+  const isNextInteractionDue =
+    node.nextInteractionDate && new Date(node.nextInteractionDate).toDateString() <= new Date().toDateString()
 
   const handleInfoClick = (e) => {
     e.stopPropagation()
@@ -35,8 +35,8 @@ const TreeNode = ({ node, csrfToken, currentUserId }) => {
           <div className={styles.cell} title="Данные пользователя">
             <InfoIcon className={styles.infoIcon} onClick={handleInfoClick} />
           </div>
-          {isNextInteractionToday && (
-            <div className={styles.cell} title="Взаимодействие сегодня">
+          {isNextInteractionDue && (
+            <div className={styles.cell} title="Назначено взаимодействие">
               <AttentionIcon className={styles.attentionIcon} />
             </div>
           )}
