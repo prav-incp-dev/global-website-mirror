@@ -38,11 +38,10 @@
 
 .userTable {
   display: flex;
+  gap: 10px;
 }
 
 .cell {
-  flex: 1;
-  padding: 7px;
   text-align: center;
 }
 

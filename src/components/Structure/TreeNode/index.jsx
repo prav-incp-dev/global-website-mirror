@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { UserRole } from '@/generated/prisma/enums'
 import InfoIcon from '@/assets/icons/InfoIcon.svg?react'
+import AttentionIcon from '@/assets/icons/AttentionIcon.svg?react'
 import UserModal from '../UserModal'
 import styles from './index.module.css'
 
@@ -9,6 +10,9 @@ const TreeNode = ({ node, csrfToken }) => {
   const [showInfoModal, setShowInfoModal] = useState(false)
   const hasChildren = node.children && node.children.length > 0
   const status = node.role === UserRole.Candidate ? 'Кандидат' : 'Консультант'
+
+  const isNextInteractionToday =
+    node.nextInteractionDate && new Date(node.nextInteractionDate).toDateString() === new Date().toDateString()
 
   const handleInfoClick = (e) => {
     e.stopPropagation()
@@ -27,6 +31,11 @@ const TreeNode = ({ node, csrfToken }) => {
           <div className={styles.cell} title="Данные пользователя">
               <InfoIcon className={styles.infoIcon} onClick={handleInfoClick} />
           </div>
+          {isNextInteractionToday && (
+            <div className={styles.cell} title="Взаимодействие сегодня">
+              <AttentionIcon className={styles.attentionIcon} />
+            </div>
+          )}
         </div>
       </div>
 
