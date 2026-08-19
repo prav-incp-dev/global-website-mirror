@@ -73,7 +73,7 @@ const Admin = () => {
         <button className={styles.inviteButton} onClick={() => setInvitationOpen(true)}>
           Сгенерировать пригласительную ссылку
         </button>
-        <InvitationModal isOpen={invitationOpen} onClose={() => setInvitationOpen(false)} csrfToken={csrfToken} />
+        {invitationOpen && <InvitationModal onClose={() => setInvitationOpen(false)} csrfToken={csrfToken} />}
       </>
 
       <div className={styles.tabs}>

@@ -52,7 +52,12 @@ const TreeNode = ({ node, csrfToken, currentUserId }) => {
       )}
 
       {showInfoModal && (
-        <UserModal data={{ ...node, status }} csrfToken={csrfToken} currentUserId={currentUserId} onClose={() => setShowInfoModal(false)} />
+        <UserModal
+          data={{ ...node, status }}
+          csrfToken={csrfToken}
+          currentUserId={currentUserId}
+          onClose={() => setShowInfoModal(false)}
+        />
       )}
     </div>
   )

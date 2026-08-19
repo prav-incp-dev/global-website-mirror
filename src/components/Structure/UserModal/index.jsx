@@ -10,7 +10,7 @@ const UserModal = ({ data, csrfToken, currentUserId, onClose }) => {
   const isDirectChild = data.parentId === currentUserId
 
   return (
-    <Modal isOpen title="Информация о пользователе" onClose={onClose}>
+    <Modal title="Информация о пользователе" onClose={onClose}>
       <div className={styles.infoTable}>
         <div className={styles.infoRow}>
           <span className={styles.label}>Имя:</span>

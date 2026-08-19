@@ -1,9 +1,7 @@
 import CloseIcon from '@/assets/icons/CloseIcon.svg?react'
 import styles from './index.module.css'
 
-const Modal = ({ isOpen, onClose, title, className, children }) => {
-  if (!isOpen) return null
-
+const Modal = ({ onClose, title, className, children }) => {
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) {
       onClose()

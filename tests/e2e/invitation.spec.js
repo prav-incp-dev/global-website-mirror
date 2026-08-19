@@ -74,6 +74,33 @@ test.describe('generate invitation link', () => {
     await expect(page.getByText('admin@example.com')).toBeVisible()
   })
 
+  test('It generates different invitation tokens each time', async ({ context, page, loginAs }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+    await loginAs(2)
+    await expect(page).not.toHaveURL(/\/auth$/)
+    await expect(page.getByText('consultant@example.com')).toBeVisible()
+    await expect(page.locator('text=Ник в Телеграм')).toBeVisible()
+
+    // First token
+    const inviteButton = page.locator('button', { hasText: 'Сгенерировать пригласительную ссылку' })
+    await inviteButton.scrollIntoViewIfNeeded()
+    await inviteButton.click()
+    await expect(page.locator('div[class*="overlay"]')).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByRole('heading', { name: 'Пригласительная ссылка' })).toBeVisible()
+    const token1 = await getInvitationTokenFromModal(page)
+    await page.getByRole('button', { name: 'Закрыть' }).click()
+    await expect(page.getByRole('heading', { name: 'Профиль' })).toBeVisible()
+
+    // Second token
+    await inviteButton.click()
+    await expect(page.locator('div[class*="overlay"]')).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByRole('heading', { name: 'Пригласительная ссылка' })).toBeVisible()
+    const token2 = await getInvitationTokenFromModal(page)
+
+    // Assert tokens are different
+    expect(token1).not.toBe(token2)
+  })
+
   test('Consultant generates invitation link with owner=userId', async ({ context, page, loginAs }) => {
     // Grant clipboard permissions so the copy button works
     await context.grantPermissions(['clipboard-read', 'clipboard-write'])

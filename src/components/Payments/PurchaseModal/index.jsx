@@ -139,7 +139,7 @@ const PurchaseModal = ({ onClose, onCreate, profile, csrfToken }) => {
   }
 
   return (
-    <Modal isOpen onClose={onClose} className={styles.purchaseModal}>
+    <Modal onClose={onClose} className={styles.purchaseModal}>
       <div className={styles.purchaseModalBody}>
         <div className={styles.stepper}>
           <button

@@ -105,7 +105,7 @@ const Index = () => {
               Сгенерировать пригласительную ссылку
             </button>
 
-            <InvitationModal isOpen={invitationOpen} onClose={() => setInvitationOpen(false)} csrfToken={csrfToken} />
+            {invitationOpen && <InvitationModal onClose={() => setInvitationOpen(false)} csrfToken={csrfToken} />}
           </>
         )}
         <div className={styles.tabs}>

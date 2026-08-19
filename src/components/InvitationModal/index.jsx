@@ -4,7 +4,7 @@ import styles from './index.module.css'
 import CopyIcon from '@/assets/icons/CopyIcon.svg?react'
 import CheckIcon from '@/assets/icons/CheckIcon.svg?react'
 
-const InvitationModal = ({ isOpen, onClose, csrfToken }) => {
+const InvitationModal = ({ onClose, csrfToken }) => {
   const [token, setToken] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -56,7 +56,7 @@ const InvitationModal = ({ isOpen, onClose, csrfToken }) => {
   const invitationUrl = token ? `${window.location.origin}/register?token=${token}` : ''
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Пригласительная ссылка">
+    <Modal onClose={onClose} title="Пригласительная ссылка">
       {loading && <p className={styles.loadingText}>Генерация ссылки...</p>}
       {error && <p className={styles.errorText}>{error}</p>}
 
