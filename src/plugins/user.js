@@ -1,6 +1,7 @@
 import fp from 'fastify-plugin'
 import { getAddress, formatUnits } from 'viem'
 import { getPublicClient, usdtAddress } from '../lib/chain.js'
+import { UserRole } from '../generated/prisma/client'
 
 const erc20Abi = [
   {
@@ -46,6 +47,8 @@ export default fp(async (server) => {
     },
 
     getDescendants: async (user) => {
+      if (user.role === UserRole.Candidate) return []
+
       const children = await server.prisma.$queryRaw`
         WITH RECURSIVE user_hierarchy AS (
           SELECT *

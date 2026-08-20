@@ -47,7 +47,7 @@ describe('user plugin', () => {
     const baseUser = {
       password: 'hash',
       companyId: 1,
-      role: 'Candidate',
+      role: 'Consultant',
     }
 
     let createdIds = []
