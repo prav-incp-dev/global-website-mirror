@@ -7,7 +7,7 @@ const setupPrismaCleaner = (app) => {
 
   app.decorate('prismaCleaner', {
     records: createdRecords,
-    log() {
+    log: () => {
       if (createdRecords.size === 0 && createManyCounts.size === 0) return
       for (const [model, ids] of createdRecords) {
         if (ids.size > 0) {
@@ -18,7 +18,7 @@ const setupPrismaCleaner = (app) => {
         console.log(`[prisma:created] ${model}: ${count} records via createMany`)
       }
     },
-    async clean() {
+    clean: async () => {
       const prisma = app.prisma
       const models = [...createdRecords].filter(([, ids]) => ids.size > 0)
       if (models.length === 0) {
@@ -74,7 +74,7 @@ export const createApp = async () => {
   })
   setupPrismaCleaner(app)
   onTestFinished(async () => {
-    app.prismaCleaner.log()
+    // app.prismaCleaner.log()
     app.prismaCleaner.clean()
     await app.close()
   })
@@ -90,7 +90,7 @@ export const createNoCsrfApp = async () => {
   })
   setupPrismaCleaner(app)
   onTestFinished(async () => {
-    app.prismaCleaner.log()
+    // app.prismaCleaner.log()
     app.prismaCleaner.clean()
     await app.close()
   })
