@@ -350,6 +350,7 @@ describe('POST /api/interaction/schedule', () => {
     expect(body.interaction.targetId).toBe(target.id)
     expect(body.interaction.initiatorId).toBe(consultant.id)
     expect(body.interaction.completedAt).toBeNull()
+    expect(body.interaction.reminderSent).toBe(false)
     expect(new Date(body.interaction.plannedAt).toISOString()).toBe(new Date(plannedAt).toISOString())
 
     createdInteractionIds.push(body.interaction.id)
@@ -375,7 +376,7 @@ describe('POST /api/interaction/schedule', () => {
       phone: `+10000010${String(Date.now()).slice(-4)}`,
     })
 
-    // Create an existing open interaction
+    // Create an existing open interaction with reminderSent already sent
     const existing = await withInteractionCleanup((data) => app.prisma.interaction.create({ data }))({
       status: 'Open',
       plannedAt: new Date('2026-09-10T10:00:00Z'),
@@ -383,6 +384,7 @@ describe('POST /api/interaction/schedule', () => {
       description: 'Scheduled call',
       initiatorId: consultant.id,
       targetId: target.id,
+      reminderSent: true,
     })
 
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(consultant)
@@ -404,6 +406,7 @@ describe('POST /api/interaction/schedule', () => {
     expect(body.success).toBe(true)
     expect(body.interaction.id).toBe(existing.id)
     expect(body.interaction.status).toBe('Open')
+    expect(body.interaction.reminderSent).toBe(false)
     expect(new Date(body.interaction.plannedAt).toISOString()).toBe(new Date(newPlannedAt).toISOString())
   })
 

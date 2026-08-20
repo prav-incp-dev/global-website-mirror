@@ -108,3 +108,22 @@ export const sendRegistrationConfirmation = async (user) => {
 
   return info
 }
+
+/**
+ * Sends a reminder email about a scheduled interaction.
+ */
+export const sendInteractionReminder = async (initiator, targetName) => {
+  const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@ourhouse.app'
+  const transport = createTransport()
+
+  const info = await transport.sendMail({
+    from: `"Наш Дом" <${fromEmail}>`,
+    to: initiator.email,
+    subject: 'Напоминание о взаимодействии',
+    text: `Здравствуйте ${initiator.firstName || initiator.nick || 'уважаемый пользователь'}!\n\nНапоминаем, что у вас запланировано взаимодействие с ${targetName}\n\n— Наш Дом`,
+  })
+
+  processMailResult(info, initiator)
+
+  return info
+}
