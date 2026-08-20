@@ -18,6 +18,29 @@ const setupPrismaCleaner = (app) => {
         console.log(`[prisma:created] ${model}: ${count} records via createMany`)
       }
     },
+    async clean() {
+      const prisma = app.prisma
+      const models = [...createdRecords].filter(([, ids]) => ids.size > 0)
+      if (models.length === 0) {
+        createdRecords.clear()
+        createManyCounts.clear()
+        return
+      }
+      const tables = models.map(([model]) => `"${model}"`)
+      await prisma.$executeRawUnsafe(tables.map((t) => `ALTER TABLE ${t} DISABLE TRIGGER ALL`).join('; '))
+      try {
+        for (const [model, ids] of createdRecords) {
+          if (ids.size > 0) {
+            const modelKey = model[0].toLowerCase() + model.slice(1)
+            await prisma[modelKey].deleteMany({ where: { id: { in: [...ids] } } })
+          }
+        }
+      } finally {
+        await prisma.$executeRawUnsafe(tables.map((t) => `ALTER TABLE ${t} ENABLE TRIGGER ALL;`).join('; '))
+      }
+      createdRecords.clear()
+      createManyCounts.clear()
+    },
   })
 
   app.prisma = app.prisma.$extends({
@@ -52,6 +75,7 @@ export const createApp = async () => {
   setupPrismaCleaner(app)
   onTestFinished(async () => {
     app.prismaCleaner.log()
+    app.prismaCleaner.clean()
     await app.close()
   })
   return app
@@ -67,6 +91,7 @@ export const createNoCsrfApp = async () => {
   setupPrismaCleaner(app)
   onTestFinished(async () => {
     app.prismaCleaner.log()
+    app.prismaCleaner.clean()
     await app.close()
   })
   return app
