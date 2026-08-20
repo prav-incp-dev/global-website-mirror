@@ -8,38 +8,38 @@ beforeAll(() => {
   vi.stubEnv('SESSION_SECRET', SESSION_SECRET)
 })
 
+const baseUser = {
+  password: 'hash',
+  companyId: 1,
+}
+
+let createdIds = []
+let createdInteractionIds = []
+
+const withCleanup = (createFn) => {
+  return async (...args) => {
+    const result = await createFn(...args)
+    createdIds.push(result.id)
+    return result
+  }
+}
+
+const withInteractionCleanup = (createFn) => {
+  return async (...args) => {
+    const result = await createFn(...args)
+    createdInteractionIds.push(result.id)
+    return result
+  }
+}
+
+const deleteAllCreated = async (app) => {
+  await app.prisma.interaction.deleteMany({ where: { id: { in: createdInteractionIds } } })
+  await app.prisma.user.deleteMany({ where: { id: { in: createdIds } } })
+  createdIds = []
+  createdInteractionIds = []
+}
+
 describe('POST /api/interaction/complete', () => {
-  const baseUser = {
-    password: 'hash',
-    companyId: 1,
-  }
-
-  let createdIds = []
-  let createdInteractionIds = []
-
-  const withCleanup = (createFn) => {
-    return async (...args) => {
-      const result = await createFn(...args)
-      createdIds.push(result.id)
-      return result
-    }
-  }
-
-  const withInteractionCleanup = (createFn) => {
-    return async (...args) => {
-      const result = await createFn(...args)
-      createdInteractionIds.push(result.id)
-      return result
-    }
-  }
-
-  const deleteAllCreated = async (app) => {
-    await app.prisma.interaction.deleteMany({ where: { id: { in: createdInteractionIds } } })
-    await app.prisma.user.deleteMany({ where: { id: { in: createdIds } } })
-    createdIds = []
-    createdInteractionIds = []
-  }
-
   it('returns 401 when user is not authenticated', async () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
@@ -244,37 +244,6 @@ describe('POST /api/interaction/complete', () => {
 })
 
 describe('POST /api/interaction/schedule', () => {
-  const baseUser = {
-    password: 'hash',
-    companyId: 1,
-  }
-
-  let createdIds = []
-  let createdInteractionIds = []
-
-  const withCleanup = (createFn) => {
-    return async (...args) => {
-      const result = await createFn(...args)
-      createdIds.push(result.id)
-      return result
-    }
-  }
-
-  const withInteractionCleanup = (createFn) => {
-    return async (...args) => {
-      const result = await createFn(...args)
-      createdInteractionIds.push(result.id)
-      return result
-    }
-  }
-
-  const deleteAllCreated = async (app) => {
-    await app.prisma.interaction.deleteMany({ where: { id: { in: createdInteractionIds } } })
-    await app.prisma.user.deleteMany({ where: { id: { in: createdIds } } })
-    createdIds = []
-    createdInteractionIds = []
-  }
-
   it('returns 401 when user is not authenticated', async () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
