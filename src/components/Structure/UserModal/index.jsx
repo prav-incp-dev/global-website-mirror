@@ -24,28 +24,30 @@ const UserModal = ({ data, csrfToken, currentUserId, onClose }) => {
           <span className={styles.label}>Статус:</span>
           <span className={styles.value}>{data.status || '—'}</span>
         </div>
-        <div className={styles.infoRow}>
-          <span className={styles.label}>Почта:</span>
-          <span className={styles.value}>{data.email}</span>
-        </div>
-        <div className={styles.infoRow}>
-          <span className={styles.label}>Номер телефона:</span>
-          <span className={styles.value}>{data.phoneNumber || '—'}</span>
-        </div>
-        <div className={styles.infoRow}>
-          <span className={styles.label}>Номер пайщика:</span>
-          <span className={styles.value}>{data.memberId || '—'}</span>
-        </div>
-        <div className={styles.infoRow}>
-          <span className={styles.label}>Ник в Телеграм:</span>
-          <span className={styles.value}>{data.nick || '—'}</span>
-        </div>
+        {isDirectChild && [
+          <div className={styles.infoRow} key="email">
+            <span className={styles.label}>Почта:</span>
+            <span className={styles.value}>{data.email}</span>
+          </div>,
+          <div className={styles.infoRow} key="phoneNumber">
+            <span className={styles.label}>Номер телефона:</span>
+            <span className={styles.value}>{data.phoneNumber || '—'}</span>
+          </div>,
+          <div className={styles.infoRow} key="memberId">
+            <span className={styles.label}>Номер пайщика:</span>
+            <span className={styles.value}>{data.memberId || '—'}</span>
+          </div>,
+          <div className={styles.infoRow} key="nick">
+            <span className={styles.label}>Ник в Телеграм:</span>
+            <span className={styles.value}>{data.nick || '—'}</span>
+          </div>,
+        ]}
         <div className={styles.infoRow}>
           <span className={styles.label}>Уровень:</span>
           <span className={styles.value}>{data.level}</span>
         </div>
         <div className={styles.infoRow}>
-          <span className={styles.label}>Личные продажи</span>
+          <span className={styles.label}>Личные продажи:</span>
           <span className={styles.value}>{data.score}</span>
         </div>
         <div className={styles.infoRow}>
