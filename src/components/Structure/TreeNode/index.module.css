@@ -58,6 +58,13 @@
   color: #42bbe7;
 }
 
+.checkIcon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  color: #4caf50;
+}
+
 .attentionIcon {
   width: 20px;
   height: 20px;

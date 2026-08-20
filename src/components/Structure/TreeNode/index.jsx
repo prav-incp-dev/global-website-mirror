@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { UserRole } from '@/generated/prisma/enums'
 import InfoIcon from '@/assets/icons/InfoIcon.svg?react'
+import CheckIcon from '@/assets/icons/CheckIcon.svg?react'
 import AttentionIcon from '@/assets/icons/AttentionIcon.svg?react'
 import UserModal from '../UserModal'
 import styles from './index.module.css'
@@ -9,7 +10,7 @@ const TreeNode = ({ node, csrfToken, currentUserId }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [showInfoModal, setShowInfoModal] = useState(false)
   const hasChildren = node.children && node.children.length > 0
-  const status = node.role === UserRole.Candidate ? 'Кандидат' : 'Консультант'
+  const isConsultant = node.role === UserRole.Consultant
   const isStaleBranch = node.isStale || node.hasStaleDescendant
 
   const isNextInteractionDue =
@@ -29,9 +30,13 @@ const TreeNode = ({ node, csrfToken, currentUserId }) => {
         {hasChildren && <span className={`${styles.arrow} ${isOpen ? styles.arrowOpen : ''}`}>▶</span>}
 
         <div className={styles.userTable}>
-          <div className={styles.cell}>{node.firstName}</div>
-          <div className={styles.cell}>{status}</div>
+          <div className={styles.cell}>{`${node.firstName} ${node.lastName || ''}`.trim()}</div>
           <div className={styles.cell}>{node.lastInteractionDate?.toLocaleDateString('ru-RU') || '-'}</div>
+          {isConsultant && (
+            <div className={styles.cell} title="Консультант">
+              <CheckIcon className={styles.checkIcon} />
+            </div>
+          )}
           <div className={styles.cell} title="Данные пользователя">
             <InfoIcon className={styles.infoIcon} onClick={handleInfoClick} />
           </div>
@@ -53,7 +58,7 @@ const TreeNode = ({ node, csrfToken, currentUserId }) => {
 
       {showInfoModal && (
         <UserModal
-          data={{ ...node, status }}
+          data={{ ...node, status: isConsultant ? 'Консультант' : 'Кандидат' }}
           csrfToken={csrfToken}
           currentUserId={currentUserId}
           onClose={() => setShowInfoModal(false)}
