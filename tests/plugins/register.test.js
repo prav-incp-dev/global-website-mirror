@@ -1,4 +1,4 @@
-import { beforeAll, describe, it, vi } from 'vitest'
+import { beforeAll, describe, it, onTestFinished, vi } from 'vitest'
 import jwt from 'jsonwebtoken'
 import { createApp } from '../helpers'
 
@@ -9,116 +9,94 @@ beforeAll(() => {
 })
 
 describe('register plugin', () => {
+  let createdUserIds = []
+  let createdUsedInviteIds = []
+  let createdInteractionIds = []
+
+  const withUsedInviteCleanup = (createFn) => {
+    return async (...args) => {
+      const result = await createFn(...args)
+      createdUsedInviteIds.push(result.id)
+      return result
+    }
+  }
+
+  const deleteAllCreated = async (app) => {
+    await app.prisma.interaction.deleteMany({ where: { id: { in: createdInteractionIds } } })
+    await app.prisma.usedInvite.deleteMany({ where: { id: { in: createdUsedInviteIds } } })
+    await app.prisma.user.deleteMany({ where: { id: { in: createdUserIds } } })
+    createdUserIds = []
+    createdUsedInviteIds = []
+    createdInteractionIds = []
+  }
+
   it('createUser creates a user and removes password from result', async ({ expect }) => {
     const app = await createApp()
-
-    const mockCompany = { id: 1, name: 'Test Company' }
-    vi.spyOn(app.prisma.company, 'findFirst').mockResolvedValue(mockCompany)
-
-    let capturedUserCreateArgs = null
-    let capturedUsedInviteCreateArgs = null
-    let capturedInteractionCreateArgs = null
-
-    vi.spyOn(app.prisma, '$transaction').mockImplementation(async (cb) => {
-      const tx = {
-        user: {
-          create: vi.fn().mockImplementation((args) => {
-            capturedUserCreateArgs = args
-            return {
-              id: 1,
-              email: args.data.email,
-              password: args.data.password,
-              role: args.data.role,
-              nick: args.data.nick,
-              firstName: args.data.firstName,
-              lastName: args.data.lastName,
-              phone: args.data.phone,
-              memberId: args.data.memberId,
-              companyId: args.data.companyId,
-              company: mockCompany,
-            }
-          }),
-        },
-        usedInvite: {
-          create: vi.fn().mockImplementation((args) => {
-            capturedUsedInviteCreateArgs = args
-            return { id: 1, code: args.data.code }
-          }),
-        },
-        interaction: {
-          create: vi.fn().mockImplementation((args) => {
-            capturedInteractionCreateArgs = args
-            return { id: 1 }
-          }),
-        },
-      }
-      return cb(tx)
+    onTestFinished(async () => {
+      await deleteAllCreated(app)
     })
+
+    const email = `create-user-${Date.now()}@test.com`
+    const phone = `+10000001${String(Date.now()).slice(-4)}`
+    const inviteCode = `invite-${Date.now()}`
 
     const result = await app.registration.createUser({
-      email: 'new.user@example.com',
+      email,
       firstName: 'New',
-      phone: '+10000000002',
+      phone,
       password: 'plainpassword',
-      inviteCode: 'test-invite',
+      inviteCode,
     })
 
-    expect(capturedUserCreateArgs.data.password).not.toBe('plainpassword')
-    expect(capturedUserCreateArgs.data.password).toBeDefined()
-
-    expect(capturedUserCreateArgs.data).toMatchObject({
-      email: 'new.user@example.com',
-      firstName: 'New',
-      phone: '+10000000002',
-      role: 'Candidate',
-      companyId: 1,
-    })
-
-    expect(capturedUsedInviteCreateArgs.data).toEqual({ code: 'test-invite' })
-
-    expect(capturedInteractionCreateArgs.data).toMatchObject({
-      status: 'Closed',
-      description: 'Registration',
-      targetId: 1,
-      initiatorId: null,
-    })
-    expect(capturedInteractionCreateArgs.data.plannedAt).toBeInstanceOf(Date)
-    expect(capturedInteractionCreateArgs.data.completedAt).toBeInstanceOf(Date)
-
+    // Verify password is not in the result
     expect(result).not.toHaveProperty('password')
-    expect(result.email).toBe('new.user@example.com')
 
-    expect(app.prisma.company.findFirst).toHaveBeenCalledWith({
-      orderBy: { id: 'asc' },
+    // Verify the user was actually created in the DB
+    const dbUser = await app.prisma.user.findUnique({ where: { id: result.id } })
+    expect(dbUser).not.toBeNull()
+    expect(dbUser.email).toBe(email)
+    expect(dbUser.firstName).toBe('New')
+    expect(dbUser.role).toBe('Candidate')
+    // Password should be hashed, not plaintext
+    expect(dbUser.password).not.toBe('plainpassword')
+    expect(dbUser.password).toBeDefined()
+
+    // Verify the usedInvite was created
+    const usedInvite = await app.prisma.usedInvite.findUnique({ where: { code: inviteCode } })
+    expect(usedInvite).not.toBeNull()
+
+    // Verify the interaction was created
+    const interaction = await app.prisma.interaction.findFirst({
+      where: { targetId: result.id, description: 'Registration' },
     })
+    expect(interaction).not.toBeNull()
+    expect(interaction.status).toBe('Closed')
+    expect(interaction.initiatorId).toBeNull()
+
+    // Track for cleanup
+    createdUserIds.push(result.id)
+    createdUsedInviteIds.push(usedInvite.id)
+    createdInteractionIds.push(interaction.id)
   })
 
   it('createUser throws error when inviteCode is already taken', async ({ expect }) => {
     const app = await createApp()
-
-    const mockCompany = { id: 1, name: 'Test Company' }
-    vi.spyOn(app.prisma.company, 'findFirst').mockResolvedValue(mockCompany)
-
-    const p2002Error = Object.assign(new Error('Unique constraint failed on the fields: (`code`)'), {
-      code: 'P2002',
+    onTestFinished(async () => {
+      await deleteAllCreated(app)
     })
 
-    vi.spyOn(app.prisma, '$transaction').mockImplementation(async (cb) => {
-      const tx = {
-        user: { create: vi.fn() },
-        usedInvite: { create: vi.fn().mockRejectedValue(p2002Error) },
-        interaction: { create: vi.fn() },
-      }
-      return cb(tx)
-    })
+    const inviteCode = `already-used-${Date.now()}`
+
+    // Create a used invite record first
+    await withUsedInviteCleanup((data) => app.prisma.usedInvite.create({ data }))({ code: inviteCode })
 
     await expect(
       app.registration.createUser({
-        email: 'new.user@example.com',
+        email: `duplicate-invite-${Date.now()}@test.com`,
         firstName: 'New',
-        phone: '+10000000002',
+        phone: `+10000002${String(Date.now()).slice(-4)}`,
         password: 'plainpassword',
-        inviteCode: 'already-used-code',
+        inviteCode,
       }),
     ).rejects.toThrow('Unique constraint failed')
   })
@@ -126,15 +104,19 @@ describe('register plugin', () => {
   it('createUser throws error when no company found', async ({ expect }) => {
     const app = await createApp()
 
+    // The seed data creates a company, so we mock findFirst to simulate
+    // the scenario where no company exists. This is analogous to mocking
+    // app.auth.getUser in the interaction route tests — we mock the
+    // guard condition while the rest of the test infrastructure is real.
     vi.spyOn(app.prisma.company, 'findFirst').mockResolvedValue(null)
 
     await expect(
       app.registration.createUser({
-        email: 'new.user@example.com',
+        email: `no-company-${Date.now()}@test.com`,
         firstName: 'New',
-        phone: '+10000000002',
+        phone: `+10000003${String(Date.now()).slice(-4)}`,
         password: 'plainpassword',
-        inviteCode: 'test-invite',
+        inviteCode: `invite-no-company-${Date.now()}`,
       }),
     ).rejects.toThrow('No company found')
   })
@@ -143,14 +125,10 @@ describe('register plugin', () => {
     const app = await createApp()
 
     vi.spyOn(jwt, 'verify').mockReturnValue({ inviteCode: 'abc123', owner: 1 })
-    vi.spyOn(app.prisma.usedInvite, 'findUnique').mockResolvedValue(null)
 
     const result = await app.registration.verifyToken('valid-token')
 
     expect(result).toEqual({ inviteCode: 'abc123', owner: 1 })
-    expect(app.prisma.usedInvite.findUnique).toHaveBeenCalledWith({
-      where: { code: 'abc123' },
-    })
   })
 
   it('verifyToken throws error for invalid token (no inviteCode)', async ({ expect }) => {
@@ -173,9 +151,16 @@ describe('register plugin', () => {
 
   it('verifyToken throws error when invite is already used', async ({ expect }) => {
     const app = await createApp()
+    onTestFinished(async () => {
+      await deleteAllCreated(app)
+    })
 
-    vi.spyOn(jwt, 'verify').mockReturnValue({ inviteCode: 'used-code', owner: '1' })
-    vi.spyOn(app.prisma.usedInvite, 'findUnique').mockResolvedValue({ code: 'used-code' })
+    const inviteCode = `used-code-${Date.now()}`
+
+    // Create a real UsedInvite record in the DB
+    await withUsedInviteCleanup((data) => app.prisma.usedInvite.create({ data }))({ code: inviteCode })
+
+    vi.spyOn(jwt, 'verify').mockReturnValue({ inviteCode, owner: '1' })
 
     await expect(app.registration.verifyToken('used-token')).rejects.toThrow('Invite already used')
   })
