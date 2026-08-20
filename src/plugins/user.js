@@ -1,6 +1,7 @@
 import fp from 'fastify-plugin'
 import { getAddress, formatUnits } from 'viem'
 import { getPublicClient, usdtAddress } from '../lib/chain.js'
+import { UserRole } from '../generated/prisma/client'
 
 const erc20Abi = [
   {
@@ -43,6 +44,45 @@ export default fp(async (server) => {
       ])
 
       return formatUnits(rawBalance, decimals)
+    },
+
+    getDescendants: async (user) => {
+      if (user.role === UserRole.Candidate) return []
+
+      const children = await server.prisma.$queryRaw`
+        WITH RECURSIVE user_hierarchy AS (
+          SELECT *
+          FROM "User"
+          WHERE "parentId" = ${user.id}
+
+          UNION ALL
+
+          SELECT u.*
+          FROM "User" u
+          INNER JOIN user_hierarchy uh ON u."parentId" = uh.id
+        ),
+        last_interactions AS (
+          SELECT
+            "targetId",
+            MAX("completedAt") AS "lastInteractionDate"
+          FROM "Interaction"
+          WHERE "status" = 'Closed'
+          GROUP BY "targetId"
+        ),
+        next_interactions AS (
+          SELECT
+            "targetId",
+            "plannedAt"
+          FROM "Interaction"
+          WHERE "status" = 'Open'
+        )
+        SELECT uh.*, li."lastInteractionDate", ni."plannedAt" AS "nextInteractionDate"
+        FROM user_hierarchy uh
+        LEFT JOIN last_interactions li ON li."targetId" = uh.id
+        LEFT JOIN next_interactions ni ON ni."targetId" = uh.id
+      `
+
+      return children
     },
   })
 })

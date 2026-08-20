@@ -5,6 +5,8 @@ import UserProfile from '@/components/UserProfile'
 import InvitationModal from '@/components/InvitationModal'
 import Payments from '@/components/Payments'
 import StatsDashboard from '@/components/StatsDashboard'
+import Structure from '@/components/Structure'
+import { DescendantsProvider } from '@/components/Structure/DescendantsContext'
 import styles from './index.module.css'
 
 export const getData = async ({ server, req, reply }) => {
@@ -19,11 +21,11 @@ export const getData = async ({ server, req, reply }) => {
     return reply.redirect('/admin')
   }
 
-  // Generate CSRF token for logout form
   const csrfToken = reply.generateCsrf()
-
   const payments = await server.payment.getPayments(user)
-  const stats = user.role === UserRole.Consultant && (await server.consultant.getStats(user))
+  const descendants = await server.user.getDescendants(user)
+  const staleDays = parseInt(process.env.STALE_INTERACTION_DAYS, 10) || 30
+  const currentUserId = user.id
 
   return {
     profile: {
@@ -42,26 +44,30 @@ export const getData = async ({ server, req, reply }) => {
       companyName: user.company?.name ?? null,
       companyPrimaryWallet: user.company?.primaryWallet ?? null,
     },
+    currentUserId,
     payments,
+    descendants,
+    staleDays,
     csrfToken,
-    stats,
   }
 }
 
 const TABS = (role) => {
-  const tabs = [
+  const commonTabs = [
     { key: 'profile', label: 'Профиль' },
     { key: 'payments', label: 'Покупки' },
   ]
 
-  if (role === UserRole.Consultant) tabs.push({ key: 'stats', label: 'Статистика' })
-
-  return tabs
+  const consultantTabs = [
+    { key: 'stats', label: 'Статистика' },
+    { key: 'structure', label: 'Структура' },
+  ]
+  return commonTabs.concat(role === UserRole.Consultant ? consultantTabs : [])
 }
 
 const Index = () => {
   const { data } = useRouteContext()
-  const { profile = {}, payments = [], csrfToken = '', stats = null } = data
+  const { profile = {}, currentUserId, payments = [], descendants = [], staleDays = 30, csrfToken = '' } = data
   const [activeTab, setActiveTab] = useState('profile')
   const [invitationOpen, setInvitationOpen] = useState(false)
   const [profileData, setProfileData] = useState(profile)
@@ -85,44 +91,47 @@ const Index = () => {
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.headerTitle}>Профиль</h1>
-        <button className={styles.logoutButton} onClick={handleLogout}>
-          Выйти
-        </button>
-      </div>
-      {profileData.role === UserRole.Consultant && (
-        <>
-          <button className={styles.inviteButton} onClick={() => setInvitationOpen(true)}>
-            Сгенерировать пригласительную ссылку
+    <DescendantsProvider descendants={descendants} staleDays={staleDays} currentUserId={currentUserId}>
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <h1 className={styles.headerTitle}>Профиль</h1>
+          <button className={styles.logoutButton} onClick={handleLogout}>
+            Выйти
           </button>
+        </div>
+        {profileData.role === UserRole.Consultant && (
+          <>
+            <button className={styles.inviteButton} onClick={() => setInvitationOpen(true)}>
+              Сгенерировать пригласительную ссылку
+            </button>
 
-          <InvitationModal isOpen={invitationOpen} onClose={() => setInvitationOpen(false)} csrfToken={csrfToken} />
-        </>
-      )}
-      <div className={styles.tabs}>
-        {TABS(profileData.role).map((tab) => (
-          <button
-            key={tab.key}
-            className={`${styles.tab} ${activeTab === tab.key ? styles.tabActive : ''}`}
-            onClick={() => setActiveTab(tab.key)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+            {invitationOpen && <InvitationModal onClose={() => setInvitationOpen(false)} csrfToken={csrfToken} />}
+          </>
+        )}
+        <div className={styles.tabs}>
+          {TABS(profileData.role).map((tab) => (
+            <button
+              key={tab.key}
+              className={`${styles.tab} ${activeTab === tab.key ? styles.tabActive : ''}`}
+              onClick={() => setActiveTab(tab.key)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-      <div className={styles.content}>
-        {activeTab === 'profile' && (
-          <UserProfile profile={profileData} csrfToken={csrfToken} onUpdate={handleUpdateProfile} />
-        )}
-        {activeTab === 'payments' && (
-          <Payments profile={profileData} initialPayments={payments} csrfToken={csrfToken} />
-        )}
-        {activeTab === 'stats' && <StatsDashboard profile={profileData} stats={stats} />}
+        <div className={styles.content}>
+          {activeTab === 'profile' && (
+            <UserProfile profile={profileData} csrfToken={csrfToken} onUpdate={handleUpdateProfile} />
+          )}
+          {activeTab === 'payments' && (
+            <Payments profile={profileData} initialPayments={payments} csrfToken={csrfToken} />
+          )}
+          {activeTab === 'stats' && <StatsDashboard profile={profileData} />}
+          {activeTab === 'structure' && <Structure csrfToken={csrfToken} />}
+        </div>
       </div>
-    </div>
+    </DescendantsProvider>
   )
 }
 

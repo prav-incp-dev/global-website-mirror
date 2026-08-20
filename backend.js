@@ -4,7 +4,6 @@ import authPlugin from './src/plugins/auth'
 import registerPlugin from './src/plugins/register'
 import adminPlugin from './src/plugins/admin'
 import paymentPlugin from './src/plugins/payment'
-import consultantPlugin from './src/plugins/consultant'
 import userPlugin from './src/plugins/user'
 import authRoutes from './src/routes/auth'
 import registerRoutes from './src/routes/register'
@@ -12,6 +11,7 @@ import invitationRoutes from './src/routes/invitation'
 import adminRoutes from './src/routes/admin'
 import userRoutes from './src/routes/user'
 import paymentRoutes from './src/routes/payment'
+import interactionRoutes from './src/routes/interaction'
 import { WALLET_REGEXP, PHONE_REGEXP, MEMBER_REGEXP } from './src/lib/regexps.js'
 
 export const buildBackendApp = async (opts = {}) => {
@@ -36,7 +36,6 @@ export const buildBackendApp = async (opts = {}) => {
   await backend.register(registerPlugin)
   await backend.register(adminPlugin)
   await backend.register(paymentPlugin)
-  await backend.register(consultantPlugin)
   await backend.register(userPlugin)
   await backend.register(authRoutes)
   await backend.register(registerRoutes)
@@ -44,6 +43,7 @@ export const buildBackendApp = async (opts = {}) => {
   await backend.register(adminRoutes)
   await backend.register(userRoutes)
   await backend.register(paymentRoutes)
+  await backend.register(interactionRoutes)
 
   return backend
 }

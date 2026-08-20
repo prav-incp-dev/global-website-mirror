@@ -1,0 +1,70 @@
+.container {
+  margin-left: 16px;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.row {
+  cursor: pointer;
+  padding: 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rowLeaf {
+  cursor: default;
+  padding: 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.arrow {
+  font-size: 12px;
+  display: inline-block;
+  width: 12px;
+  transition: transform 0.1s;
+}
+
+.arrowOpen {
+  transform: rotate(90deg);
+}
+
+.childrenContainer {
+  border-left: 1px dashed #ccc;
+  margin-left: 5px;
+}
+
+.userTable {
+  display: flex;
+  gap: 10px;
+}
+
+.cell {
+  text-align: center;
+}
+
+.infoIcon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  cursor: pointer;
+  color: #42bbe7cc;
+  transition: color 0.15s;
+}
+
+.infoIcon:hover {
+  color: #42bbe7;
+}
+
+.attentionIcon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  color: #e8a317;
+}
+
+.stale {
+  color: #e53935;
+}

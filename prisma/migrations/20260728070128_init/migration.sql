@@ -7,6 +7,9 @@ CREATE TYPE "OrderStatus" AS ENUM ('Pending', 'Paid', 'Canceled');
 -- CreateEnum
 CREATE TYPE "PaymentStatus" AS ENUM ('Pending', 'Completed', 'ToCancel', 'Canceled', 'Failed');
 
+-- CreateEnum
+CREATE TYPE "InteractionStatus" AS ENUM ('Open', 'Closed');
+
 -- CreateTable
 CREATE TABLE "Company" (
     "id" SERIAL NOT NULL,
@@ -162,3 +165,33 @@ ALTER TABLE "Payment" ADD CONSTRAINT "Payment_userId_fkey" FOREIGN KEY ("userId"
 
 -- AddForeignKey
 ALTER TABLE "Payment" ADD CONSTRAINT "Payment_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- CreateTable
+CREATE TABLE "Interaction" (
+    "id" SERIAL NOT NULL,
+    "status" "InteractionStatus" NOT NULL DEFAULT 'Open',
+    "plannedAt" TIMESTAMP(3) NOT NULL,
+    "completedAt" TIMESTAMP(3),
+    "description" TEXT NOT NULL,
+    "initiatorId" INTEGER,
+    "targetId" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Interaction_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE INDEX "Interaction_initiatorId_idx" ON "Interaction"("initiatorId");
+
+-- CreateIndex
+CREATE INDEX "Interaction_targetId_idx" ON "Interaction"("targetId");
+
+-- CreateIndex
+CREATE INDEX "Interaction_completedAt_idx" ON "Interaction"("completedAt");
+
+-- AddForeignKey
+ALTER TABLE "Interaction" ADD CONSTRAINT "Interaction_initiatorId_fkey" FOREIGN KEY ("initiatorId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Interaction" ADD CONSTRAINT "Interaction_targetId_fkey" FOREIGN KEY ("targetId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

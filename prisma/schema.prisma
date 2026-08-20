@@ -27,6 +27,11 @@ enum PaymentStatus {
   Failed
 }
 
+enum InteractionStatus {
+  Open
+  Closed
+}
+
 model Company {
   id              Int      @id @default(autoincrement())
   name            String   @unique
@@ -65,10 +70,12 @@ model User {
   children        User[]   @relation("UserParent")
   wallet          String?
   confirmationCode String?
-  orders          Order[]
-  payments        Payment[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  orders                  Order[]
+  payments                Payment[]
+  initiatedInteractions   Interaction[] @relation("InitiatorInteractions")
+  targetedInteractions    Interaction[] @relation("TargetInteractions")
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 }
 
 model ServiceWallet {
@@ -121,4 +128,22 @@ model Payment {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+}
+
+model Interaction {
+  id          Int               @id @default(autoincrement())
+  status      InteractionStatus @default(Open)
+  plannedAt   DateTime
+  completedAt DateTime?
+  description String
+  initiatorId Int?
+  initiator   User?             @relation("InitiatorInteractions", fields: [initiatorId], references: [id])
+  targetId    Int
+  target      User              @relation("TargetInteractions", fields: [targetId], references: [id])
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([initiatorId])
+  @@index([targetId])
+  @@index([completedAt])
 }

@@ -44,7 +44,7 @@ try {
     wallet: '0xABCDEF1234567890',
   }
 
-  const user = await prisma.user.upsert({
+  const admin = await prisma.user.upsert({
     where: { email: 'admin@example.com' },
     update: adminData,
     create: {
@@ -55,28 +55,7 @@ try {
   })
 
   console.log(`Seeded company: ${company.name}`)
-  console.log(`Seeded admin user: ${user.email}`)
-
-  const candidateData = {
-    password: passwordHash,
-    role: UserRole.Candidate,
-    nick: '@candidate',
-    firstName: 'Test',
-    lastName: 'Candidate',
-    phone: '+10000000002',
-    memberId: 'DOM-00000000-0002',
-    wallet: '0x2222222222222222222222222222222222222222',
-  }
-
-  const candidate = await prisma.user.upsert({
-    where: { email: 'candidate@example.com' },
-    update: candidateData,
-    create: {
-      email: 'candidate@example.com',
-      ...candidateData,
-      companyId: company.id,
-    },
-  })
+  console.log(`Seeded admin user: ${admin.email}`)
 
   const consultantData = {
     password: passwordHash,
@@ -97,6 +76,28 @@ try {
       email: 'consultant@example.com',
       ...consultantData,
       companyId: company.id,
+    },
+  })
+
+  const candidateData = {
+    password: passwordHash,
+    role: UserRole.Candidate,
+    nick: '@candidate',
+    firstName: 'Test',
+    lastName: 'Candidate',
+    phone: '+10000000002',
+    memberId: 'DOM-00000000-0002',
+    wallet: '0x2222222222222222222222222222222222222222',
+  }
+
+  const candidate = await prisma.user.upsert({
+    where: { email: 'candidate@example.com' },
+    update: candidateData,
+    create: {
+      email: 'candidate@example.com',
+      ...candidateData,
+      companyId: company.id,
+      parentId: consultant.id,
     },
   })
 
@@ -134,6 +135,28 @@ try {
 
     seededPaymentHash = sampleTxHash
   }
+
+  await prisma.interaction.create({
+    data: {
+      status: 'Closed',
+      plannedAt: new Date(),
+      completedAt: new Date(),
+      description: 'Registration',
+      initiatorId: null,
+      targetId: consultant.id,
+    },
+  })
+
+  await prisma.interaction.create({
+    data: {
+      status: 'Closed',
+      plannedAt: new Date(),
+      completedAt: new Date(),
+      description: 'Registration',
+      initiatorId: consultant.id,
+      targetId: candidate.id,
+    },
+  })
 
   console.log(`Seeded candidate user: ${candidate.email}`)
   console.log(`Seeded consultant user: ${consultant.email}`)
