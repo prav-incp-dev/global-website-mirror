@@ -112,6 +112,7 @@ export default async (fastify) => {
           where: { id: existingOpen.id },
           data: {
             plannedAt: plannedAtDate,
+            reminderSent: false,
           },
         })
 

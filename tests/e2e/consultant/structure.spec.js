@@ -136,17 +136,17 @@ test.describe('consultant structure tab', () => {
     // 2. Click 'Structure' tab
     await page.getByRole('button', { name: 'Структура' }).click()
 
+    
     // Verify Tom and Maria are visible with their types
-    await expect(page.getByText('Tom', { exact: true })).toBeVisible()
-    await expect(page.getByText('Maria', { exact: true })).toBeVisible()
+    await expect(page.getByText('Tom Smith')).toBeVisible()
+    await expect(page.getByText('Maria Brown')).toBeVisible()
 
-    // Tom is Consultant, Maria is Candidate
-    await expect(page.getByText('Консультант')).toBeVisible()
-    await expect(page.getByText('Кандидат')).toBeVisible()
+    // Tom is Consultant (green checkmark), Maria is Candidate (no checkmark)
+    await expect(page.locator('[title="Консультант"]')).toBeVisible()
 
     // Tom has arrow (expandable), Maria does not
-    const tomRow = page.getByText('Tom', { exact: true }).locator('..')
-    const mariaRow = page.getByText('Maria', { exact: true }).locator('..')
+    const tomRow = page.getByText('Tom Smith').locator('..')
+    const mariaRow = page.getByText('Maria Brown').locator('..')
 
     // Tom's row should have an arrow (▶)
     await expect(tomRow.locator('..').getByText('▶')).toBeVisible()
@@ -154,8 +154,8 @@ test.describe('consultant structure tab', () => {
     await expect(mariaRow.locator('..').getByText('▶')).not.toBeVisible()
 
     // 3. Click Tom to expand and see Teresa
-    await page.getByText('Tom', { exact: true }).click()
-    await expect(page.getByText('Teresa', { exact: true })).toBeVisible()
+    await page.getByText('Tom Smith').click()
+    await expect(page.getByText('Teresa Green')).toBeVisible()
 
     // Teresa has attention icon (nextInteractionDate is overdue)
     await expect(page.locator('[title="Назначено взаимодействие"]')).toBeVisible()
@@ -164,25 +164,37 @@ test.describe('consultant structure tab', () => {
     const staleColor = 'rgb(229, 57, 53)'
 
     // Tom should be red
-    const tomRowElement = page.getByText('Tom', { exact: true }).locator('..').locator('..')
+    const tomRowElement = page.getByText('Tom Smith').locator('..').locator('..')
     await expect(tomRowElement).toHaveCSS('color', staleColor)
 
     // Teresa should NOT be red
-    const teresaRowElement = page.getByText('Teresa', { exact: true }).locator('..').locator('..')
+    const teresaRowElement = page.getByText('Teresa Green').locator('..').locator('..')
     await expect(teresaRowElement).not.toHaveCSS('color', staleColor)
 
     // Maria should NOT be red
-    const mariaRowElement = page.getByText('Maria', { exact: true }).locator('..').locator('..')
+    const mariaRowElement = page.getByText('Maria Brown', { exact: true }).locator('..').locator('..')
     await expect(mariaRowElement).not.toHaveCSS('color', staleColor)
 
     // 5. Click Teresa's info icon — modal opens, no interaction buttons
     const teresaInfoIcon = page
-      .getByText('Teresa', { exact: true })
+      .getByText('Teresa Green')
       .locator('..')
       .locator('..')
       .locator('[title="Данные пользователя"]')
     await teresaInfoIcon.click()
     await expect(page.getByRole('heading', { name: 'Информация о пользователе' })).toBeVisible()
+    await expect(page.getByText('Имя:')).toBeVisible()
+    await expect(page.getByText('Фамилия:')).toBeVisible()
+    await expect(page.getByText('Статус:')).toBeVisible()
+    await expect(page.getByText('Почта:')).not.toBeVisible()
+    await expect(page.getByText('Номер телефона:')).not.toBeVisible()
+    await expect(page.getByText('Номер пайщика:')).not.toBeVisible()
+    await expect(page.getByText('Ник в Телеграм:')).not.toBeVisible()
+    await expect(page.getByText('Уровень:')).toBeVisible()
+    await expect(page.getByText('Личные продажи:')).toBeVisible()
+    await expect(page.getByText('Групповые продажи:')).toBeVisible()
+    await expect(page.getByText('Дата последнего взаимодействия:')).toBeVisible()
+    await expect(page.getByText('Дата запланированного взаимодействия:')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Отметить взаимодействие' })).not.toBeVisible()
     await expect(page.getByRole('button', { name: 'Запланировать взаимодействие' })).not.toBeVisible()
 
@@ -191,7 +203,7 @@ test.describe('consultant structure tab', () => {
 
     // 6. Click Tom's info icon
     const tomInfoIcon = page
-      .getByText('Tom', { exact: true })
+      .getByText('Tom Smith')
       .locator('..')
       .locator('..')
       .locator('[title="Данные пользователя"]')
@@ -199,6 +211,18 @@ test.describe('consultant structure tab', () => {
     await expect(page.getByRole('heading', { name: 'Информация о пользователе' })).toBeVisible()
 
     // Click "Отметить взаимодействие"
+    await expect(page.getByText('Имя:')).toBeVisible()
+    await expect(page.getByText('Фамилия:')).toBeVisible()
+    await expect(page.getByText('Статус:')).toBeVisible()
+    await expect(page.getByText('Почта:')).toBeVisible()
+    await expect(page.getByText('Номер телефона:')).toBeVisible()
+    await expect(page.getByText('Номер пайщика:')).toBeVisible()
+    await expect(page.getByText('Ник в Телеграм:')).toBeVisible()
+    await expect(page.getByText('Уровень:')).toBeVisible()
+    await expect(page.getByText('Личные продажи:')).toBeVisible()
+    await expect(page.getByText('Групповые продажи:')).toBeVisible()
+    await expect(page.getByText('Дата последнего взаимодействия:')).toBeVisible()
+    await expect(page.getByText('Дата запланированного взаимодействия:')).toBeVisible()
     await page.getByRole('button', { name: 'Отметить взаимодействие' }).click()
     await expect(page.getByRole('heading', { name: 'Отметить взаимодействие' })).toBeVisible()
 
@@ -226,7 +250,7 @@ test.describe('consultant structure tab', () => {
 
     // 7. Click Maria's info icon
     const mariaInfoIcon = page
-      .getByText('Maria', { exact: true })
+      .getByText('Maria Brown')
       .locator('..')
       .locator('..')
       .locator('[title="Данные пользователя"]')

@@ -8,38 +8,38 @@ beforeAll(() => {
   vi.stubEnv('SESSION_SECRET', SESSION_SECRET)
 })
 
+const baseUser = {
+  password: 'hash',
+  companyId: 1,
+}
+
+let createdIds = []
+let createdInteractionIds = []
+
+const withCleanup = (createFn) => {
+  return async (...args) => {
+    const result = await createFn(...args)
+    createdIds.push(result.id)
+    return result
+  }
+}
+
+const withInteractionCleanup = (createFn) => {
+  return async (...args) => {
+    const result = await createFn(...args)
+    createdInteractionIds.push(result.id)
+    return result
+  }
+}
+
+const deleteAllCreated = async (app) => {
+  await app.prisma.interaction.deleteMany({ where: { id: { in: createdInteractionIds } } })
+  await app.prisma.user.deleteMany({ where: { id: { in: createdIds } } })
+  createdIds = []
+  createdInteractionIds = []
+}
+
 describe('POST /api/interaction/complete', () => {
-  const baseUser = {
-    password: 'hash',
-    companyId: 1,
-  }
-
-  let createdIds = []
-  let createdInteractionIds = []
-
-  const withCleanup = (createFn) => {
-    return async (...args) => {
-      const result = await createFn(...args)
-      createdIds.push(result.id)
-      return result
-    }
-  }
-
-  const withInteractionCleanup = (createFn) => {
-    return async (...args) => {
-      const result = await createFn(...args)
-      createdInteractionIds.push(result.id)
-      return result
-    }
-  }
-
-  const deleteAllCreated = async (app) => {
-    await app.prisma.interaction.deleteMany({ where: { id: { in: createdInteractionIds } } })
-    await app.prisma.user.deleteMany({ where: { id: { in: createdIds } } })
-    createdIds = []
-    createdInteractionIds = []
-  }
-
   it('returns 401 when user is not authenticated', async () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
@@ -244,37 +244,6 @@ describe('POST /api/interaction/complete', () => {
 })
 
 describe('POST /api/interaction/schedule', () => {
-  const baseUser = {
-    password: 'hash',
-    companyId: 1,
-  }
-
-  let createdIds = []
-  let createdInteractionIds = []
-
-  const withCleanup = (createFn) => {
-    return async (...args) => {
-      const result = await createFn(...args)
-      createdIds.push(result.id)
-      return result
-    }
-  }
-
-  const withInteractionCleanup = (createFn) => {
-    return async (...args) => {
-      const result = await createFn(...args)
-      createdInteractionIds.push(result.id)
-      return result
-    }
-  }
-
-  const deleteAllCreated = async (app) => {
-    await app.prisma.interaction.deleteMany({ where: { id: { in: createdInteractionIds } } })
-    await app.prisma.user.deleteMany({ where: { id: { in: createdIds } } })
-    createdIds = []
-    createdInteractionIds = []
-  }
-
   it('returns 401 when user is not authenticated', async () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
@@ -350,6 +319,7 @@ describe('POST /api/interaction/schedule', () => {
     expect(body.interaction.targetId).toBe(target.id)
     expect(body.interaction.initiatorId).toBe(consultant.id)
     expect(body.interaction.completedAt).toBeNull()
+    expect(body.interaction.reminderSent).toBe(false)
     expect(new Date(body.interaction.plannedAt).toISOString()).toBe(new Date(plannedAt).toISOString())
 
     createdInteractionIds.push(body.interaction.id)
@@ -375,7 +345,7 @@ describe('POST /api/interaction/schedule', () => {
       phone: `+10000010${String(Date.now()).slice(-4)}`,
     })
 
-    // Create an existing open interaction
+    // Create an existing open interaction with reminderSent already sent
     const existing = await withInteractionCleanup((data) => app.prisma.interaction.create({ data }))({
       status: 'Open',
       plannedAt: new Date('2026-09-10T10:00:00Z'),
@@ -383,6 +353,7 @@ describe('POST /api/interaction/schedule', () => {
       description: 'Scheduled call',
       initiatorId: consultant.id,
       targetId: target.id,
+      reminderSent: true,
     })
 
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(consultant)
@@ -404,6 +375,7 @@ describe('POST /api/interaction/schedule', () => {
     expect(body.success).toBe(true)
     expect(body.interaction.id).toBe(existing.id)
     expect(body.interaction.status).toBe('Open')
+    expect(body.interaction.reminderSent).toBe(false)
     expect(new Date(body.interaction.plannedAt).toISOString()).toBe(new Date(newPlannedAt).toISOString())
   })
 

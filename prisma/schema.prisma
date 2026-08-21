@@ -131,17 +131,18 @@ model Payment {
 }
 
 model Interaction {
-  id          Int               @id @default(autoincrement())
-  status      InteractionStatus @default(Open)
-  plannedAt   DateTime
-  completedAt DateTime?
-  description String
-  initiatorId Int?
-  initiator   User?             @relation("InitiatorInteractions", fields: [initiatorId], references: [id])
-  targetId    Int
-  target      User              @relation("TargetInteractions", fields: [targetId], references: [id])
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  id            Int               @id @default(autoincrement())
+  status        InteractionStatus @default(Open)
+  plannedAt     DateTime
+  completedAt   DateTime?
+  description   String
+  reminderSent  Boolean           @default(false)
+  initiatorId   Int?
+  initiator     User?             @relation("InitiatorInteractions", fields: [initiatorId], references: [id])
+  targetId      Int
+  target        User              @relation("TargetInteractions", fields: [targetId], references: [id])
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
   @@index([initiatorId])
   @@index([targetId])

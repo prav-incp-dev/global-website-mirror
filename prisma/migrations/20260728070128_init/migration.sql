@@ -173,6 +173,7 @@ CREATE TABLE "Interaction" (
     "plannedAt" TIMESTAMP(3) NOT NULL,
     "completedAt" TIMESTAMP(3),
     "description" TEXT NOT NULL,
+    "reminderSent" BOOLEAN NOT NULL DEFAULT false,
     "initiatorId" INTEGER,
     "targetId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
