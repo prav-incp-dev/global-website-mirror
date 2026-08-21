@@ -75,7 +75,7 @@ export const createApp = async () => {
   setupPrismaCleaner(app)
   onTestFinished(async () => {
     // app.prismaCleaner.log()
-    app.prismaCleaner.clean()
+    await app.prismaCleaner.clean()
     await app.close()
   })
   return app
@@ -91,7 +91,7 @@ export const createNoCsrfApp = async () => {
   setupPrismaCleaner(app)
   onTestFinished(async () => {
     // app.prismaCleaner.log()
-    app.prismaCleaner.clean()
+    await app.prismaCleaner.clean()
     await app.close()
   })
   return app

@@ -1,4 +1,4 @@
-import { beforeAll, describe, it, onTestFinished, vi } from 'vitest'
+import { beforeAll, describe, it, vi } from 'vitest'
 import jwt from 'jsonwebtoken'
 import { createApp } from '../helpers'
 
@@ -9,32 +9,8 @@ beforeAll(() => {
 })
 
 describe('register plugin', () => {
-  let createdUserIds = []
-  let createdUsedInviteIds = []
-  let createdInteractionIds = []
-
-  const withUsedInviteCleanup = (createFn) => {
-    return async (...args) => {
-      const result = await createFn(...args)
-      createdUsedInviteIds.push(result.id)
-      return result
-    }
-  }
-
-  const deleteAllCreated = async (app) => {
-    await app.prisma.interaction.deleteMany({ where: { id: { in: createdInteractionIds } } })
-    await app.prisma.usedInvite.deleteMany({ where: { id: { in: createdUsedInviteIds } } })
-    await app.prisma.user.deleteMany({ where: { id: { in: createdUserIds } } })
-    createdUserIds = []
-    createdUsedInviteIds = []
-    createdInteractionIds = []
-  }
-
   it('createUser creates a user and removes password from result', async ({ expect }) => {
     const app = await createApp()
-    onTestFinished(async () => {
-      await deleteAllCreated(app)
-    })
 
     const email = `create-user-${Date.now()}@test.com`
     const phone = `+10000001${String(Date.now()).slice(-4)}`
@@ -72,23 +48,15 @@ describe('register plugin', () => {
     expect(interaction).not.toBeNull()
     expect(interaction.status).toBe('Closed')
     expect(interaction.initiatorId).toBeNull()
-
-    // Track for cleanup
-    createdUserIds.push(result.id)
-    createdUsedInviteIds.push(usedInvite.id)
-    createdInteractionIds.push(interaction.id)
   })
 
   it('createUser throws error when inviteCode is already taken', async ({ expect }) => {
     const app = await createApp()
-    onTestFinished(async () => {
-      await deleteAllCreated(app)
-    })
 
     const inviteCode = `already-used-${Date.now()}`
 
     // Create a used invite record first
-    await withUsedInviteCleanup((data) => app.prisma.usedInvite.create({ data }))({ code: inviteCode })
+    await app.prisma.usedInvite.create({ data: { code: inviteCode } })
 
     await expect(
       app.registration.createUser({
@@ -151,14 +119,11 @@ describe('register plugin', () => {
 
   it('verifyToken throws error when invite is already used', async ({ expect }) => {
     const app = await createApp()
-    onTestFinished(async () => {
-      await deleteAllCreated(app)
-    })
 
     const inviteCode = `used-code-${Date.now()}`
 
     // Create a real UsedInvite record in the DB
-    await withUsedInviteCleanup((data) => app.prisma.usedInvite.create({ data }))({ code: inviteCode })
+    await app.prisma.usedInvite.create({ data: { code: inviteCode } })
 
     vi.spyOn(jwt, 'verify').mockReturnValue({ inviteCode, owner: '1' })
 

@@ -136,7 +136,6 @@ test.describe('consultant structure tab', () => {
     // 2. Click 'Structure' tab
     await page.getByRole('button', { name: 'Структура' }).click()
 
-    
     // Verify Tom and Maria are visible with their types
     await expect(page.getByText('Tom Smith')).toBeVisible()
     await expect(page.getByText('Maria Brown')).toBeVisible()
@@ -202,11 +201,7 @@ test.describe('consultant structure tab', () => {
     await page.getByRole('button', { name: 'Закрыть' }).click()
 
     // 6. Click Tom's info icon
-    const tomInfoIcon = page
-      .getByText('Tom Smith')
-      .locator('..')
-      .locator('..')
-      .locator('[title="Данные пользователя"]')
+    const tomInfoIcon = page.getByText('Tom Smith').locator('..').locator('..').locator('[title="Данные пользователя"]')
     await tomInfoIcon.click()
     await expect(page.getByRole('heading', { name: 'Информация о пользователе' })).toBeVisible()
 

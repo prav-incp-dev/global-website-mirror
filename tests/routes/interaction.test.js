@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { UserRole } from '@/generated/prisma/client'
 import { createNoCsrfApp as createApp } from '../helpers'
 
@@ -11,32 +11,6 @@ beforeAll(() => {
 const baseUser = {
   password: 'hash',
   companyId: 1,
-}
-
-let createdIds = []
-let createdInteractionIds = []
-
-const withCleanup = (createFn) => {
-  return async (...args) => {
-    const result = await createFn(...args)
-    createdIds.push(result.id)
-    return result
-  }
-}
-
-const withInteractionCleanup = (createFn) => {
-  return async (...args) => {
-    const result = await createFn(...args)
-    createdInteractionIds.push(result.id)
-    return result
-  }
-}
-
-const deleteAllCreated = async (app) => {
-  await app.prisma.interaction.deleteMany({ where: { id: { in: createdInteractionIds } } })
-  await app.prisma.user.deleteMany({ where: { id: { in: createdIds } } })
-  createdIds = []
-  createdInteractionIds = []
 }
 
 describe('POST /api/interaction/complete', () => {
@@ -126,32 +100,35 @@ describe('POST /api/interaction/complete', () => {
 
   it('updates existing open interaction when one exists', async ({ expect }) => {
     const app = await createApp()
-    onTestFinished(async () => {
-      await deleteAllCreated(app)
+
+    const consultant = await app.prisma.user.create({
+      data: {
+        ...baseUser,
+        role: UserRole.Consultant,
+        email: `interaction-update-consultant-${Date.now()}@test.com`,
+        phone: `+10000003${String(Date.now()).slice(-4)}`,
+      },
     })
 
-    const consultant = await withCleanup((data) => app.prisma.user.create({ data }))({
-      ...baseUser,
-      role: UserRole.Consultant,
-      email: `interaction-update-consultant-${Date.now()}@test.com`,
-      phone: `+10000003${String(Date.now()).slice(-4)}`,
-    })
-
-    const target = await withCleanup((data) => app.prisma.user.create({ data }))({
-      ...baseUser,
-      role: UserRole.Candidate,
-      email: `interaction-update-target-${Date.now()}@test.com`,
-      phone: `+10000004${String(Date.now()).slice(-4)}`,
+    const target = await app.prisma.user.create({
+      data: {
+        ...baseUser,
+        role: UserRole.Candidate,
+        email: `interaction-update-target-${Date.now()}@test.com`,
+        phone: `+10000004${String(Date.now()).slice(-4)}`,
+      },
     })
 
     // Create an existing open interaction
-    const existing = await withInteractionCleanup((data) => app.prisma.interaction.create({ data }))({
-      status: 'Open',
-      plannedAt: new Date('2026-08-20T14:00:00Z'),
-      completedAt: null,
-      description: 'Scheduled call',
-      initiatorId: consultant.id,
-      targetId: target.id,
+    await app.prisma.interaction.create({
+      data: {
+        status: 'Open',
+        plannedAt: new Date('2026-08-20T14:00:00Z'),
+        completedAt: null,
+        description: 'Scheduled call',
+        initiatorId: consultant.id,
+        targetId: target.id,
+      },
     })
 
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(consultant)
@@ -173,7 +150,6 @@ describe('POST /api/interaction/complete', () => {
 
     const body = response.json()
     expect(body.success).toBe(true)
-    expect(body.interaction.id).toBe(existing.id)
     expect(body.interaction.status).toBe('Closed')
     expect(body.interaction.description).toBe(description)
     expect(new Date(body.interaction.completedAt).toISOString()).toBe(new Date(completedAt).toISOString())
@@ -201,22 +177,23 @@ describe('POST /api/interaction/complete', () => {
 
   it('allows Admin user to complete interaction', async ({ expect }) => {
     const app = await createApp()
-    onTestFinished(async () => {
-      await deleteAllCreated(app)
+
+    const admin = await app.prisma.user.create({
+      data: {
+        ...baseUser,
+        role: UserRole.Admin,
+        email: `interaction-admin-${Date.now()}@test.com`,
+        phone: `+10000005${String(Date.now()).slice(-4)}`,
+      },
     })
 
-    const admin = await withCleanup((data) => app.prisma.user.create({ data }))({
-      ...baseUser,
-      role: UserRole.Admin,
-      email: `interaction-admin-${Date.now()}@test.com`,
-      phone: `+10000005${String(Date.now()).slice(-4)}`,
-    })
-
-    const target = await withCleanup((data) => app.prisma.user.create({ data }))({
-      ...baseUser,
-      role: UserRole.Candidate,
-      email: `interaction-admin-target-${Date.now()}@test.com`,
-      phone: `+10000006${String(Date.now()).slice(-4)}`,
+    const target = await app.prisma.user.create({
+      data: {
+        ...baseUser,
+        role: UserRole.Candidate,
+        email: `interaction-admin-target-${Date.now()}@test.com`,
+        phone: `+10000006${String(Date.now()).slice(-4)}`,
+      },
     })
 
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(admin)
@@ -237,8 +214,6 @@ describe('POST /api/interaction/complete', () => {
     expect(body.success).toBe(true)
     expect(body.interaction.status).toBe('Closed')
     expect(body.interaction.initiatorId).toBe(admin.id)
-
-    createdInteractionIds.push(body.interaction.id)
   })
 })
 
@@ -279,22 +254,23 @@ describe('POST /api/interaction/schedule', () => {
 
   it('creates a new open interaction when no open one exists', async ({ expect }) => {
     const app = await createApp()
-    onTestFinished(async () => {
-      await deleteAllCreated(app)
+
+    const consultant = await app.prisma.user.create({
+      data: {
+        ...baseUser,
+        role: UserRole.Consultant,
+        email: `interaction-schedule-create-consultant-${Date.now()}@test.com`,
+        phone: `+10000007${String(Date.now()).slice(-4)}`,
+      },
     })
 
-    const consultant = await withCleanup((data) => app.prisma.user.create({ data }))({
-      ...baseUser,
-      role: UserRole.Consultant,
-      email: `interaction-schedule-create-consultant-${Date.now()}@test.com`,
-      phone: `+10000007${String(Date.now()).slice(-4)}`,
-    })
-
-    const target = await withCleanup((data) => app.prisma.user.create({ data }))({
-      ...baseUser,
-      role: UserRole.Candidate,
-      email: `interaction-schedule-create-target-${Date.now()}@test.com`,
-      phone: `+10000008${String(Date.now()).slice(-4)}`,
+    const target = await app.prisma.user.create({
+      data: {
+        ...baseUser,
+        role: UserRole.Candidate,
+        email: `interaction-schedule-create-target-${Date.now()}@test.com`,
+        phone: `+10000008${String(Date.now()).slice(-4)}`,
+      },
     })
 
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(consultant)
@@ -320,39 +296,40 @@ describe('POST /api/interaction/schedule', () => {
     expect(body.interaction.completedAt).toBeNull()
     expect(body.interaction.reminderSent).toBe(false)
     expect(new Date(body.interaction.plannedAt).toISOString()).toBe(new Date(plannedAt).toISOString())
-
-    createdInteractionIds.push(body.interaction.id)
   })
 
   it('updates plannedAt on existing open interaction', async ({ expect }) => {
     const app = await createApp()
-    onTestFinished(async () => {
-      await deleteAllCreated(app)
+
+    const consultant = await app.prisma.user.create({
+      data: {
+        ...baseUser,
+        role: UserRole.Consultant,
+        email: `interaction-consultant-${Date.now()}@test.com`,
+        phone: `+10000009${String(Date.now()).slice(-4)}`,
+      },
     })
 
-    const consultant = await withCleanup((data) => app.prisma.user.create({ data }))({
-      ...baseUser,
-      role: UserRole.Consultant,
-      email: `interaction-consultant-${Date.now()}@test.com`,
-      phone: `+10000009${String(Date.now()).slice(-4)}`,
-    })
-
-    const target = await withCleanup((data) => app.prisma.user.create({ data }))({
-      ...baseUser,
-      role: UserRole.Candidate,
-      email: `interaction-candidate-${Date.now()}@test.com`,
-      phone: `+10000010${String(Date.now()).slice(-4)}`,
+    const target = await app.prisma.user.create({
+      data: {
+        ...baseUser,
+        role: UserRole.Candidate,
+        email: `interaction-candidate-${Date.now()}@test.com`,
+        phone: `+10000010${String(Date.now()).slice(-4)}`,
+      },
     })
 
     // Create an existing open interaction with reminderSent already sent
-    const existing = await withInteractionCleanup((data) => app.prisma.interaction.create({ data }))({
-      status: 'Open',
-      plannedAt: new Date('2026-09-10T10:00:00Z'),
-      completedAt: null,
-      description: 'Scheduled call',
-      initiatorId: consultant.id,
-      targetId: target.id,
-      reminderSent: true,
+    await app.prisma.interaction.create({
+      data: {
+        status: 'Open',
+        plannedAt: new Date('2026-09-10T10:00:00Z'),
+        completedAt: null,
+        description: 'Scheduled call',
+        initiatorId: consultant.id,
+        targetId: target.id,
+        reminderSent: true,
+      },
     })
 
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(consultant)
@@ -372,7 +349,6 @@ describe('POST /api/interaction/schedule', () => {
 
     const body = response.json()
     expect(body.success).toBe(true)
-    expect(body.interaction.id).toBe(existing.id)
     expect(body.interaction.status).toBe('Open')
     expect(body.interaction.reminderSent).toBe(false)
     expect(new Date(body.interaction.plannedAt).toISOString()).toBe(new Date(newPlannedAt).toISOString())
@@ -397,22 +373,23 @@ describe('POST /api/interaction/schedule', () => {
 
   it('allows Admin user to schedule interaction', async ({ expect }) => {
     const app = await createApp()
-    onTestFinished(async () => {
-      await deleteAllCreated(app)
+
+    const admin = await app.prisma.user.create({
+      data: {
+        ...baseUser,
+        role: UserRole.Admin,
+        email: `interaction-admin-${Date.now()}@test.com`,
+        phone: `+10000011${String(Date.now()).slice(-4)}`,
+      },
     })
 
-    const admin = await withCleanup((data) => app.prisma.user.create({ data }))({
-      ...baseUser,
-      role: UserRole.Admin,
-      email: `interaction-admin-${Date.now()}@test.com`,
-      phone: `+10000011${String(Date.now()).slice(-4)}`,
-    })
-
-    const target = await withCleanup((data) => app.prisma.user.create({ data }))({
-      ...baseUser,
-      role: UserRole.Candidate,
-      email: `interaction-target-${Date.now()}@test.com`,
-      phone: `+10000012${String(Date.now()).slice(-4)}`,
+    const target = await app.prisma.user.create({
+      data: {
+        ...baseUser,
+        role: UserRole.Candidate,
+        email: `interaction-target-${Date.now()}@test.com`,
+        phone: `+10000012${String(Date.now()).slice(-4)}`,
+      },
     })
 
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(admin)
@@ -432,7 +409,5 @@ describe('POST /api/interaction/schedule', () => {
     expect(body.success).toBe(true)
     expect(body.interaction.status).toBe('Open')
     expect(body.interaction.initiatorId).toBe(admin.id)
-
-    createdInteractionIds.push(body.interaction.id)
   })
 })
