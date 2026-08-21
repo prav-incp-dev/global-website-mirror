@@ -3,6 +3,7 @@ import fastifyVite from '@fastify/vite'
 import fastifyCron from 'fastify-cron'
 import { buildBackendApp } from './backend.js'
 import { checkUpcomingInteractions } from './src/jobs/interactionReminder.js'
+import { untieUsers } from './src/jobs/inactivityChecker.js'
 
 const server = await buildBackendApp({ logger: true })
 
@@ -25,6 +26,14 @@ await server.register(fastifyCron, {
       timeZone: 'Europe/Moscow',
       onTick: async (server) => {
         await checkUpcomingInteractions(server.prisma, server.log)
+      },
+    },
+    {
+      name: 'inactivity-checker',
+      cronTime: '0 0 * * *',
+      timeZone: 'Europe/Moscow',
+      onTick: async (server) => {
+        await untieUsers(server.prisma, server.log)
       },
     },
   ],

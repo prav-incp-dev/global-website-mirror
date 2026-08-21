@@ -18,6 +18,16 @@ test.describe('consultant manages own profile', () => {
 
     // --- Verify balance button is visible (candidate has wallet)
     await expect(page.getByRole('button', { name: 'Проверить баланс' })).toBeVisible()
+
+    // Mock balance API to always fail (avoids dependency on real RPC)
+    await page.route('**/api/user/balance', (route) => {
+      route.fulfill({
+        status: 502,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'Не удалось получить баланс' }),
+      })
+    })
+
     await page.getByRole('button', { name: 'Проверить баланс' }).click()
     await expect(page.getByText('Не удалось получить баланс')).toBeVisible()
 
