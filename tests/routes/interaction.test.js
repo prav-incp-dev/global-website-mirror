@@ -78,22 +78,23 @@ describe('POST /api/interaction/complete', () => {
 
   it('creates a new interaction when no open one exists', async ({ expect }) => {
     const app = await createApp()
-    onTestFinished(async () => {
-      await deleteAllCreated(app)
+
+    const consultant = await app.prisma.user.create({
+      data: {
+        ...baseUser,
+        role: UserRole.Consultant,
+        email: `interaction-create-consultant-${Date.now()}@test.com`,
+        phone: `+10000001${String(Date.now()).slice(-4)}`,
+      },
     })
 
-    const consultant = await withCleanup((data) => app.prisma.user.create({ data }))({
-      ...baseUser,
-      role: UserRole.Consultant,
-      email: `interaction-create-consultant-${Date.now()}@test.com`,
-      phone: `+10000001${String(Date.now()).slice(-4)}`,
-    })
-
-    const target = await withCleanup((data) => app.prisma.user.create({ data }))({
-      ...baseUser,
-      role: UserRole.Candidate,
-      email: `interaction-create-target-${Date.now()}@test.com`,
-      phone: `+10000002${String(Date.now()).slice(-4)}`,
+    const target = await app.prisma.user.create({
+      data: {
+        ...baseUser,
+        role: UserRole.Candidate,
+        email: `interaction-create-target-${Date.now()}@test.com`,
+        phone: `+10000002${String(Date.now()).slice(-4)}`,
+      },
     })
 
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(consultant)
@@ -121,8 +122,6 @@ describe('POST /api/interaction/complete', () => {
     expect(body.interaction.initiatorId).toBe(consultant.id)
     expect(new Date(body.interaction.completedAt).toISOString()).toBe(new Date(completedAt).toISOString())
     expect(new Date(body.interaction.plannedAt).toISOString()).toBe(new Date(completedAt).toISOString())
-
-    createdInteractionIds.push(body.interaction.id)
   })
 
   it('updates existing open interaction when one exists', async ({ expect }) => {

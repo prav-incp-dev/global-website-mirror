@@ -1,11 +1,81 @@
 import { onTestFinished } from 'vitest'
 import { buildBackendApp } from '../backend.js'
 
+const setupPrismaCleaner = (app) => {
+  const createdRecords = new Map()
+  const createManyCounts = new Map()
+
+  app.decorate('prismaCleaner', {
+    records: createdRecords,
+    log: () => {
+      if (createdRecords.size === 0 && createManyCounts.size === 0) return
+      for (const [model, ids] of createdRecords) {
+        if (ids.size > 0) {
+          console.log(`[prisma:created] ${model}: ${[...ids].join(', ')}`)
+        }
+      }
+      for (const [model, count] of createManyCounts) {
+        console.log(`[prisma:created] ${model}: ${count} records via createMany`)
+      }
+    },
+    clean: async () => {
+      const prisma = app.prisma
+      const models = [...createdRecords].filter(([, ids]) => ids.size > 0)
+      if (models.length === 0) {
+        createdRecords.clear()
+        createManyCounts.clear()
+        return
+      }
+      const tables = models.map(([model]) => `"${model}"`)
+      await prisma.$executeRawUnsafe(tables.map((t) => `ALTER TABLE ${t} DISABLE TRIGGER ALL`).join('; '))
+      try {
+        for (const [model, ids] of createdRecords) {
+          if (ids.size > 0) {
+            const modelKey = model[0].toLowerCase() + model.slice(1)
+            await prisma[modelKey].deleteMany({ where: { id: { in: [...ids] } } })
+          }
+        }
+      } finally {
+        await prisma.$executeRawUnsafe(tables.map((t) => `ALTER TABLE ${t} ENABLE TRIGGER ALL;`).join('; '))
+      }
+      createdRecords.clear()
+      createManyCounts.clear()
+    },
+  })
+
+  app.prisma = app.prisma.$extends({
+    query: {
+      $allModels: {
+        async create({ model, args, query }) {
+          const result = await query(args)
+          if (result?.id != null) {
+            const set = createdRecords.get(model) || new Set()
+            set.add(result.id)
+            createdRecords.set(model, set)
+          }
+          return result
+        },
+        async createMany({ model, args, query }) {
+          const result = await query(args)
+          if (result?.count > 0) {
+            const prev = createManyCounts.get(model) || 0
+            createManyCounts.set(model, prev + result.count)
+          }
+          return result
+        },
+      },
+    },
+  })
+}
+
 export const createApp = async () => {
   const app = await buildBackendApp({
     logger: false,
   })
+  setupPrismaCleaner(app)
   onTestFinished(async () => {
+    // app.prismaCleaner.log()
+    app.prismaCleaner.clean()
     await app.close()
   })
   return app
@@ -18,7 +88,10 @@ export const createNoCsrfApp = async () => {
       enableCsrf: false,
     },
   })
+  setupPrismaCleaner(app)
   onTestFinished(async () => {
+    // app.prismaCleaner.log()
+    app.prismaCleaner.clean()
     await app.close()
   })
   return app
