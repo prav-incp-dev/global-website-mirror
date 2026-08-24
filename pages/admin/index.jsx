@@ -14,7 +14,10 @@ export const getData = async ({ server, req, reply }) => {
 
   const csrfToken = reply.generateCsrf()
   const company = await server.admin.getCompany(user)
-  const clientsData = await server.admin.getClients()
+  const [clientsData, orphansCount] = await Promise.all([
+    server.admin.getClients(user),
+    server.admin.getOrphansCount(user),
+  ])
 
   return {
     profile: {
@@ -24,6 +27,7 @@ export const getData = async ({ server, req, reply }) => {
     },
     company: company,
     clients: clientsData,
+    orphansCount,
     csrfToken,
   }
 }
@@ -36,7 +40,7 @@ const TABS = [
 
 const Admin = () => {
   const { data } = useRouteContext()
-  const { profile = {}, company = null, clients = {}, csrfToken = '' } = data
+  const { profile = {}, company = null, clients = {}, orphansCount = 0, csrfToken = '' } = data
   const [activeTab, setActiveTab] = useState('admin')
   const [invitationOpen, setInvitationOpen] = useState(false)
   const [profileData, setProfileData] = useState(profile)
@@ -108,6 +112,7 @@ const Admin = () => {
               limit: clients.limit,
               totalPages: clients.totalPages,
             }}
+            initialOrphansCount={orphansCount}
             csrfToken={csrfToken}
           />
         )}

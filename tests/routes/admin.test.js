@@ -475,6 +475,7 @@ describe('GET /api/admin/clients', () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
     vi.spyOn(app.admin, 'getClients').mockResolvedValue(mockResult)
+    vi.spyOn(app.admin, 'getOrphansCount').mockResolvedValue(5)
 
     const response = await app.inject({
       method: 'GET',
@@ -482,8 +483,9 @@ describe('GET /api/admin/clients', () => {
     })
 
     expect(response.statusCode).toBe(200)
-    expect(response.json()).toEqual(mockResult)
-    expect(app.admin.getClients).toHaveBeenCalledWith(1, CLIENTS_PAGE_LIMIT, '')
+    expect(response.json()).toEqual({ ...mockResult, orphansCount: 5 })
+    expect(app.admin.getClients).toHaveBeenCalledWith(adminUser, 1, CLIENTS_PAGE_LIMIT, '', false)
+    expect(app.admin.getOrphansCount).toHaveBeenCalledWith(adminUser, '')
   })
 
   it('passes query parameters to getClients', async () => {
@@ -505,6 +507,7 @@ describe('GET /api/admin/clients', () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
     vi.spyOn(app.admin, 'getClients').mockResolvedValue(mockResult)
+    vi.spyOn(app.admin, 'getOrphansCount').mockResolvedValue(3)
 
     const response = await app.inject({
       method: 'GET',
@@ -512,8 +515,9 @@ describe('GET /api/admin/clients', () => {
     })
 
     expect(response.statusCode).toBe(200)
-    expect(response.json()).toEqual(mockResult)
-    expect(app.admin.getClients).toHaveBeenCalledWith(2, 5, 'John')
+    expect(response.json()).toEqual({ ...mockResult, orphansCount: 3 })
+    expect(app.admin.getClients).toHaveBeenCalledWith(adminUser, 2, 5, 'John', false)
+    expect(app.admin.getOrphansCount).toHaveBeenCalledWith(adminUser, 'John')
   })
 
   it('uses defaults when no query params provided', async () => {
@@ -535,6 +539,7 @@ describe('GET /api/admin/clients', () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
     vi.spyOn(app.admin, 'getClients').mockResolvedValue(mockResult)
+    vi.spyOn(app.admin, 'getOrphansCount').mockResolvedValue(0)
 
     const response = await app.inject({
       method: 'GET',
@@ -542,7 +547,8 @@ describe('GET /api/admin/clients', () => {
     })
 
     expect(response.statusCode).toBe(200)
-    expect(response.json()).toEqual(mockResult)
-    expect(app.admin.getClients).toHaveBeenCalledWith(1, CLIENTS_PAGE_LIMIT, '')
+    expect(response.json()).toEqual({ ...mockResult, orphansCount: 0 })
+    expect(app.admin.getClients).toHaveBeenCalledWith(adminUser, 1, CLIENTS_PAGE_LIMIT, '', false)
+    expect(app.admin.getOrphansCount).toHaveBeenCalledWith(adminUser, '')
   })
 })

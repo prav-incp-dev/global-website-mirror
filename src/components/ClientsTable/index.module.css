@@ -2,13 +2,14 @@
   width: 100%;
 }
 
-.searchWrapper {
-  position: relative;
+.toolbar {
+  display: flex;
+  gap: 12px;
   margin-bottom: 16px;
 }
 
 .searchInput {
-  width: 100%;
+  flex: 1;
   padding: 12px 40px 12px 14px;
   background: #1a1a1a;
   color: #e0e0e0;
@@ -27,6 +28,39 @@
 .searchInput:focus {
   border-color: #d4af37;
   box-shadow: 0 0 12px rgba(212, 175, 55, 0.15);
+}
+
+.orphansToggle {
+  flex: 1;
+  padding: 12px 14px;
+  background: transparent;
+  color: #e0e0e0;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.orphansToggle:hover {
+  border-color: rgba(212, 175, 55, 0.5);
+  background: rgba(212, 175, 55, 0.05);
+}
+
+.orphansToggle:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.orphansToggleActive {
+  background: rgba(212, 175, 55, 0.12);
+  border-color: #d4af37;
+  color: #d4af37;
 }
 
 .tableWrapper {

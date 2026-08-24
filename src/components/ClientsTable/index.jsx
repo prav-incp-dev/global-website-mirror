@@ -3,21 +3,25 @@ import { UserRole } from '@/generated/prisma/enums'
 import styles from './index.module.css'
 import InfoIcon from '@/assets/icons/InfoIcon.svg?react'
 import ClientModal from './ClientModal'
+import { ClientsProvider, useClientsContext } from './ClientsContext'
 
-const ClientsTable = ({ initialUsers, initialPagination, csrfToken }) => {
-  const [users, setUsers] = useState(initialUsers)
-  const [pagination, setPagination] = useState(initialPagination)
+const ClientsTableInner = () => {
+  const { users, setUsers, pagination, setPagination, orphansCount, setOrphansCount, csrfToken } = useClientsContext()
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
   const [selectedUser, setSelectedUser] = useState(null)
+  const [orphansOnly, setOrphansOnly] = useState(false)
   const debounceRef = useRef(null)
 
-  const fetchClients = useCallback(async (page, searchQuery) => {
+  const fetchClients = useCallback(async (page, searchQuery, filterOrphansOnly) => {
     setLoading(true)
 
     const params = new URLSearchParams({ page, limit: pagination.limit })
     if (searchQuery) {
       params.set('query', searchQuery)
+    }
+    if (filterOrphansOnly) {
+      params.set('orphansOnly', 'true')
     }
 
     const res = await fetch(`/api/admin/clients?${params}`, {
@@ -34,9 +38,12 @@ const ClientsTable = ({ initialUsers, initialPagination, csrfToken }) => {
         limit: result.limit,
         totalPages: result.totalPages,
       })
+      if (result.orphansCount != null) {
+        setOrphansCount(result.orphansCount)
+      }
     }
     setLoading(false)
-  }, [csrfToken, pagination.limit])
+  }, [csrfToken, pagination.limit, setUsers, setPagination, setOrphansCount])
 
   const handleSearchChange = (e) => {
     const value = e.target.value
@@ -47,13 +54,19 @@ const ClientsTable = ({ initialUsers, initialPagination, csrfToken }) => {
     }
 
     debounceRef.current = setTimeout(() => {
-      fetchClients(1, value)
+      fetchClients(1, value, orphansOnly)
     }, 300)
   }
 
   const handlePageChange = async (newPage) => {
     if (newPage < 1 || newPage > pagination.totalPages) return
-    await fetchClients(newPage, query)
+    await fetchClients(newPage, query, orphansOnly)
+  }
+
+  const handleOrphansToggle = () => {
+    const next = !orphansOnly
+    setOrphansOnly(next)
+    fetchClients(1, query, next)
   }
 
   useEffect(() => {
@@ -91,7 +104,14 @@ const ClientsTable = ({ initialUsers, initialPagination, csrfToken }) => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.searchWrapper}>
+      <div className={styles.toolbar}>
+        <button
+          className={`${styles.orphansToggle} ${orphansOnly ? styles.orphansToggleActive : ''}`}
+          onClick={handleOrphansToggle}
+          disabled={!orphansCount}
+        >
+          Без родителя ({orphansCount})
+        </button>
         <input
           type="text"
           className={styles.searchInput}
@@ -148,6 +168,19 @@ const ClientsTable = ({ initialUsers, initialPagination, csrfToken }) => {
         <ClientModal data={selectedUser} onClose={() => setSelectedUser(null)} />
       )}
     </div>
+  )
+}
+
+const ClientsTable = ({ initialUsers, initialPagination, initialOrphansCount = 0, csrfToken }) => {
+  return (
+    <ClientsProvider
+      initialUsers={initialUsers}
+      initialPagination={initialPagination}
+      initialOrphansCount={initialOrphansCount}
+      csrfToken={csrfToken}
+    >
+      <ClientsTableInner />
+    </ClientsProvider>
   )
 }
 

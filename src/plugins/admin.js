@@ -12,11 +12,31 @@ export default fp(async (fastify) => {
       })
     },
 
-    getClients: async (page = 1, limit = CLIENTS_PAGE_LIMIT, query = '') => {
+    getOrphansCount: async (user, query = '') => {
+      return fastify.prisma.user.count({
+        where: {
+          role: { not: 'Admin' },
+          companyId: user.company.id,
+          parentId: null,
+          ...(query
+            ? {
+                OR: [
+                  { firstName: { contains: query, mode: 'insensitive' } },
+                  { lastName: { contains: query, mode: 'insensitive' } },
+                ],
+              }
+            : {}),
+        },
+      })
+    },
+
+    getClients: async (user, page = 1, limit = CLIENTS_PAGE_LIMIT, query = '', orphansOnly = false) => {
       const skip = (page - 1) * limit
 
       const where = {
         role: { not: 'Admin' },
+        companyId: user.company.id,
+        ...(orphansOnly ? { parentId: null } : {}),
         ...(query
           ? {
               OR: [
@@ -47,7 +67,6 @@ export default fp(async (fastify) => {
               select: {
                 firstName: true,
                 lastName: true,
-                nick: true,
               },
             },
           },

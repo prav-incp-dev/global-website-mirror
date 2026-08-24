@@ -110,6 +110,7 @@ export default async (fastify) => {
           page: { type: 'integer', minimum: 1, default: 1 },
           limit: { type: 'integer', minimum: 1, maximum: 100, default: CLIENTS_PAGE_LIMIT },
           query: { type: 'string' },
+          orphansOnly: { type: 'boolean', default: false },
         },
       },
     },
@@ -119,9 +120,12 @@ export default async (fastify) => {
         return reply.code(403).send({ error: 'Доступ запрещен' })
       }
 
-      const { page = 1, limit = CLIENTS_PAGE_LIMIT, query = '' } = req.query
-      const result = await fastify.admin.getClients(page, limit, query)
-      return reply.send(result)
+      const { page = 1, limit = CLIENTS_PAGE_LIMIT, query = '', orphansOnly = false } = req.query
+      const [result, orphansCount] = await Promise.all([
+        fastify.admin.getClients(user, page, limit, query, orphansOnly),
+        fastify.admin.getOrphansCount(user, query),
+      ])
+      return reply.send({ ...result, orphansCount })
     },
   })
 }
