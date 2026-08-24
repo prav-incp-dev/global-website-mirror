@@ -8,52 +8,249 @@ beforeAll(() => {
 })
 
 describe('admin plugin', () => {
-  it('getCompany returns null when user has no company', async () => {
-    const app = await createApp()
+  describe('getCompany', () => {
+    it('returns null when user has no company', async () => {
+      const app = await createApp()
 
-    const adminUser = {
-      id: 1,
-      email: 'admin@example.com',
-      role: 'Admin',
-      company: null,
-    }
+      const adminUser = {
+        id: 1,
+        email: 'admin@example.com',
+        role: 'Admin',
+        company: null,
+      }
 
-    const company = await app.admin.getCompany(adminUser)
+      const company = await app.admin.getCompany(adminUser)
 
-    expect(company).toBeNull()
+      expect(company).toBeNull()
+    })
+
+    it('returns null when user is null', async () => {
+      const app = await createApp()
+
+      const company = await app.admin.getCompany(null)
+
+      expect(company).toBeNull()
+    })
+
+    it('returns company data', async () => {
+      const adminUser = {
+        id: 1,
+        email: 'admin@example.com',
+        role: 'Admin',
+        company: { id: 1 },
+      }
+
+      const foundCompany = {
+        id: 1,
+        name: 'Our House MLM',
+        primaryWallet: '0x1234567890abcdef1234567890abcdef12345678',
+        secondaryWallet: null,
+      }
+
+      const app = await createApp()
+      vi.spyOn(app.prisma.company, 'findUnique').mockResolvedValue(foundCompany)
+
+      const company = await app.admin.getCompany(adminUser)
+
+      expect(company).toEqual(foundCompany)
+      expect(app.prisma.company.findUnique).toHaveBeenCalledWith({
+        where: { id: 1 },
+      })
+    })
   })
 
-  it('getCompany returns null when user is null', async () => {
-    const app = await createApp()
-
-    const company = await app.admin.getCompany(null)
-
-    expect(company).toBeNull()
-  })
-
-  it('getCompany returns company data', async () => {
-    const adminUser = {
-      id: 1,
-      email: 'admin@example.com',
-      role: 'Admin',
-      company: { id: 1 },
+  describe('getClients', () => {
+    const createTestCompany = async (app) => {
+      return app.prisma.company.create({
+        data: { name: `Test Company ${Date.now()}` },
+      })
     }
 
-    const foundCompany = {
-      id: 1,
-      name: 'Our House MLM',
-      primaryWallet: '0x1234567890abcdef1234567890abcdef12345678',
-      secondaryWallet: null,
+    const createTestUser = async (app, companyId, overrides = {}) => {
+      return app.prisma.user.create({
+        data: {
+          email: `user-${Date.now()}-${Math.random()}@test.com`,
+          password: 'hash',
+          role: 'Candidate',
+          firstName: 'Test',
+          lastName: 'User',
+          phone: `+7${Date.now()}${Math.floor(Math.random() * 100)}`,
+          companyId,
+          ...overrides,
+        },
+      })
     }
 
-    const app = await createApp()
-    vi.spyOn(app.prisma.company, 'findUnique').mockResolvedValue(foundCompany)
+    it('returns all non-admin users when no query is provided', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
 
-    const company = await app.admin.getCompany(adminUser)
+      await createTestUser(app, company.id, {
+        email: 'consultant@test.com',
+        role: 'Consultant',
+        firstName: 'Zara',
+        lastName: 'Unique',
+      })
+      await createTestUser(app, company.id, {
+        email: 'candidate@test.com',
+        role: 'Candidate',
+        firstName: 'Zane',
+        lastName: 'Distinct',
+      })
 
-    expect(company).toEqual(foundCompany)
-    expect(app.prisma.company.findUnique).toHaveBeenCalledWith({
-      where: { id: 1 },
+      const result = await app.admin.getClients(1, 20, '')
+
+      expect(result.users.length).toBeGreaterThanOrEqual(2)
+      expect(result.total).toBeGreaterThanOrEqual(2)
+      expect(result.page).toBe(1)
+      expect(result.limit).toBe(20)
+    })
+
+    it('excludes Admin users from results', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+
+      await createTestUser(app, company.id, {
+        email: 'admin-exclude@test.com',
+        role: 'Admin',
+        firstName: 'Xylo',
+        lastName: 'AdminUser',
+      })
+      await createTestUser(app, company.id, {
+        email: 'consultant-exclude@test.com',
+        role: 'Consultant',
+        firstName: 'Xena',
+        lastName: 'ConsultantUser',
+      })
+
+      const result = await app.admin.getClients(1, 20, 'Xena')
+
+      expect(result.users).toHaveLength(1)
+      expect(result.users[0].role).toBe('Consultant')
+      expect(result.total).toBe(1)
+    })
+
+    it('returns paginated results', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+
+      for (let i = 0; i < 5; i++) {
+        await createTestUser(app, company.id, {
+          email: `paginate-user${i}@test.com`,
+          firstName: `PaginateUser${i}`,
+          phone: `+7${Date.now()}${i}`,
+        })
+      }
+
+      const page1 = await app.admin.getClients(1, 2, 'PaginateUser')
+
+      expect(page1.users).toHaveLength(2)
+      expect(page1.total).toBe(5)
+      expect(page1.page).toBe(1)
+      expect(page1.limit).toBe(2)
+      expect(page1.totalPages).toBe(3)
+
+      const page2 = await app.admin.getClients(2, 2, 'PaginateUser')
+
+      expect(page2.users).toHaveLength(2)
+      expect(page2.page).toBe(2)
+
+      const page3 = await app.admin.getClients(3, 2, 'PaginateUser')
+
+      expect(page3.users).toHaveLength(1)
+      expect(page3.page).toBe(3)
+    })
+
+    it('filters by firstName (case-insensitive)', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+
+      await createTestUser(app, company.id, {
+        email: 'alice-filter@test.com',
+        firstName: 'Qalice',
+        lastName: 'Johnson',
+      })
+      await createTestUser(app, company.id, {
+        email: 'bob-filter@test.com',
+        firstName: 'Bob',
+        lastName: 'Smith',
+      })
+      await createTestUser(app, company.id, {
+        email: 'alex-filter@test.com',
+        firstName: 'Qalexander',
+        lastName: 'Brown',
+      })
+
+      const result = await app.admin.getClients(1, 20, 'Qal')
+
+      expect(result.users).toHaveLength(2)
+      expect(result.users.map((u) => u.firstName)).toEqual(
+        expect.arrayContaining(['Qalice', 'Qalexander'])
+      )
+    })
+
+    it('filters by lastName (case-insensitive)', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+
+      await createTestUser(app, company.id, {
+        email: 'user1-last@test.com',
+        firstName: 'John',
+        lastName: 'Qsmith',
+      })
+      await createTestUser(app, company.id, {
+        email: 'user2-last@test.com',
+        firstName: 'Jane',
+        lastName: 'Qsmithers',
+      })
+      await createTestUser(app, company.id, {
+        email: 'user3-last@test.com',
+        firstName: 'Bob',
+        lastName: 'Johnson',
+      })
+
+      const result = await app.admin.getClients(1, 20, 'qsmith')
+
+      expect(result.users).toHaveLength(2)
+      expect(result.users.map((u) => u.lastName)).toEqual(
+        expect.arrayContaining(['Qsmith', 'Qsmithers'])
+      )
+    })
+
+    it('returns empty users array when no matches', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+
+      await createTestUser(app, company.id, {
+        email: 'user-no-match@test.com',
+        firstName: 'John',
+        lastName: 'Doe',
+      })
+
+      const result = await app.admin.getClients(1, 20, 'zzzznonexistentzzzz')
+
+      expect(result.users).toHaveLength(0)
+      expect(result.total).toBe(0)
+      expect(result.totalPages).toBe(0)
+    })
+
+    it('returns correct totalPages calculation', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+
+      for (let i = 0; i < 10; i++) {
+        await createTestUser(app, company.id, {
+          email: `totalpages-user${i}@test.com`,
+          firstName: `TotalPagesUser${i}`,
+          phone: `+7${Date.now()}${i}`,
+        })
+      }
+
+      const result = await app.admin.getClients(1, 3, 'TotalPagesUser')
+
+      expect(result.total).toBe(10)
+      expect(result.limit).toBe(3)
+      expect(result.totalPages).toBe(4)
     })
   })
 })

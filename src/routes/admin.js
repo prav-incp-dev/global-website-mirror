@@ -1,4 +1,5 @@
 import { UserRole } from '../generated/prisma/client'
+import { CLIENTS_PAGE_LIMIT } from '../plugins/admin.js'
 
 export default async (fastify) => {
   fastify.put('/api/admin/profile', {
@@ -98,6 +99,29 @@ export default async (fastify) => {
         }
         return reply.code(500).send({ error: 'Ошибка обновления компании' })
       }
+    },
+  })
+
+  fastify.get('/api/admin/clients', {
+    schema: {
+      querystring: {
+        type: 'object',
+        properties: {
+          page: { type: 'integer', minimum: 1, default: 1 },
+          limit: { type: 'integer', minimum: 1, maximum: 100, default: CLIENTS_PAGE_LIMIT },
+          query: { type: 'string' },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      const { page = 1, limit = CLIENTS_PAGE_LIMIT, query = '' } = req.query
+      const result = await fastify.admin.getClients(page, limit, query)
+      return reply.send(result)
     },
   })
 }
