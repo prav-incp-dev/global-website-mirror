@@ -1,12 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { UserRole } from '@/generated/prisma/enums'
 import styles from './index.module.css'
+import InfoIcon from '@/assets/icons/InfoIcon.svg?react'
+import ClientModal from './ClientModal'
 
 const ClientsTable = ({ initialUsers, initialPagination, csrfToken }) => {
   const [users, setUsers] = useState(initialUsers)
   const [pagination, setPagination] = useState(initialPagination)
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
+  const [selectedUser, setSelectedUser] = useState(null)
   const debounceRef = useRef(null)
 
   const fetchClients = useCallback(async (page, searchQuery) => {
@@ -64,7 +67,7 @@ const ClientsTable = ({ initialUsers, initialPagination, csrfToken }) => {
   const emptyRow = () => {
     return (
       <tr>
-        <td colSpan={3} className={styles.empty}>
+        <td colSpan={4} className={styles.empty}>
           Нет клиентов
         </td>
       </tr>
@@ -78,6 +81,9 @@ const ClientsTable = ({ initialUsers, initialPagination, csrfToken }) => {
         <td className={styles.td}>{user.level}</td>
         <td className={styles.td}>
           <span className={styles.candidate}>{user.role === UserRole.Consultant ? 'Консультант' : 'Кандидат'}</span>
+        </td>
+        <td className={styles.td} title="Данные пользователя">
+          <InfoIcon className={styles.infoIcon} onClick={() => setSelectedUser(user)} />
         </td>
       </tr>
     ))
@@ -102,6 +108,7 @@ const ClientsTable = ({ initialUsers, initialPagination, csrfToken }) => {
               <th className={styles.th}>Имя</th>
               <th className={styles.th}>Ур.</th>
               <th className={styles.th}>Статус</th>
+              <th className={styles.th}></th>
             </tr>
           </thead>
           <tbody>
@@ -135,6 +142,10 @@ const ClientsTable = ({ initialUsers, initialPagination, csrfToken }) => {
             Вперёд
           </button>
         </div>
+      )}
+
+      {selectedUser && (
+        <ClientModal data={selectedUser} onClose={() => setSelectedUser(null)} />
       )}
     </div>
   )

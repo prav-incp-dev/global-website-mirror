@@ -105,11 +105,17 @@
   font-size: 0.875rem;
 }
 
-.checkmark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #00b894;
+.infoIcon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  cursor: pointer;
+  color: #42bbe7cc;
+  transition: color 0.15s;
+}
+
+.infoIcon:hover {
+  color: #42bbe7;
 }
 
 .candidate {
