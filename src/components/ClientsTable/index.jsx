@@ -6,44 +6,56 @@ import ClientModal from './ClientModal'
 import { ClientsProvider, useClientsContext } from './ClientsContext'
 
 const ClientsTableInner = () => {
-  const { users, setUsers, pagination, setPagination, orphansCount, setOrphansCount, csrfToken } = useClientsContext()
+  const {
+    users,
+    setUsers,
+    pagination,
+    setPagination,
+    orphansCount,
+    setOrphansCount,
+    csrfToken,
+    selectedUserId,
+    setSelectedUserId,
+  } = useClientsContext()
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
-  const [selectedUser, setSelectedUser] = useState(null)
   const [orphansOnly, setOrphansOnly] = useState(false)
   const debounceRef = useRef(null)
 
-  const fetchClients = useCallback(async (page, searchQuery, filterOrphansOnly) => {
-    setLoading(true)
+  const fetchClients = useCallback(
+    async (page, searchQuery, filterOrphansOnly) => {
+      setLoading(true)
 
-    const params = new URLSearchParams({ page, limit: pagination.limit })
-    if (searchQuery) {
-      params.set('query', searchQuery)
-    }
-    if (filterOrphansOnly) {
-      params.set('orphansOnly', 'true')
-    }
-
-    const res = await fetch(`/api/admin/clients?${params}`, {
-      headers: {
-        'x-csrf-token': csrfToken,
-      },
-    })
-    const result = await res.json()
-    if (result.users) {
-      setUsers(result.users)
-      setPagination({
-        total: result.total,
-        page: result.page,
-        limit: result.limit,
-        totalPages: result.totalPages,
-      })
-      if (result.orphansCount != null) {
-        setOrphansCount(result.orphansCount)
+      const params = new URLSearchParams({ page, limit: pagination.limit })
+      if (searchQuery) {
+        params.set('query', searchQuery)
       }
-    }
-    setLoading(false)
-  }, [csrfToken, pagination.limit, setUsers, setPagination, setOrphansCount])
+      if (filterOrphansOnly) {
+        params.set('orphansOnly', 'true')
+      }
+
+      const res = await fetch(`/api/admin/clients?${params}`, {
+        headers: {
+          'x-csrf-token': csrfToken,
+        },
+      })
+      const result = await res.json()
+      if (result.users) {
+        setUsers(result.users)
+        setPagination({
+          total: result.total,
+          page: result.page,
+          limit: result.limit,
+          totalPages: result.totalPages,
+        })
+        if (result.orphansCount != null) {
+          setOrphansCount(result.orphansCount)
+        }
+      }
+      setLoading(false)
+    },
+    [csrfToken, pagination.limit, setUsers, setPagination, setOrphansCount],
+  )
 
   const handleSearchChange = (e) => {
     const value = e.target.value
@@ -96,7 +108,7 @@ const ClientsTableInner = () => {
           <span className={styles.candidate}>{user.role === UserRole.Consultant ? 'Консультант' : 'Кандидат'}</span>
         </td>
         <td className={styles.td} title="Данные пользователя">
-          <InfoIcon className={styles.infoIcon} onClick={() => setSelectedUser(user)} />
+          <InfoIcon className={styles.infoIcon} onClick={() => setSelectedUserId(user.id)} />
         </td>
       </tr>
     ))
@@ -131,9 +143,7 @@ const ClientsTableInner = () => {
               <th className={styles.th}></th>
             </tr>
           </thead>
-          <tbody>
-            {users.length === 0 ? emptyRow() : usersList()}
-          </tbody>
+          <tbody>{users.length === 0 ? emptyRow() : usersList()}</tbody>
         </table>
         {loading && (
           <div className={styles.loadingOverlay}>
@@ -164,9 +174,7 @@ const ClientsTableInner = () => {
         </div>
       )}
 
-      {selectedUser && (
-        <ClientModal data={selectedUser} onClose={() => setSelectedUser(null)} />
-      )}
+      {selectedUserId && <ClientModal onClose={() => setSelectedUserId(null)} />}
     </div>
   )
 }

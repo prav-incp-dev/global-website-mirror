@@ -102,7 +102,6 @@ test.describe('admin clients page', () => {
     const rows = page.locator('table tbody tr')
     await expect(rows).toHaveCount(20)
 
-    await page.pause()
     // Pagination shows "1 из 2"
     await expect(page.getByText('1 из 2')).toBeVisible()
 
@@ -164,5 +163,93 @@ test.describe('admin clients page', () => {
 
     // Button shows 'Без родителя (1)'
     await expect(page.getByRole('button', { name: 'Без родителя (1)' })).toBeVisible()
+  })
+
+  test('change parent flow: clear parent from a client with parent', async ({ loginAs, page }) => {
+    // 1. Login as admin and navigate to clients page
+    await loginAs(adminId)
+    await page.goto('/admin')
+    await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
+    await page.getByRole('button', { name: 'Клиенты' }).click()
+    await page.waitForLoadState('networkidle')
+
+    // 2. The first client in the list is the last created Tom (sorted by id desc)
+    //    which has a parent set to johns[0] (John Doe0)
+    const rows = page.locator('table tbody tr')
+    await expect(rows).toHaveCount(20)
+
+    // 3. Click the info icon on the first row (last td in the row)
+    await rows.first().locator('td:last-child').click()
+
+    // 4. ClientModal should be visible — verify it shows parent info
+    const parentLabel = page.getByText('Родитель:')
+    await expect(parentLabel).toBeVisible()
+
+    // The parent value should show "John Doe0"
+    const parentRow = parentLabel.locator('..')
+    await expect(parentRow).toContainText('John Doe0')
+
+    // 5. Click "Изменить родителя" to open ChangeParentModal
+    const changeParentButton = page.getByRole('button', { name: 'Изменить родителя' })
+    await changeParentButton.click()
+
+    // 6. ChangeParentModal shows a chip with the current parent name
+    //    Verify the chip shows "John Doe0", then clear it
+    const clearButton = page.locator('button[aria-label="Очистить"]')
+    const chip = clearButton.locator('..')
+    await expect(chip).toContainText('John Doe0')
+    await clearButton.click()
+
+    // 7. Click "Сохранить" to save the change (parent → null)
+    await page.getByRole('button', { name: 'Сохранить' }).click()
+    await page.waitForLoadState('networkidle')
+
+    // 8. ChangeParentModal disappears. ClientModal should now show "Нет родителя"
+    await expect(parentLabel).toBeVisible()
+    await expect(parentLabel.locator('..')).toContainText('Нет родителя')
+
+    // 9. Click "Изменить родителя" again — now the search input is empty by default
+    await changeParentButton.click()
+
+    // 10. Type "j" (1 char) — nothing shown (minimum 2 chars required)
+    const searchInput = page.locator('input[placeholder="Начните вводить имя для поиска"]')
+    await searchInput.fill('j')
+    await expect(page.getByText('Ничего не найдено')).not.toBeVisible()
+    await expect(page.getByTestId('parent-search-dropdown')).not.toBeVisible()
+
+    // 11. Type "jo" (2 chars) — after debounce, dropdown with 10 John options appears
+    await searchInput.fill('jo')
+    await expect(page.getByTestId('parent-search-dropdown')).toBeVisible()
+    const options = page.getByTestId('parent-search-dropdown').locator('li')
+    await expect(options).toHaveCount(10)
+
+    // 12. Type "jod" (3 chars) — no matches, "Ничего не найдено" appears
+    await searchInput.fill('jod')
+    await expect(page.getByText('Ничего не найдено')).toBeVisible()
+    await expect(page.getByTestId('parent-search-dropdown')).not.toBeVisible()
+
+    // 13. Delete last character (back to "jo") — dropdown with 10 Johns returns
+    await searchInput.fill('jo')
+    await expect(page.getByTestId('parent-search-dropdown')).toBeVisible()
+    await expect(page.getByText('Ничего не найдено')).not.toBeVisible()
+    await expect(options).toHaveCount(10)
+
+    // 14. Click the very first option in the list and capture its name
+    //     The first span inside the <li> holds the "firstName lastName" name
+    const firstOption = options.first()
+    const selectedName = (await firstOption.locator('span').first().textContent()).trim()
+    await firstOption.click()
+
+    // 15. The chip now shows the selected parent name
+    const newChip = page.locator('button[aria-label="Очистить"]').locator('..')
+    await expect(newChip).toContainText(selectedName.trim())
+
+    // 16. Click "Сохранить" to save the parent change
+    await page.getByRole('button', { name: 'Сохранить' }).click()
+    await page.waitForLoadState('networkidle')
+
+    // 17. ChangeParentModal closes. ClientModal should now show the selected parent name
+    await expect(parentLabel).toBeVisible()
+    await expect(parentLabel.locator('..')).toContainText(selectedName.trim())
   })
 })

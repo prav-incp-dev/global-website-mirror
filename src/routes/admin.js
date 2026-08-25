@@ -128,4 +128,124 @@ export default async (fastify) => {
       return reply.send({ ...result, orphansCount })
     },
   })
+
+  fastify.get('/api/admin/clients/search', {
+    schema: {
+      querystring: {
+        type: 'object',
+        required: ['query'],
+        properties: {
+          query: { type: 'string', minLength: 2 },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      const { query } = req.query
+
+      const users = await fastify.prisma.user.findMany({
+        where: {
+          role: { not: 'Admin' },
+          companyId: user.company.id,
+          OR: [
+            { firstName: { contains: query, mode: 'insensitive' } },
+            { lastName: { contains: query, mode: 'insensitive' } },
+          ],
+        },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          level: true,
+        },
+        take: 20,
+        orderBy: { id: 'desc' },
+      })
+
+      return reply.send({ users })
+    },
+  })
+
+  fastify.put('/api/admin/user/parent', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['userId'],
+        properties: {
+          userId: { type: 'integer', minimum: 1 },
+          parentId: {
+            anyOf: [{ type: 'integer', minimum: 1 }, { type: 'null' }],
+          },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      const { userId, parentId } = req.body
+
+      if (userId === parentId) {
+        return reply.code(400).send({ error: 'Пользователь не может быть собственным родителем' })
+      }
+
+      try {
+        const targetUser = await fastify.prisma.user.findUnique({
+          where: { id: userId },
+          select: { id: true, companyId: true },
+        })
+
+        if (!targetUser) {
+          return reply.code(404).send({ error: 'Пользователь не найден' })
+        }
+
+        if (targetUser.companyId !== user.company.id) {
+          return reply.code(403).send({ error: 'Доступ запрещен' })
+        }
+
+        if (parentId != null) {
+          const parentUser = await fastify.prisma.user.findUnique({
+            where: { id: parentId },
+            select: { id: true, companyId: true },
+          })
+
+          if (!parentUser) {
+            return reply.code(404).send({ error: 'Родительский пользователь не найден' })
+          }
+
+          if (parentUser.companyId !== user.company.id) {
+            return reply.code(403).send({ error: 'Доступ запрещен' })
+          }
+        }
+
+        const updatedUser = await fastify.prisma.user.update({
+          where: { id: userId },
+          data: { parentId: parentId ?? null },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            level: true,
+            parentId: true,
+            parent: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        })
+
+        return reply.send({ success: true, user: updatedUser })
+      } catch {
+        return reply.code(500).send({ error: 'Ошибка обновления родителя' })
+      }
+    },
+  })
 }

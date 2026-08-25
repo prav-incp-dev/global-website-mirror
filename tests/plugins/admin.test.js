@@ -361,9 +361,7 @@ describe('admin plugin', () => {
       const result = await app.admin.getClients(adminUser, 1, 20, 'Qal')
 
       expect(result.users).toHaveLength(2)
-      expect(result.users.map((u) => u.firstName)).toEqual(
-        expect.arrayContaining(['Qalice', 'Qalexander'])
-      )
+      expect(result.users.map((u) => u.firstName)).toEqual(expect.arrayContaining(['Qalice', 'Qalexander']))
     })
 
     it('filters by lastName (case-insensitive)', async () => {
@@ -390,9 +388,7 @@ describe('admin plugin', () => {
       const result = await app.admin.getClients(adminUser, 1, 20, 'qsmith')
 
       expect(result.users).toHaveLength(2)
-      expect(result.users.map((u) => u.lastName)).toEqual(
-        expect.arrayContaining(['Qsmith', 'Qsmithers'])
-      )
+      expect(result.users.map((u) => u.lastName)).toEqual(expect.arrayContaining(['Qsmith', 'Qsmithers']))
     })
 
     it('returns empty users array when no matches', async () => {

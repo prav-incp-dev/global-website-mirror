@@ -295,7 +295,10 @@ test.describe('consultant structure tab', () => {
     // Verify scheduled date was stored. Re-open Maria's modal
     await mariaInfoIcon.click()
     await expect(page.getByRole('heading', { name: 'Информация о пользователе' })).toBeVisible()
-    const mariaModalReopened = page.getByRole('heading', { name: 'Информация о пользователе' }).locator('..').locator('..')
+    const mariaModalReopened = page
+      .getByRole('heading', { name: 'Информация о пользователе' })
+      .locator('..')
+      .locator('..')
     await expect(mariaModalReopened.getByText(tomorrow.toLocaleDateString('ru-RU'))).toBeVisible()
 
     // Close Maria's modal
