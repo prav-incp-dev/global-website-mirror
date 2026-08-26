@@ -1,9 +1,9 @@
 import CloseIcon from '@/assets/icons/CloseIcon.svg?react'
 import styles from './index.module.css'
 
-const Modal = ({ onClose, title, className, children }) => {
+const Modal = ({ onClose, title, className, children, isStatic = false }) => {
   const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) {
+    if (!isStatic && e.target === e.currentTarget) {
       onClose()
     }
   }

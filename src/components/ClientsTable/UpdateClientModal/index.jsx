@@ -64,7 +64,7 @@ const UpdateClientModal = ({ onClose }) => {
   if (!selectedUser) return null
 
   return (
-    <Modal title="Установить достижения" onClose={onClose}>
+    <Modal title="Установить достижения" isStatic onClose={onClose}>
       <div className={styles.container}>
         {error && <p className={styles.error}>{error}</p>}
 

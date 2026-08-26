@@ -70,7 +70,7 @@ const CompleteInteractionModal = ({ targetId, lastInteractionDate, csrfToken, on
   }
 
   return (
-    <Modal title="Отметить взаимодействие" onClose={onClose}>
+    <Modal title="Отметить взаимодействие" isStatic onClose={onClose}>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className={styles.field}>
           <label className={styles.label} htmlFor="completedAt">

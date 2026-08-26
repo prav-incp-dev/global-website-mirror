@@ -132,7 +132,7 @@ const PurchaseModal = ({ onClose, onCreate, profile, csrfToken }) => {
   }
 
   return (
-    <Modal onClose={onClose} className={styles.purchaseModal}>
+    <Modal onClose={onClose} isStatic className={styles.purchaseModal}>
       <div className={styles.purchaseModalBody}>
         <Stepper min={MIN_QTY} max={MAX_QTY} value={quantity} onChange={setQuantity} />
 

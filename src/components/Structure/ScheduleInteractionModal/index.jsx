@@ -64,7 +64,7 @@ const ScheduleInteractionModal = ({ targetId, nextInteractionDate, csrfToken, on
   }
 
   return (
-    <Modal title="Запланировать взаимодействие" onClose={onClose}>
+    <Modal title="Запланировать взаимодействие" isStatic onClose={onClose}>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className={styles.field}>
           <label className={styles.label} htmlFor="plannedAt">

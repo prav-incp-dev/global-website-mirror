@@ -56,7 +56,7 @@ const InvitationModal = ({ onClose, csrfToken }) => {
   const invitationUrl = token ? `${window.location.origin}/register?token=${token}` : ''
 
   return (
-    <Modal onClose={onClose} title="Пригласительная ссылка">
+    <Modal onClose={onClose} isStatic title="Пригласительная ссылка">
       {loading && <p className={styles.loadingText}>Генерация ссылки...</p>}
       {error && <p className={styles.errorText}>{error}</p>}
 

@@ -191,7 +191,7 @@ const UpdateParentModal = ({ onClose }) => {
   }
 
   return (
-    <Modal title="Установить родителя" onClose={onClose}>
+    <Modal title="Установить родителя" isStatic onClose={onClose}>
       <div className={styles.container}>
         <div className={styles.selectWrapper}>
           {selectedOption ? showSelected() : showInput()}
