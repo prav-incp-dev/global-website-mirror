@@ -4,7 +4,7 @@ import { useClientsContext } from '../ClientsContext'
 import { userName } from '@/lib/user'
 import styles from './index.module.css'
 
-const ChangeParentModal = ({ onClose }) => {
+const UpdateParentModal = ({ onClose }) => {
   const { csrfToken, selectedUser, updateSelectedUser } = useClientsContext()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
@@ -207,4 +207,4 @@ const ChangeParentModal = ({ onClose }) => {
   )
 }
 
-export default ChangeParentModal
+export default UpdateParentModal
