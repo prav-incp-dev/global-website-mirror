@@ -3,6 +3,7 @@ import { useRouteContext } from '@fastify/react/client'
 import { UserRole } from '@/generated/prisma/enums'
 import AdminProfile from '@/components/AdminProfile'
 import CompanyProfile from '@/components/CompanyProfile'
+import ClientsTable from '@/components/ClientsTable'
 import InvitationModal from '@/components/InvitationModal'
 import styles from './index.module.css'
 
@@ -13,6 +14,10 @@ export const getData = async ({ server, req, reply }) => {
 
   const csrfToken = reply.generateCsrf()
   const company = await server.admin.getCompany(user)
+  const [clientsData, orphansCount] = await Promise.all([
+    server.admin.getClients(user),
+    server.admin.getOrphansCount(user),
+  ])
 
   return {
     profile: {
@@ -21,6 +26,8 @@ export const getData = async ({ server, req, reply }) => {
       email: user.email,
     },
     company: company,
+    clients: clientsData,
+    orphansCount,
     csrfToken,
   }
 }
@@ -28,11 +35,12 @@ export const getData = async ({ server, req, reply }) => {
 const TABS = [
   { key: 'admin', label: 'Профиль администратора' },
   { key: 'company', label: 'Профиль компании' },
+  { key: 'clients', label: 'Клиенты' },
 ]
 
 const Admin = () => {
   const { data } = useRouteContext()
-  const { profile = {}, company = null, csrfToken = '' } = data
+  const { profile = {}, company = null, clients = {}, orphansCount = 0, csrfToken = '' } = data
   const [activeTab, setActiveTab] = useState('admin')
   const [invitationOpen, setInvitationOpen] = useState(false)
   const [profileData, setProfileData] = useState(profile)
@@ -94,6 +102,19 @@ const Admin = () => {
         )}
         {activeTab === 'company' && (
           <CompanyProfile company={companyData} csrfToken={csrfToken} onUpdate={handleUpdateCompany} />
+        )}
+        {activeTab === 'clients' && clients && (
+          <ClientsTable
+            initialUsers={clients.users}
+            initialPagination={{
+              total: clients.total,
+              page: clients.page,
+              limit: clients.limit,
+              totalPages: clients.totalPages,
+            }}
+            initialOrphansCount={orphansCount}
+            csrfToken={csrfToken}
+          />
         )}
       </div>
     </div>

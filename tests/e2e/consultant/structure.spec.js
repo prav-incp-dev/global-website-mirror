@@ -182,43 +182,47 @@ test.describe('consultant structure tab', () => {
       .locator('[title="Данные пользователя"]')
     await teresaInfoIcon.click()
     await expect(page.getByRole('heading', { name: 'Информация о пользователе' })).toBeVisible()
-    await expect(page.getByText('Имя:')).toBeVisible()
-    await expect(page.getByText('Фамилия:')).toBeVisible()
-    await expect(page.getByText('Статус:')).toBeVisible()
-    await expect(page.getByText('Почта:')).not.toBeVisible()
-    await expect(page.getByText('Номер телефона:')).not.toBeVisible()
-    await expect(page.getByText('Номер пайщика:')).not.toBeVisible()
-    await expect(page.getByText('Ник в Телеграм:')).not.toBeVisible()
-    await expect(page.getByText('Уровень:')).toBeVisible()
-    await expect(page.getByText('Личные продажи:')).toBeVisible()
-    await expect(page.getByText('Групповые продажи:')).toBeVisible()
-    await expect(page.getByText('Дата последнего взаимодействия:')).toBeVisible()
-    await expect(page.getByText('Дата запланированного взаимодействия:')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Отметить взаимодействие' })).not.toBeVisible()
-    await expect(page.getByRole('button', { name: 'Запланировать взаимодействие' })).not.toBeVisible()
+
+    const userModal = page.getByRole('heading', { name: 'Информация о пользователе' }).locator('..').locator('..')
+
+    await expect(userModal.getByText('Имя:')).toBeVisible()
+    await expect(userModal.getByText('Фамилия:')).toBeVisible()
+    await expect(userModal.getByText('Статус:')).toBeVisible()
+    await expect(userModal.getByText('Почта:')).not.toBeVisible()
+    await expect(userModal.getByText('Номер телефона:')).not.toBeVisible()
+    await expect(userModal.getByText('Номер пайщика:')).not.toBeVisible()
+    await expect(userModal.getByText('Ник в Телеграм:')).not.toBeVisible()
+    await expect(userModal.getByText('Уровень:')).toBeVisible()
+    await expect(userModal.getByText('Личные продажи:')).toBeVisible()
+    await expect(userModal.getByText('Групповые продажи:')).toBeVisible()
+    await expect(userModal.getByText('Дата последнего взаимодействия:')).toBeVisible()
+    await expect(userModal.getByText('Дата запланированного взаимодействия:')).toBeVisible()
+    await expect(userModal.getByRole('button', { name: 'Отметить взаимодействие' })).not.toBeVisible()
+    await expect(userModal.getByRole('button', { name: 'Запланировать взаимодействие' })).not.toBeVisible()
 
     // Close Teresa's modal
-    await page.getByRole('button', { name: 'Закрыть' }).click()
+    await userModal.getByRole('button', { name: 'Закрыть' }).click()
 
     // 6. Click Tom's info icon
     const tomInfoIcon = page.getByText('Tom Smith').locator('..').locator('..').locator('[title="Данные пользователя"]')
     await tomInfoIcon.click()
     await expect(page.getByRole('heading', { name: 'Информация о пользователе' })).toBeVisible()
 
-    // Click "Отметить взаимодействие"
-    await expect(page.getByText('Имя:')).toBeVisible()
-    await expect(page.getByText('Фамилия:')).toBeVisible()
-    await expect(page.getByText('Статус:')).toBeVisible()
-    await expect(page.getByText('Почта:')).toBeVisible()
-    await expect(page.getByText('Номер телефона:')).toBeVisible()
-    await expect(page.getByText('Номер пайщика:')).toBeVisible()
-    await expect(page.getByText('Ник в Телеграм:')).toBeVisible()
-    await expect(page.getByText('Уровень:')).toBeVisible()
-    await expect(page.getByText('Личные продажи:')).toBeVisible()
-    await expect(page.getByText('Групповые продажи:')).toBeVisible()
-    await expect(page.getByText('Дата последнего взаимодействия:')).toBeVisible()
-    await expect(page.getByText('Дата запланированного взаимодействия:')).toBeVisible()
-    await page.getByRole('button', { name: 'Отметить взаимодействие' }).click()
+    const tomModal = page.getByRole('heading', { name: 'Информация о пользователе' }).locator('..').locator('..')
+
+    await expect(tomModal.getByText('Имя:')).toBeVisible()
+    await expect(tomModal.getByText('Фамилия:')).toBeVisible()
+    await expect(tomModal.getByText('Статус:')).toBeVisible()
+    await expect(tomModal.getByText('Почта:')).toBeVisible()
+    await expect(tomModal.getByText('Номер телефона:')).toBeVisible()
+    await expect(tomModal.getByText('Номер пайщика:')).toBeVisible()
+    await expect(tomModal.getByText('Ник в Телеграм:')).toBeVisible()
+    await expect(tomModal.getByText('Уровень:')).toBeVisible()
+    await expect(tomModal.getByText('Личные продажи:')).toBeVisible()
+    await expect(tomModal.getByText('Групповые продажи:')).toBeVisible()
+    await expect(tomModal.getByText('Дата последнего взаимодействия:')).toBeVisible()
+    await expect(tomModal.getByText('Дата запланированного взаимодействия:')).toBeVisible()
+    await tomModal.getByRole('button', { name: 'Отметить взаимодействие' }).click()
     await expect(page.getByRole('heading', { name: 'Отметить взаимодействие' })).toBeVisible()
 
     // Enter yesterday's date
@@ -234,11 +238,11 @@ test.describe('consultant structure tab', () => {
     await expect(page.getByRole('heading', { name: 'Отметить взаимодействие' })).not.toBeVisible()
 
     // Verify last interaction date is updated for Tom (yesterday) inside the modal
-    const lastInteractionRow = page.getByText('Дата последнего взаимодействия:').locator('..')
+    const lastInteractionRow = tomModal.getByText('Дата последнего взаимодействия:').locator('..')
     await expect(lastInteractionRow.getByText(yesterday.toLocaleDateString('ru-RU'))).toBeVisible()
 
     // Close Tom's modal
-    await page.getByRole('button', { name: 'Закрыть' }).click()
+    await tomModal.getByRole('button', { name: 'Закрыть' }).click()
 
     // Verify Tom and Teresa are no longer red
     await expect(tomRowElement).not.toHaveCSS('color', staleColor)
@@ -252,8 +256,10 @@ test.describe('consultant structure tab', () => {
     await mariaInfoIcon.click()
     await expect(page.getByRole('heading', { name: 'Информация о пользователе' })).toBeVisible()
 
+    const mariaModal = page.getByRole('heading', { name: 'Информация о пользователе' }).locator('..').locator('..')
+
     // Schedule interaction in a week
-    await page.getByRole('button', { name: 'Запланировать взаимодействие' }).click()
+    await mariaModal.getByRole('button', { name: 'Запланировать взаимодействие' }).click()
     await expect(page.getByRole('heading', { name: 'Запланировать взаимодействие' })).toBeVisible()
 
     const oneWeek = daysFromNow(7)
@@ -263,7 +269,7 @@ test.describe('consultant structure tab', () => {
     await expect(page.getByRole('heading', { name: 'Запланировать взаимодействие' })).not.toBeVisible()
 
     // Verify next interaction date is updated
-    const nextInteractionRow = page.getByText('Дата запланированного взаимодействия:').locator('..')
+    const nextInteractionRow = mariaModal.getByText('Дата запланированного взаимодействия:').locator('..')
     await expect(nextInteractionRow.getByText(oneWeek.toLocaleDateString('ru-RU'))).toBeVisible()
 
     // Schedule again — verify previous date is default
@@ -284,15 +290,19 @@ test.describe('consultant structure tab', () => {
     await expect(nextInteractionRow.getByText(tomorrow.toLocaleDateString('ru-RU'))).toBeVisible()
 
     // Close Maria's modal
-    await page.getByRole('button', { name: 'Закрыть' }).click()
+    await mariaModal.getByRole('button', { name: 'Закрыть' }).click()
 
     // Verify scheduled date was stored. Re-open Maria's modal
     await mariaInfoIcon.click()
     await expect(page.getByRole('heading', { name: 'Информация о пользователе' })).toBeVisible()
-    await expect(nextInteractionRow.getByText(tomorrow.toLocaleDateString('ru-RU'))).toBeVisible()
+    const mariaModalReopened = page
+      .getByRole('heading', { name: 'Информация о пользователе' })
+      .locator('..')
+      .locator('..')
+    await expect(mariaModalReopened.getByText(tomorrow.toLocaleDateString('ru-RU'))).toBeVisible()
 
     // Close Maria's modal
-    await page.getByRole('button', { name: 'Закрыть' }).click()
+    await mariaModalReopened.getByRole('button', { name: 'Закрыть' }).click()
 
     // 8. Switch tabs and back — verify dates are not reset
     await page.getByRole('button', { name: 'Профиль' }).click()
