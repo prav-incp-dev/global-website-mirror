@@ -10,7 +10,7 @@ import styles from './index.module.css'
 const ClientModal = ({ onClose }) => {
   const { selectedUser } = useClientsContext()
   const [showChangeParent, setShowChangeParent] = useState(false)
-  const [showEditScores, setShowEditScores] = useState(false)
+  const [showUpdateModal, setShowUpdateModal] = useState(false)
 
   if (!selectedUser) return null
 
@@ -25,7 +25,7 @@ const ClientModal = ({ onClose }) => {
   return (
     <Modal title="Информация о пользователе" onClose={onClose}>
       {showChangeParent && <UpdateParentModal onClose={() => setShowChangeParent(false)} />}
-      {showEditScores && <UpdateClientModal onClose={() => setShowEditScores(false)} />}
+      {showUpdateModal && <UpdateClientModal onClose={() => setShowUpdateModal(false)} />}
       <div className={styles.infoTable}>
         <div className={styles.infoRow}>
           <span className={styles.label}>Имя:</span>
@@ -86,7 +86,7 @@ const ClientModal = ({ onClose }) => {
           Изменить родителя
         </button>
         {isConsultant && (
-          <button className={styles.actionButton} onClick={() => setShowEditScores(true)}>
+          <button className={styles.actionButton} onClick={() => setShowUpdateModal(true)}>
             Изменить достижения
           </button>
         )}
