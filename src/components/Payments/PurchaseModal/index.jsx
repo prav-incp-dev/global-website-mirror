@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { getAddress, parseUnits } from 'viem'
 import { getPublicClient, getWalletClient, ensureChain, usdtAddress, usdtDecimals } from '@/lib/chain.js'
 import Modal from '../../Modal'
+import Stepper from '../../Stepper'
 import styles from './index.module.css'
 import { PRICE_MAP } from '@/lib/pricing'
 
@@ -26,14 +27,6 @@ const PurchaseModal = ({ onClose, onCreate, profile, csrfToken }) => {
   const [isPaying, setIsPaying] = useState(false)
   const [payError, setPayError] = useState('')
   const [loaderText, setLoaderText] = useState('')
-
-  const decrement = () => {
-    setQuantity((prev) => Math.max(MIN_QTY, prev - 1))
-  }
-
-  const increment = () => {
-    setQuantity((prev) => Math.min(MAX_QTY, prev + 1))
-  }
 
   const price = PRICE_MAP[quantity]
 
@@ -141,25 +134,7 @@ const PurchaseModal = ({ onClose, onCreate, profile, csrfToken }) => {
   return (
     <Modal onClose={onClose} className={styles.purchaseModal}>
       <div className={styles.purchaseModalBody}>
-        <div className={styles.stepper}>
-          <button
-            className={styles.stepperButton}
-            onClick={decrement}
-            disabled={quantity <= MIN_QTY}
-            aria-label="Уменьшить"
-          >
-            −
-          </button>
-          <span className={styles.stepperValue}>{quantity}</span>
-          <button
-            className={styles.stepperButton}
-            onClick={increment}
-            disabled={quantity >= MAX_QTY}
-            aria-label="Увеличить"
-          >
-            +
-          </button>
-        </div>
+        <Stepper min={MIN_QTY} max={MAX_QTY} value={quantity} onChange={setQuantity} />
 
         <div className={styles.priceRow}>
           <span className={styles.priceLabel}>Сумма</span>
