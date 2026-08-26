@@ -4,6 +4,7 @@ import InfoIcon from '@/assets/icons/InfoIcon.svg?react'
 import CheckIcon from '@/assets/icons/CheckIcon.svg?react'
 import AttentionIcon from '@/assets/icons/AttentionIcon.svg?react'
 import UserModal from '../UserModal'
+import { userName } from '@/lib/user'
 import styles from './index.module.css'
 
 const TreeNode = ({ node, csrfToken, currentUserId }) => {
@@ -30,7 +31,7 @@ const TreeNode = ({ node, csrfToken, currentUserId }) => {
         {hasChildren && <span className={`${styles.arrow} ${isOpen ? styles.arrowOpen : ''}`}>▶</span>}
 
         <div className={styles.userTable}>
-          <div className={styles.cell}>{`${node.firstName} ${node.lastName || ''}`.trim()}</div>
+          <div className={styles.cell}>{userName(node)}</div>
           <div className={styles.cell}>{node.lastInteractionDate?.toLocaleDateString('ru-RU') || '-'}</div>
           {isConsultant && (
             <div className={styles.cell} title="Консультант">

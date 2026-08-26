@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Modal from '../../Modal'
 import { useClientsContext } from '../ClientsContext'
+import { userName } from '@/lib/user'
 import styles from './index.module.css'
 
 const ChangeParentModal = ({ onClose }) => {
@@ -10,14 +11,11 @@ const ChangeParentModal = ({ onClose }) => {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
 
-  const userLabel = (user) => {
-    return `${user.firstName} ${user.lastName || ''}`.trim()
-  }
   const getSelected = () => {
     if (!selectedUser.parentId) return null
     return {
       id: selectedUser.parentId,
-      label: userLabel(selectedUser.parent),
+      label: userName(selectedUser.parent),
       firstName: selectedUser.parent.firstName,
       lastName: selectedUser.parent.lastName,
     }
@@ -103,7 +101,7 @@ const ChangeParentModal = ({ onClose }) => {
   }
 
   const handleSelect = (user) => {
-    setSelectedOption({ id: user.id, label: userLabel(user), firstName: user.firstName, lastName: user.lastName })
+    setSelectedOption({ id: user.id, label: userName(user), firstName: user.firstName, lastName: user.lastName })
     setQuery('')
     setResults([])
     setOpen(false)
@@ -175,9 +173,7 @@ const ChangeParentModal = ({ onClose }) => {
             onMouseDown={() => handleSelect(user)}
             onMouseEnter={() => setHighlightedIndex(index)}
           >
-            <span className={styles.optionName}>
-              {user.firstName} {user.lastName || ''}
-            </span>
+            <span className={styles.optionName}>{userName(user)}</span>
             <span className={styles.optionLevel}>Уровень: {user.level}</span>
           </li>
         ))}

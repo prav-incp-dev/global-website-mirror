@@ -1,8 +1,5 @@
 import { sendInteractionReminder } from '../services/emailService.js'
-
-const targetName = (user) => {
-  return `${user.firstName} ${user.lastName}`.trim()
-}
+import { userName } from '../lib/user.js'
 
 export async function checkUpcomingInteractions(prisma, log = console) {
   const endOfToday = new Date()
@@ -21,7 +18,7 @@ export async function checkUpcomingInteractions(prisma, log = console) {
     const initiator = interaction.initiator
     if (!initiator) continue
 
-    await sendInteractionReminder(initiator, targetName(interaction.target))
+    await sendInteractionReminder(initiator, userName(interaction.target))
 
     await prisma.interaction.update({
       where: { id: interaction.id },

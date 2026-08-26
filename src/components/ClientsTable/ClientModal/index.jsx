@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useClientsContext } from '../ClientsContext'
 import Modal from '../../Modal'
 import ChangeParentModal from '../ChangeParentModal'
+import { userName } from '@/lib/user'
 import styles from './index.module.css'
 
 const ClientModal = ({ onClose }) => {
@@ -13,7 +14,7 @@ const ClientModal = ({ onClose }) => {
   const parentName = () => {
     if (!selectedUser.parentId) return 'Нет родителя'
 
-    return `${selectedUser.parent.firstName} ${selectedUser.parent.lastName || ''}`.trim()
+    return userName(selectedUser.parent)
   }
 
   return (

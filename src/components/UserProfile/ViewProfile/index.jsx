@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { UserRole } from '@/generated/prisma/enums'
+import { userName } from '@/lib/user'
 import styles from './index.module.css'
 
 const ViewProfile = ({ profile, onEdit }) => {
@@ -10,7 +11,7 @@ const ViewProfile = ({ profile, onEdit }) => {
     const parent = profile.parent
     if (!parent) return null
 
-    return parent.nick || `${parent.firstName} ${parent.lastName}`
+    return parent.nick || userName(parent)
   }
   const parent = getParent()
 
