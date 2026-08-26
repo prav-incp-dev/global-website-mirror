@@ -34,6 +34,8 @@
 }
 
 .title {
+  width: 100%;
+  text-align: center;
   font-family: 'Playfair Display', Georgia, serif;
   font-size: 1.25rem;
   font-weight: 600;

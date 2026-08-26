@@ -1444,3 +1444,337 @@ describe('PUT /api/admin/user/parent', () => {
     expect(response.json()).toEqual({ error: 'Ошибка обновления родителя' })
   })
 })
+describe('PUT /api/admin/user', () => {
+  const createAdminUser = () => ({
+    id: 1,
+    email: 'admin@test.com',
+    role: 'Admin',
+    company: { id: 1 },
+  })
+
+  const createCompany = async (app, name, wallet) => {
+    return app.prisma.company.create({
+      data: { name, primaryWallet: wallet },
+    })
+  }
+
+  const createUser = async (app, overrides = {}) => {
+    const { emailPrefix, ...data } = overrides
+    return app.prisma.user.create({
+      data: {
+        email: `${emailPrefix || 'user'}-${Date.now()}@test.com`,
+        password: 'hashed',
+        role: 'Consultant',
+        firstName: 'Target',
+        lastName: 'User',
+        phone: `+375291${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`,
+        level: 1,
+        levelConfirmed: true,
+        score: 10,
+        ...data,
+      },
+    })
+  }
+
+  it('returns 403 when user is not authenticated', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user',
+      payload: { userId: 1, level: 2 },
+    })
+
+    expect(response.statusCode).toBe(403)
+    expect(response.json()).toEqual({ error: 'Доступ запрещен' })
+  })
+
+  it('returns 403 when user is not Admin', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue({
+      id: 1,
+      email: 'candidate@test.com',
+      role: 'Candidate',
+      company: { id: 1 },
+    })
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user',
+      payload: { userId: 1, level: 2 },
+    })
+
+    expect(response.statusCode).toBe(403)
+    expect(response.json()).toEqual({ error: 'Доступ запрещен' })
+  })
+
+  it('returns 400 when userId is missing', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user',
+      payload: { level: 2 },
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(response.json().message).toContain('required')
+  })
+
+  it('returns 400 when no updatable fields are provided', async () => {
+    const app = await createApp()
+    const company = await createCompany(app, 'Empty Fields Company', '0x9999999999999999999999999999999999999999')
+
+    const targetUser = await createUser(app, { companyId: company.id })
+
+    const adminUser = createAdminUser()
+    adminUser.company.id = company.id
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user',
+      payload: { userId: targetUser.id },
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(response.json()).toEqual({ error: 'Нет полей для обновления' })
+  })
+
+  it('returns 400 when level is below minimum', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user',
+      payload: { userId: 1, level: 0 },
+    })
+
+    expect(response.statusCode).toBe(400)
+  })
+
+  it('returns 400 when level is above maximum', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user',
+      payload: { userId: 1, level: 11 },
+    })
+
+    expect(response.statusCode).toBe(400)
+  })
+
+  it('returns 400 when score is negative', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user',
+      payload: { userId: 1, score: -1 },
+    })
+
+    expect(response.statusCode).toBe(400)
+  })
+
+  it('returns 404 when target user does not exist', async () => {
+    const app = await createApp()
+    const company = await createCompany(app, 'Not Found Company', '0x1111111111111111111111111111111111111111')
+    const adminUser = createAdminUser()
+    adminUser.company.id = company.id
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user',
+      payload: { userId: 999999, level: 2 },
+    })
+
+    expect(response.statusCode).toBe(404)
+    expect(response.json()).toEqual({ error: 'Пользователь не найден' })
+  })
+
+  it('returns 403 when target user is in a different company', async () => {
+    const app = await createApp()
+    const companyA = await createCompany(app, 'Company A', '0x2222222222222222222222222222222222222222')
+    const companyB = await createCompany(app, 'Company B', '0x3333333333333333333333333333333333333333')
+
+    const targetUser = await createUser(app, { companyId: companyB.id })
+
+    const adminUser = createAdminUser()
+    adminUser.company.id = companyA.id
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user',
+      payload: { userId: targetUser.id, level: 2 },
+    })
+
+    expect(response.statusCode).toBe(403)
+    expect(response.json()).toEqual({ error: 'Доступ запрещен' })
+  })
+
+  it('returns 400 when target user is not a Consultant', async () => {
+    const app = await createApp()
+    const company = await createCompany(app, 'Non Consultant Company', '0x4444444444444444444444444444444444444444')
+
+    const targetUser = await createUser(app, {
+      companyId: company.id,
+      emailPrefix: 'candidate',
+      role: 'Candidate',
+    })
+
+    const adminUser = createAdminUser()
+    adminUser.company.id = company.id
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user',
+      payload: { userId: targetUser.id, level: 2 },
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(response.json()).toEqual({ error: 'Обновлять уровень можно только консультантам' })
+  })
+
+  it('successfully updates all three fields', async () => {
+    const app = await createApp()
+    const company = await createCompany(app, 'Update All Company', '0x5555555555555555555555555555555555555555')
+
+    const targetUser = await createUser(app, { companyId: company.id })
+
+    const adminUser = createAdminUser()
+    adminUser.company.id = company.id
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user',
+      payload: { userId: targetUser.id, level: 3, levelConfirmed: false, score: 150 },
+    })
+
+    expect(response.statusCode).toBe(200)
+
+    const body = response.json()
+    expect(body.success).toBe(true)
+    expect(body.user.id).toBe(targetUser.id)
+    expect(body.user.level).toBe(3)
+    expect(body.user.levelConfirmed).toBe(false)
+    expect(body.user.score).toBe(150)
+
+    // Verify the database was actually updated
+    const updatedUser = await app.prisma.user.findUnique({ where: { id: targetUser.id } })
+    expect(updatedUser.level).toBe(3)
+    expect(updatedUser.levelConfirmed).toBe(false)
+    expect(updatedUser.score).toBe(150)
+  })
+
+  it('successfully updates only level, leaving other fields unchanged', async () => {
+    const app = await createApp()
+    const company = await createCompany(app, 'Partial Level Company', '0x6666666666666666666666666666666666666666')
+
+    const targetUser = await createUser(app, { companyId: company.id })
+
+    const adminUser = createAdminUser()
+    adminUser.company.id = company.id
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user',
+      payload: { userId: targetUser.id, level: 4 },
+    })
+
+    expect(response.statusCode).toBe(200)
+
+    const body = response.json()
+    expect(body.success).toBe(true)
+    expect(body.user.level).toBe(4)
+    expect(body.user.levelConfirmed).toBe(true)
+    expect(body.user.score).toBe(10)
+
+    const updatedUser = await app.prisma.user.findUnique({ where: { id: targetUser.id } })
+    expect(updatedUser.level).toBe(4)
+    expect(updatedUser.levelConfirmed).toBe(true)
+    expect(updatedUser.score).toBe(10)
+  })
+
+  it('successfully updates only levelConfirmed to false', async () => {
+    const app = await createApp()
+    const company = await createCompany(app, 'Partial Confirmed Company', '0x7777777777777777777777777777777777777777')
+
+    const targetUser = await createUser(app, { companyId: company.id })
+
+    const adminUser = createAdminUser()
+    adminUser.company.id = company.id
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user',
+      payload: { userId: targetUser.id, levelConfirmed: false },
+    })
+
+    expect(response.statusCode).toBe(200)
+
+    const body = response.json()
+    expect(body.success).toBe(true)
+    expect(body.user.levelConfirmed).toBe(false)
+    expect(body.user.level).toBe(1)
+    expect(body.user.score).toBe(10)
+
+    const updatedUser = await app.prisma.user.findUnique({ where: { id: targetUser.id } })
+    expect(updatedUser.levelConfirmed).toBe(false)
+  })
+
+  it('successfully updates only score', async () => {
+    const app = await createApp()
+    const company = await createCompany(app, 'Partial Score Company', '0x8888888888888888888888888888888888888888')
+
+    const targetUser = await createUser(app, { companyId: company.id })
+
+    const adminUser = createAdminUser()
+    adminUser.company.id = company.id
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user',
+      payload: { userId: targetUser.id, score: 250 },
+    })
+
+    expect(response.statusCode).toBe(200)
+
+    const body = response.json()
+    expect(body.success).toBe(true)
+    expect(body.user.score).toBe(250)
+    expect(body.user.level).toBe(1)
+    expect(body.user.levelConfirmed).toBe(true)
+
+    const updatedUser = await app.prisma.user.findUnique({ where: { id: targetUser.id } })
+    expect(updatedUser.score).toBe(250)
+  })
+
+  it('returns 500 on unexpected database error', async () => {
+    const app = await createApp()
+    const adminUser = createAdminUser()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+    vi.spyOn(app.prisma.user, 'findUnique').mockRejectedValue(new Error('Database connection failed'))
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user',
+      payload: { userId: 1, level: 2 },
+    })
+
+    expect(response.statusCode).toBe(500)
+    expect(response.json()).toEqual({ error: 'Ошибка обновления пользователя' })
+  })
+})

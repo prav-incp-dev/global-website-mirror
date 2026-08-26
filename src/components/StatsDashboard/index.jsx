@@ -1,9 +1,10 @@
 import styles from './index.module.css'
+import { userName } from '@/lib/user'
 
 const getDisplayName = (user) => {
   if (user.nick) return user.nick
 
-  return `${user.firstName} ${user.lastName || ''}`
+  return userName(user)
 }
 
 const StatsDashboard = ({ profile }) => {

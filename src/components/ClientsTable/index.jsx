@@ -4,6 +4,7 @@ import styles from './index.module.css'
 import InfoIcon from '@/assets/icons/InfoIcon.svg?react'
 import ClientModal from './ClientModal'
 import { ClientsProvider, useClientsContext } from './ClientsContext'
+import { userName } from '@/lib/user'
 
 const ClientsTableInner = () => {
   const {
@@ -102,7 +103,7 @@ const ClientsTableInner = () => {
   const usersList = () => {
     return users.map((user) => (
       <tr key={user.id} className={styles.row}>
-        <td className={styles.td}>{`${user.firstName} ${user.lastName || ''}`.trim()}</td>
+        <td className={styles.td}>{userName(user)}</td>
         <td className={styles.td}>{user.level}</td>
         <td className={styles.td}>
           <span className={styles.candidate}>{user.role === UserRole.Consultant ? 'Консультант' : 'Кандидат'}</span>

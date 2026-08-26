@@ -1,24 +1,31 @@
 import { useState } from 'react'
 import { useClientsContext } from '../ClientsContext'
 import Modal from '../../Modal'
-import ChangeParentModal from '../ChangeParentModal'
+import UpdateParentModal from '../UpdateParentModal'
+import UpdateClientModal from '../UpdateClientModal'
+import { UserRole } from '@/generated/prisma/enums'
+import { userName } from '@/lib/user'
 import styles from './index.module.css'
 
 const ClientModal = ({ onClose }) => {
   const { selectedUser } = useClientsContext()
   const [showChangeParent, setShowChangeParent] = useState(false)
+  const [showUpdateModal, setShowUpdateModal] = useState(false)
 
   if (!selectedUser) return null
+
+  const isConsultant = selectedUser.role === UserRole.Consultant
 
   const parentName = () => {
     if (!selectedUser.parentId) return 'Нет родителя'
 
-    return `${selectedUser.parent.firstName} ${selectedUser.parent.lastName || ''}`.trim()
+    return userName(selectedUser.parent)
   }
 
   return (
     <Modal title="Информация о пользователе" onClose={onClose}>
-      {showChangeParent && <ChangeParentModal onClose={() => setShowChangeParent(false)} />}
+      {showChangeParent && <UpdateParentModal onClose={() => setShowChangeParent(false)} />}
+      {showUpdateModal && <UpdateClientModal onClose={() => setShowUpdateModal(false)} />}
       <div className={styles.infoTable}>
         <div className={styles.infoRow}>
           <span className={styles.label}>Имя:</span>
@@ -30,7 +37,7 @@ const ClientModal = ({ onClose }) => {
         </div>
         <div className={styles.infoRow}>
           <span className={styles.label}>Статус:</span>
-          <span className={styles.value}>{selectedUser.role === 'Consultant' ? 'Консультант' : 'Кандидат'}</span>
+          <span className={styles.value}>{isConsultant ? 'Консультант' : 'Кандидат'}</span>
         </div>
         <div className={styles.infoRow}>
           <span className={styles.label}>Почта:</span>
@@ -48,18 +55,26 @@ const ClientModal = ({ onClose }) => {
           <span className={styles.label}>Ник в Телеграм:</span>
           <span className={styles.value}>{selectedUser.nick || '—'}</span>
         </div>
-        <div className={styles.infoRow}>
-          <span className={styles.label}>Уровень:</span>
-          <span className={styles.value}>{selectedUser.level}</span>
-        </div>
-        <div className={styles.infoRow}>
-          <span className={styles.label}>Личные продажи:</span>
-          <span className={styles.value}>{selectedUser.score}</span>
-        </div>
-        <div className={styles.infoRow}>
-          <span className={styles.label}>Групповые продажи:</span>
-          <span className={styles.value}>{selectedUser.groupScore}</span>
-        </div>
+        {isConsultant && (
+          <>
+            <div className={styles.infoRow}>
+              <span className={styles.label}>Уровень:</span>
+              <span className={styles.value}>{selectedUser.level}</span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.label}>Уровень подтвержден:</span>
+              <span className={styles.value}>{selectedUser.levelConfirmed ? 'Да' : 'Нет'}</span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.label}>Личные продажи:</span>
+              <span className={styles.value}>{selectedUser.score}</span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.label}>Групповые продажи:</span>
+              <span className={styles.value}>{selectedUser.groupScore}</span>
+            </div>
+          </>
+        )}
         <div className={styles.infoRow}>
           <span className={styles.label}>Родитель:</span>
           <span className={styles.value}>{parentName()}</span>
@@ -70,9 +85,11 @@ const ClientModal = ({ onClose }) => {
         <button className={styles.actionButton} onClick={() => setShowChangeParent(true)}>
           Изменить родителя
         </button>
-        <button className={styles.actionButton} onClick={() => {}}>
-          Изменить достижения
-        </button>
+        {isConsultant && (
+          <button className={styles.actionButton} onClick={() => setShowUpdateModal(true)}>
+            Изменить достижения
+          </button>
+        )}
       </div>
     </Modal>
   )

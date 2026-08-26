@@ -55,6 +55,7 @@ export default fp(async (fastify) => {
             firstName: true,
             lastName: true,
             level: true,
+            levelConfirmed: true,
             role: true,
             email: true,
             phone: true,
