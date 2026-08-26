@@ -54,6 +54,10 @@ const ClientModal = ({ onClose }) => {
           <span className={styles.value}>{selectedUser.level}</span>
         </div>
         <div className={styles.infoRow}>
+          <span className={styles.label}>Уровень подтвержден:</span>
+          <span className={styles.value}>{selectedUser.levelConfirmed ? 'Да' : 'Нет'}</span>
+        </div>
+        <div className={styles.infoRow}>
           <span className={styles.label}>Личные продажи:</span>
           <span className={styles.value}>{selectedUser.score}</span>
         </div>

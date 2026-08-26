@@ -33,15 +33,15 @@ enum InteractionStatus {
 }
 
 model Company {
-  id              Int      @id @default(autoincrement())
-  name            String   @unique
+  id              Int             @id @default(autoincrement())
+  name            String          @unique
   primaryWallet   String?
   secondaryWallet String?
   users           User[]
   serviceWallets  ServiceWallet[]
   payments        Payment[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 }
 
 model UsedInvite {
@@ -51,31 +51,32 @@ model UsedInvite {
 }
 
 model User {
-  id               Int      @id @default(autoincrement())
-  email           String   @unique
-  password        String
-  role            UserRole @default(Candidate)
-  companyId        Int
-  company         Company  @relation(fields: [companyId], references: [id])
-  nick            String?  @unique
-  firstName        String?
-  lastName         String?
-  phone            String   @unique
-  level           Int      @default(0)
-  score           Int      @default(0)
-  groupScore      Int      @default(0)
-  memberId        String?  @unique
-  parentId         Int?
-  parent          User?    @relation("UserParent", fields: [parentId], references: [id])
-  children        User[]   @relation("UserParent")
-  wallet          String?
-  confirmationCode String?
-  orders                  Order[]
-  payments                Payment[]
-  initiatedInteractions   Interaction[] @relation("InitiatorInteractions")
-  targetedInteractions    Interaction[] @relation("TargetInteractions")
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
+  id                    Int           @id @default(autoincrement())
+  email                 String        @unique
+  password              String
+  role                  UserRole      @default(Candidate)
+  companyId             Int
+  company               Company       @relation(fields: [companyId], references: [id])
+  nick                  String?       @unique
+  firstName             String?
+  lastName              String?
+  phone                 String        @unique
+  level                 Int           @default(0)
+  levelConfirmed        Boolean       @default(true)
+  score                 Int           @default(0)
+  groupScore            Int           @default(0)
+  memberId              String?       @unique
+  parentId              Int?
+  parent                User?         @relation("UserParent", fields: [parentId], references: [id])
+  children              User[]        @relation("UserParent")
+  wallet                String?
+  confirmationCode      String?
+  orders                Order[]
+  payments              Payment[]
+  initiatedInteractions Interaction[] @relation("InitiatorInteractions")
+  targetedInteractions  Interaction[] @relation("TargetInteractions")
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
 }
 
 model ServiceWallet {
@@ -131,18 +132,18 @@ model Payment {
 }
 
 model Interaction {
-  id            Int               @id @default(autoincrement())
-  status        InteractionStatus @default(Open)
-  plannedAt     DateTime
-  completedAt   DateTime?
-  description   String
-  reminderSent  Boolean           @default(false)
-  initiatorId   Int?
-  initiator     User?             @relation("InitiatorInteractions", fields: [initiatorId], references: [id])
-  targetId      Int
-  target        User              @relation("TargetInteractions", fields: [targetId], references: [id])
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  id           Int               @id @default(autoincrement())
+  status       InteractionStatus @default(Open)
+  plannedAt    DateTime
+  completedAt  DateTime?
+  description  String
+  reminderSent Boolean           @default(false)
+  initiatorId  Int?
+  initiator    User?             @relation("InitiatorInteractions", fields: [initiatorId], references: [id])
+  targetId     Int
+  target       User              @relation("TargetInteractions", fields: [targetId], references: [id])
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
 
   @@index([initiatorId])
   @@index([targetId])

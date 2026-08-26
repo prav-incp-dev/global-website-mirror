@@ -43,6 +43,7 @@ CREATE TABLE "User" (
     "lastName" TEXT,
     "phone" TEXT NOT NULL,
     "level" INTEGER NOT NULL DEFAULT 0,
+    "levelConfirmed" BOOLEAN NOT NULL DEFAULT true,
     "score" INTEGER NOT NULL DEFAULT 0,
     "groupScore" INTEGER NOT NULL DEFAULT 0,
     "memberId" TEXT,
