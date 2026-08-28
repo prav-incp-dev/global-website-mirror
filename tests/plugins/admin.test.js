@@ -230,6 +230,29 @@ describe('admin plugin', () => {
 
       expect(count).toBe(0)
     })
+
+    it('filters orphans by email (case-insensitive)', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+      const adminUser = { company: { id: company.id } }
+
+      await createTestUser(app, company.id, {
+        email: 'matchme@test.com',
+        firstName: 'Alice',
+        lastName: 'Smith',
+        parentId: null,
+      })
+      await createTestUser(app, company.id, {
+        email: 'other@test.com',
+        firstName: 'Bob',
+        lastName: 'Jones',
+        parentId: null,
+      })
+
+      const count = await app.admin.getOrphansCount(adminUser, 'matchme')
+
+      expect(count).toBe(1)
+    })
   })
 
   describe('getClients', () => {
@@ -427,6 +450,29 @@ describe('admin plugin', () => {
       expect(result.total).toBe(10)
       expect(result.limit).toBe(3)
       expect(result.totalPages).toBe(4)
+    })
+
+    it('filters by email (case-insensitive)', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+      const adminUser = { company: { id: company.id } }
+
+      await createTestUser(app, company.id, {
+        email: 'matchme-email@test.com',
+        firstName: 'Alice',
+        lastName: 'Smith',
+      })
+      await createTestUser(app, company.id, {
+        email: 'other-email@test.com',
+        firstName: 'Bob',
+        lastName: 'Jones',
+      })
+
+      const result = await app.admin.getClients(adminUser, 1, 20, 'matchme-email')
+
+      expect(result.users).toHaveLength(1)
+      expect(result.users[0].email).toBe('matchme-email@test.com')
+      expect(result.total).toBe(1)
     })
   })
 })

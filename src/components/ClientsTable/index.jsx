@@ -128,7 +128,7 @@ const ClientsTableInner = () => {
         <input
           type="text"
           className={styles.searchInput}
-          placeholder="Поиск по имени..."
+          placeholder="Поиск (имя, почта)"
           value={query}
           onChange={handleSearchChange}
         />

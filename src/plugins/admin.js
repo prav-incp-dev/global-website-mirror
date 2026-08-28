@@ -23,6 +23,7 @@ export default fp(async (fastify) => {
                 OR: [
                   { firstName: { contains: query, mode: 'insensitive' } },
                   { lastName: { contains: query, mode: 'insensitive' } },
+                  { email: { contains: query, mode: 'insensitive' } },
                 ],
               }
             : {}),
@@ -42,6 +43,7 @@ export default fp(async (fastify) => {
               OR: [
                 { firstName: { contains: query, mode: 'insensitive' } },
                 { lastName: { contains: query, mode: 'insensitive' } },
+                { email: { contains: query, mode: 'insensitive' } },
               ],
             }
           : {}),
