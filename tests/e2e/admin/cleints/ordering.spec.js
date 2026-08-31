@@ -10,7 +10,7 @@ test.describe('ordering clients', () => {
     const company = await prisma.company.create({
       data: {
         name: 'Ordering Test Company',
-        primaryWallet: '0x1111111111111111111111111111111111111111',
+        wallet: '0x1111111111111111111111111111111111111111',
       },
     })
 

@@ -11,7 +11,7 @@ test.describe('admin clients page', () => {
     const company = await prisma.company.create({
       data: {
         name: 'Orphan Reassign Test Company',
-        primaryWallet: '0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
+        wallet: '0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
       },
     })
 

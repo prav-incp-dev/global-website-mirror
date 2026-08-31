@@ -29,12 +29,12 @@ export const resetDatabase = async () => {
   // TRUNCATE with RESTART IDENTITY CASCADE handles FK constraints
   // regardless of table order and resets any sequences.
   // Keep this table list in sync with Prisma models used by E2E scenarios.
-  await prisma.$executeRaw`TRUNCATE TABLE "Payment", "Order", "User", "Company", "ServiceWallet", "UsedInvite" RESTART IDENTITY CASCADE`
+  await prisma.$executeRaw`TRUNCATE TABLE "Wage", "Payment", "Order", "User", "Company", "ServiceWallet", "UsedInvite" RESTART IDENTITY CASCADE`
 
   const company = await prisma.company.create({
     data: {
       name: 'Our House MLM',
-      primaryWallet: '0x1111111111111111111111111111111111111111',
+      wallet: '0x1111111111111111111111111111111111111111',
     },
   })
 

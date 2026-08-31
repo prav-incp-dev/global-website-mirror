@@ -20,7 +20,7 @@ export default async (fastify) => {
         return reply.code(403).send({ error: 'Доступ запрещен' })
       }
 
-      if (!user.company?.primaryWallet) {
+      if (!user.company?.wallet) {
         return reply.code(409).send({ error: 'У компании не указан кошелек для приема платежей' })
       }
 
@@ -43,7 +43,7 @@ export default async (fastify) => {
                 tokenContract: usdtAddress,
                 tokenDecimals: usdtDecimals,
                 chainId,
-                toWallet: user.company.primaryWallet,
+                toWallet: user.company.wallet,
                 status: PaymentStatus.Pending,
               },
             },

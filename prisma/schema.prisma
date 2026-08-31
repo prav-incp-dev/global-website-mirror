@@ -33,15 +33,15 @@ enum InteractionStatus {
 }
 
 model Company {
-  id              Int             @id @default(autoincrement())
-  name            String          @unique
-  primaryWallet   String?
-  secondaryWallet String?
-  users           User[]
-  serviceWallets  ServiceWallet[]
-  payments        Payment[]
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  id             Int             @id @default(autoincrement())
+  name           String          @unique
+  wallet         String?
+  users          User[]
+  serviceWallets ServiceWallet[]
+  wages          Wage[]
+  payments       Payment[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
 model UsedInvite {
@@ -74,6 +74,7 @@ model User {
   confirmationCode      String?
   orders                Order[]
   payments              Payment[]
+  wages                 Wage[]
   initiatedInteractions Interaction[] @relation("InitiatorInteractions")
   targetedInteractions  Interaction[] @relation("TargetInteractions")
   createdAt             DateTime      @default(now())
@@ -82,12 +83,38 @@ model User {
 
 model ServiceWallet {
   id        Int      @id @default(autoincrement())
-  name      String
-  number    String   @unique
+  name      String   @unique
+  address   String?  @unique
+  percent   Decimal  @db.Decimal(4, 1)
   companyId Int
   company   Company  @relation(fields: [companyId], references: [id])
+  wages     Wage[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Wage {
+  id              Int            @id @default(autoincrement())
+  companyId       Int
+  company         Company        @relation(fields: [companyId], references: [id])
+  userId          Int?
+  user            User?          @relation(fields: [userId], references: [id])
+  serviceWalletId Int?
+  serviceWallet   ServiceWallet? @relation(fields: [serviceWalletId], references: [id])
+  paymentId       Int?
+  payment         Payment?       @relation(fields: [paymentId], references: [id])
+  fromWallet      String?
+  toWallet        String?
+  score           Int            @default(0)
+  groupScore      Int            @default(0)
+  amount          Decimal        @default(0.00) @db.Decimal(12, 2)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([companyId])
+  @@index([userId])
+  @@index([serviceWalletId])
+  @@index([paymentId])
 }
 
 model Order {
@@ -124,6 +151,7 @@ model Payment {
   status            PaymentStatus @default(Pending)
   cancelRequestedAt DateTime?
   canceledAt        DateTime?
+  wages             Wage[]
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 

@@ -42,7 +42,7 @@ export const getData = async ({ server, req, reply }) => {
       score: user.score,
       groupScore: user.groupScore,
       companyName: user.company?.name ?? null,
-      companyPrimaryWallet: user.company?.primaryWallet ?? null,
+      companyWallet: user.company?.wallet ?? null,
     },
     currentUserId,
     payments,

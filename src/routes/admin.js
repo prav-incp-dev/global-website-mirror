@@ -51,13 +51,7 @@ export default async (fastify) => {
         required: ['name'],
         properties: {
           name: { type: 'string' },
-          primaryWallet: {
-            anyOf: [
-              { type: 'string', format: 'wallet' },
-              { type: 'string', maxLength: 0 },
-            ],
-          },
-          secondaryWallet: {
+          wallet: {
             anyOf: [
               { type: 'string', format: 'wallet' },
               { type: 'string', maxLength: 0 },
@@ -72,15 +66,14 @@ export default async (fastify) => {
         return reply.code(403).send({ error: 'Доступ запрещен' })
       }
 
-      const { name, primaryWallet, secondaryWallet } = req.body
+      const { name, wallet } = req.body
 
       try {
         const company = await fastify.prisma.company.update({
           where: { id: user.company.id },
           data: {
             name,
-            primaryWallet: primaryWallet || null,
-            secondaryWallet: secondaryWallet || null,
+            wallet: wallet || null,
           },
         })
 
@@ -89,8 +82,7 @@ export default async (fastify) => {
           company: {
             id: company.id,
             name: company.name,
-            primaryWallet: company.primaryWallet,
-            secondaryWallet: company.secondaryWallet,
+            wallet: company.wallet,
           },
         })
       } catch (err) {

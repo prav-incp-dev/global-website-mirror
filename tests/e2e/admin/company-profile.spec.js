@@ -17,38 +17,34 @@ test.describe('admin manages company profile', () => {
 
     // Update all fields
     await page.locator('#name').fill(updatedName)
-    await page.locator('#primaryWallet').fill('0x1234567890abcdef1234567890abcdef12345678')
-    await page.locator('#secondaryWallet').fill('0xabcdef1234567890abcdef1234567890abcdef12')
+    await page.locator('#wallet').fill('0x1234567890abcdef1234567890abcdef12345678')
     await page.getByRole('button', { name: 'Сохранить' }).click()
 
     // Verify view mode shows updated data
     await expect(page.getByText(updatedName)).toBeVisible()
     await expect(page.getByText('0x12345678...12345678')).toBeVisible()
-    await expect(page.getByText('0xabcdef12...abcdef12')).toBeVisible()
 
-    // Clear wallets
+    // Clear wallet
     await page.getByRole('button', { name: 'Редактировать' }).click()
-    await page.locator('#primaryWallet').fill('')
-    await page.locator('#secondaryWallet').fill('')
+    await page.locator('#wallet').fill('')
     await page.getByRole('button', { name: 'Сохранить' }).click()
-    await expect(page.getByText('—')).toHaveCount(2)
+    await expect(page.getByText('—')).toHaveCount(1)
 
     await page.getByRole('button', { name: 'Профиль администратора' }).click()
     await page.getByRole('button', { name: 'Профиль компании' }).click()
     await expect(page.getByText(updatedName)).toBeVisible()
   })
 
-  test('shows validation error for invalid primary wallet', async ({ loginAs, page }) => {
+  test('shows validation error for invalid wallet', async ({ loginAs, page }) => {
     await loginAs(1)
     await navigateToCompanyTab(page)
     await page.getByRole('button', { name: 'Редактировать' }).click()
 
-    await page.locator('#primaryWallet').fill('invalid-wallet-format')
-    await page.locator('#secondaryWallet').fill('bad-wallet')
+    await page.locator('#wallet').fill('invalid-wallet-format')
     await page.getByRole('button', { name: 'Сохранить' }).click()
 
     // Client-side validation from react-hook-form pattern
-    await expect(page.getByText('Неверный формат кошелька')).toHaveCount(2)
+    await expect(page.getByText('Неверный формат кошелька')).toHaveCount(1)
   })
 
   test('shows error when company name is already taken', async ({ loginAs, page }) => {

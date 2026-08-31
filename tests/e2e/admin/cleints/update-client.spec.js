@@ -11,7 +11,7 @@ test.describe('update client achievements flow', () => {
     const company = await prisma.company.create({
       data: {
         name: 'Achievements Test Company',
-        primaryWallet: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+        wallet: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
       },
     })
 

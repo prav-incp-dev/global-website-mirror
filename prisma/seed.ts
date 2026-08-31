@@ -21,17 +21,28 @@ try {
 
   const companyData = {
     name: 'Our House MLM',
-    primaryWallet: '0x1111111111111111111111111111111111111111',
+    wallet: '0x1111111111111111111111111111111111111111',
   }
 
   const company = await prisma.company.upsert({
     where: { name: companyData.name },
     update: {
-      primaryWallet: companyData.primaryWallet,
+      wallet: companyData.wallet,
     },
     create: companyData,
   })
-  const companyPrimaryWallet = company.primaryWallet || companyData.primaryWallet
+  const companyWallet = company.wallet || companyData.wallet
+
+  await prisma.serviceWallet.upsert({
+    where: { name: 'Накопительный' },
+    update: {},
+    create: {
+      name: 'Накопительный',
+      address: '0x1111111111111111111111111111111111111111',
+      percent: 40,
+      companyId: company.id,
+    },
+  })
 
   const adminData = {
     password: passwordHash,
@@ -126,7 +137,7 @@ try {
             chainId: 97,
             txHash: sampleTxHash,
             fromWallet: '0x2222222222222222222222222222222222222222',
-            toWallet: companyPrimaryWallet,
+            toWallet: companyWallet,
             status: PaymentStatus.Completed,
           },
         },

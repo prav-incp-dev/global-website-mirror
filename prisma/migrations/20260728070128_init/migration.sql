@@ -14,8 +14,7 @@ CREATE TYPE "InteractionStatus" AS ENUM ('Open', 'Closed');
 CREATE TABLE "Company" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
-    "primaryWallet" TEXT,
-    "secondaryWallet" TEXT,
+    "wallet" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -61,12 +60,31 @@ CREATE TABLE "User" (
 CREATE TABLE "ServiceWallet" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
-    "number" TEXT NOT NULL,
+    "address" TEXT,
+    "percent" DECIMAL(4,1) NOT NULL,
     "companyId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "ServiceWallet_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Wage" (
+    "id" SERIAL NOT NULL,
+    "companyId" INTEGER NOT NULL,
+    "userId" INTEGER,
+    "serviceWalletId" INTEGER,
+    "paymentId" INTEGER,
+    "fromWallet" TEXT,
+    "toWallet" TEXT,
+    "score" INTEGER NOT NULL DEFAULT 0,
+    "groupScore" INTEGER NOT NULL DEFAULT 0,
+    "amount" DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Wage_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -124,7 +142,22 @@ CREATE UNIQUE INDEX "User_phone_key" ON "User"("phone");
 CREATE UNIQUE INDEX "User_memberId_key" ON "User"("memberId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ServiceWallet_number_key" ON "ServiceWallet"("number");
+CREATE UNIQUE INDEX "ServiceWallet_name_key" ON "ServiceWallet"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ServiceWallet_address_key" ON "ServiceWallet"("address");
+
+-- CreateIndex
+CREATE INDEX "Wage_companyId_idx" ON "Wage"("companyId");
+
+-- CreateIndex
+CREATE INDEX "Wage_userId_idx" ON "Wage"("userId");
+
+-- CreateIndex
+CREATE INDEX "Wage_serviceWalletId_idx" ON "Wage"("serviceWalletId");
+
+-- CreateIndex
+CREATE INDEX "Wage_paymentId_idx" ON "Wage"("paymentId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Payment_orderId_key" ON "Payment"("orderId");
@@ -155,6 +188,18 @@ ALTER TABLE "User" ADD CONSTRAINT "User_parentId_fkey" FOREIGN KEY ("parentId") 
 
 -- AddForeignKey
 ALTER TABLE "ServiceWallet" ADD CONSTRAINT "ServiceWallet_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Wage" ADD CONSTRAINT "Wage_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Wage" ADD CONSTRAINT "Wage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Wage" ADD CONSTRAINT "Wage_serviceWalletId_fkey" FOREIGN KEY ("serviceWalletId") REFERENCES "ServiceWallet"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Wage" ADD CONSTRAINT "Wage_paymentId_fkey" FOREIGN KEY ("paymentId") REFERENCES "Payment"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Order" ADD CONSTRAINT "Order_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

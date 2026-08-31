@@ -10,7 +10,7 @@ const Payments = ({ profile, initialPayments = [], csrfToken }) => {
   const [modalOpen, setModalOpen] = useState(false)
   const [payments, setPayments] = useState(initialPayments)
   const hasWallet = Boolean(profile?.wallet)
-  const hasCompanyWallet = Boolean(profile?.companyPrimaryWallet)
+  const hasCompanyWallet = Boolean(profile?.companyWallet)
 
   const buyDisabledReason = useMemo(() => {
     if (!hasWallet) return 'Для совершения покупок необходимо добавить кошелёк в профиле'

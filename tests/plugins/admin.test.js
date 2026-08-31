@@ -43,8 +43,7 @@ describe('admin plugin', () => {
       const foundCompany = {
         id: 1,
         name: 'Our House MLM',
-        primaryWallet: '0x1234567890abcdef1234567890abcdef12345678',
-        secondaryWallet: null,
+        wallet: '0x1234567890abcdef1234567890abcdef12345678',
       }
 
       const app = await createApp()

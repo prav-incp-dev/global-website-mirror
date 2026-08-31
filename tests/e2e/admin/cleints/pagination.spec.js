@@ -11,7 +11,7 @@ test.describe('admin clients page', () => {
     const company = await prisma.company.create({
       data: {
         name: 'Test Company',
-        primaryWallet: '0x9999999999999999999999999999999999999999',
+        wallet: '0x9999999999999999999999999999999999999999',
       },
     })
 

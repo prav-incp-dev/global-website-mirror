@@ -14,15 +14,9 @@ const ViewProfile = ({ company, onEdit }) => {
         <span className={styles.value}>{company?.name || '—'}</span>
       </div>
       <div className={styles.row}>
-        <span className={styles.label}>Распределительный счет</span>
-        <span className={styles.value} title={company?.primaryWallet || '—'}>
-          {walletPreview(company?.primaryWallet)}
-        </span>
-      </div>
-      <div className={styles.row}>
-        <span className={styles.label}>Накопительный счет</span>
-        <span className={styles.value} title={company?.secondaryWallet || '—'}>
-          {walletPreview(company?.secondaryWallet)}
+        <span className={styles.label}>Распределительный счет компании</span>
+        <span className={styles.value} title={company?.wallet || '—'}>
+          {walletPreview(company?.wallet)}
         </span>
       </div>
 

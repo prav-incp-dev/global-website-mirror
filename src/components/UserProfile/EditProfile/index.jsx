@@ -137,7 +137,7 @@ const EditProfile = ({ profile, csrfToken, onUpdate, onCancel }) => {
         </div>
 
         <div className={styles.formField}>
-          <label htmlFor="primaryWallet" className={styles.label}>
+          <label htmlFor="wallet" className={styles.label}>
             Номер кошелька в сети BNB
           </label>
           <input

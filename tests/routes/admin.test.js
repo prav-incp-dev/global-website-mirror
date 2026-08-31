@@ -224,7 +224,7 @@ describe('PUT /api/admin/company', () => {
     expect(response.json().message).toContain('required')
   })
 
-  it('returns 400 when primaryWallet has invalid format', async () => {
+  it('returns 400 when wallet has invalid format', async () => {
     const adminUser = {
       id: 1,
       email: 'admin@example.com',
@@ -240,36 +240,12 @@ describe('PUT /api/admin/company', () => {
       url: '/api/admin/company',
       payload: {
         name: 'Test Company',
-        primaryWallet: 'invalid-wallet',
+        wallet: 'invalid-wallet',
       },
     })
 
     expect(response.statusCode).toBe(400)
-    expect(response.json().message).toContain('primaryWallet')
-  })
-
-  it('returns 400 when secondaryWallet has invalid format', async () => {
-    const adminUser = {
-      id: 1,
-      email: 'admin@example.com',
-      role: 'Admin',
-      company: { id: 1 },
-    }
-
-    const app = await createApp()
-    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
-
-    const response = await app.inject({
-      method: 'PUT',
-      url: '/api/admin/company',
-      payload: {
-        name: 'Test Company',
-        secondaryWallet: 'invalid-wallet',
-      },
-    })
-
-    expect(response.statusCode).toBe(400)
-    expect(response.json().message).toContain('secondaryWallet')
+    expect(response.json().message).toContain('wallet')
   })
 
   it('returns 409 when company name is already taken', async () => {
@@ -330,8 +306,7 @@ describe('PUT /api/admin/company', () => {
     const updatedCompany = {
       id: 1,
       name: 'Updated Company',
-      primaryWallet: '0x1234567890abcdef1234567890abcdef12345678',
-      secondaryWallet: null,
+      wallet: '0x1234567890abcdef1234567890abcdef12345678',
     }
 
     const app = await createApp()
@@ -343,7 +318,7 @@ describe('PUT /api/admin/company', () => {
       url: '/api/admin/company',
       payload: {
         name: 'Updated Company',
-        primaryWallet: '0x1234567890abcdef1234567890abcdef12345678',
+        wallet: '0x1234567890abcdef1234567890abcdef12345678',
       },
     })
 
@@ -353,21 +328,19 @@ describe('PUT /api/admin/company', () => {
       company: {
         id: 1,
         name: 'Updated Company',
-        primaryWallet: '0x1234567890abcdef1234567890abcdef12345678',
-        secondaryWallet: null,
+        wallet: '0x1234567890abcdef1234567890abcdef12345678',
       },
     })
     expect(app.prisma.company.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: {
         name: 'Updated Company',
-        primaryWallet: '0x1234567890abcdef1234567890abcdef12345678',
-        secondaryWallet: null,
+        wallet: '0x1234567890abcdef1234567890abcdef12345678',
       },
     })
   })
 
-  it('returns 200 when wallets are empty strings', async () => {
+  it('returns 200 when wallet is an empty string', async () => {
     const adminUser = {
       id: 1,
       email: 'admin@example.com',
@@ -378,8 +351,7 @@ describe('PUT /api/admin/company', () => {
     const updatedCompany = {
       id: 1,
       name: 'Test Company',
-      primaryWallet: null,
-      secondaryWallet: null,
+      wallet: null,
     }
 
     const app = await createApp()
@@ -391,8 +363,7 @@ describe('PUT /api/admin/company', () => {
       url: '/api/admin/company',
       payload: {
         name: 'Test Company',
-        primaryWallet: '',
-        secondaryWallet: '',
+        wallet: '',
       },
     })
 
@@ -402,16 +373,14 @@ describe('PUT /api/admin/company', () => {
       company: {
         id: 1,
         name: 'Test Company',
-        primaryWallet: null,
-        secondaryWallet: null,
+        wallet: null,
       },
     })
     expect(app.prisma.company.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: {
         name: 'Test Company',
-        primaryWallet: null,
-        secondaryWallet: null,
+        wallet: null,
       },
     })
   })
@@ -629,7 +598,7 @@ describe('GET /api/admin/clients/search', () => {
     const app = await createApp()
 
     const company = await app.prisma.company.create({
-      data: { name: 'Search Test Company 1', primaryWallet: '0x1111111111111111111111111111111111111111' },
+      data: { name: 'Search Test Company 1', wallet: '0x1111111111111111111111111111111111111111' },
     })
 
     const adminUser = {
@@ -688,7 +657,7 @@ describe('GET /api/admin/clients/search', () => {
     const app = await createApp()
 
     const company = await app.prisma.company.create({
-      data: { name: 'Search Test Company 2', primaryWallet: '0x2222222222222222222222222222222222222222' },
+      data: { name: 'Search Test Company 2', wallet: '0x2222222222222222222222222222222222222222' },
     })
 
     const adminUser = {
@@ -745,7 +714,7 @@ describe('GET /api/admin/clients/search', () => {
     const app = await createApp()
 
     const company = await app.prisma.company.create({
-      data: { name: 'Search Test Company 3', primaryWallet: '0x3333333333333333333333333333333333333333' },
+      data: { name: 'Search Test Company 3', wallet: '0x3333333333333333333333333333333333333333' },
     })
 
     const adminUser = {
@@ -785,7 +754,7 @@ describe('GET /api/admin/clients/search', () => {
     const app = await createApp()
 
     const company = await app.prisma.company.create({
-      data: { name: 'Search Test Company 4', primaryWallet: '0x4444444444444444444444444444444444444444' },
+      data: { name: 'Search Test Company 4', wallet: '0x4444444444444444444444444444444444444444' },
     })
 
     const adminUser = {
@@ -826,7 +795,7 @@ describe('GET /api/admin/clients/search', () => {
     const app = await createApp()
 
     const company = await app.prisma.company.create({
-      data: { name: 'Search Test Company 5', primaryWallet: '0x5555555555555555555555555555555555555555' },
+      data: { name: 'Search Test Company 5', wallet: '0x5555555555555555555555555555555555555555' },
     })
 
     const adminUser = {
@@ -887,11 +856,11 @@ describe('GET /api/admin/clients/search', () => {
     const app = await createApp()
 
     const companyA = await app.prisma.company.create({
-      data: { name: 'Search Test Company A', primaryWallet: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1' },
+      data: { name: 'Search Test Company A', wallet: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1' },
     })
 
     const companyB = await app.prisma.company.create({
-      data: { name: 'Search Test Company B', primaryWallet: '0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB' },
+      data: { name: 'Search Test Company B', wallet: '0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB' },
     })
 
     const adminUser = {
@@ -950,7 +919,7 @@ describe('GET /api/admin/clients/search', () => {
     const app = await createApp()
 
     const company = await app.prisma.company.create({
-      data: { name: 'Search Test Company 6', primaryWallet: '0x6666666666666666666666666666666666666666' },
+      data: { name: 'Search Test Company 6', wallet: '0x6666666666666666666666666666666666666666' },
     })
 
     const adminUser = {
@@ -1116,7 +1085,7 @@ describe('PUT /api/admin/user/parent', () => {
     const app = await createApp()
 
     const company = await app.prisma.company.create({
-      data: { name: 'Self Parent Test Company', primaryWallet: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2' },
+      data: { name: 'Self Parent Test Company', wallet: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2' },
     })
 
     const user = await app.prisma.user.create({
@@ -1158,11 +1127,11 @@ describe('PUT /api/admin/user/parent', () => {
     const app = await createApp()
 
     const companyA = await app.prisma.company.create({
-      data: { name: 'Company A for Cross Company', primaryWallet: '0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB' },
+      data: { name: 'Company A for Cross Company', wallet: '0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB' },
     })
 
     const companyB = await app.prisma.company.create({
-      data: { name: 'Company B for Cross Company', primaryWallet: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' },
+      data: { name: 'Company B for Cross Company', wallet: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' },
     })
 
     const userInCompanyB = await app.prisma.user.create({
@@ -1204,7 +1173,7 @@ describe('PUT /api/admin/user/parent', () => {
     const app = await createApp()
 
     const company = await app.prisma.company.create({
-      data: { name: 'Parent Not Found Company', primaryWallet: '0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD' },
+      data: { name: 'Parent Not Found Company', wallet: '0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD' },
     })
 
     const user = await app.prisma.user.create({
@@ -1246,11 +1215,11 @@ describe('PUT /api/admin/user/parent', () => {
     const app = await createApp()
 
     const companyA = await app.prisma.company.create({
-      data: { name: 'Parent Cross Company A', primaryWallet: '0xEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE' },
+      data: { name: 'Parent Cross Company A', wallet: '0xEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE' },
     })
 
     const companyB = await app.prisma.company.create({
-      data: { name: 'Parent Cross Company B', primaryWallet: '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF' },
+      data: { name: 'Parent Cross Company B', wallet: '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF' },
     })
 
     const userInCompanyA = await app.prisma.user.create({
@@ -1303,7 +1272,7 @@ describe('PUT /api/admin/user/parent', () => {
     const app = await createApp()
 
     const company = await app.prisma.company.create({
-      data: { name: 'Success Parent Update Company', primaryWallet: '0x1111111111111111111111111111111111111111' },
+      data: { name: 'Success Parent Update Company', wallet: '0x1111111111111111111111111111111111111111' },
     })
 
     const targetUser = await app.prisma.user.create({
@@ -1368,7 +1337,7 @@ describe('PUT /api/admin/user/parent', () => {
     const app = await createApp()
 
     const company = await app.prisma.company.create({
-      data: { name: 'Orphan Clear Company', primaryWallet: '0x3333333333333333333333333333333333333333' },
+      data: { name: 'Orphan Clear Company', wallet: '0x3333333333333333333333333333333333333333' },
     })
 
     const targetUser = await app.prisma.user.create({
@@ -1432,7 +1401,7 @@ describe('PUT /api/admin/user/parent', () => {
     const app = await createApp()
 
     const company = await app.prisma.company.create({
-      data: { name: 'Null Parent Update Company', primaryWallet: '0x2222222222222222222222222222222222222222' },
+      data: { name: 'Null Parent Update Company', wallet: '0x2222222222222222222222222222222222222222' },
     })
 
     const parentUser = await app.prisma.user.create({
@@ -1520,7 +1489,7 @@ describe('PUT /api/admin/user', () => {
 
   const createCompany = async (app, name, wallet) => {
     return app.prisma.company.create({
-      data: { name, primaryWallet: wallet },
+      data: { name, wallet: wallet },
     })
   }
 

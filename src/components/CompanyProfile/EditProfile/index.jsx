@@ -15,8 +15,7 @@ const EditProfile = ({ company, csrfToken, onUpdate, onCancel }) => {
   } = useForm({
     defaultValues: {
       name: company?.name || '',
-      primaryWallet: company?.primaryWallet || '',
-      secondaryWallet: company?.secondaryWallet || '',
+      wallet: company?.wallet || '',
     },
   })
 
@@ -71,42 +70,23 @@ const EditProfile = ({ company, csrfToken, onUpdate, onCancel }) => {
           {errors.name && <span className={styles.fieldError}>{errors.name.message}</span>}
         </div>
 
-        <div className={styles.formField}>
-          <label htmlFor="primaryWallet" className={styles.label}>
-            Распределительный счет
-          </label>
-          <input
-            id="primaryWallet"
-            type="text"
-            placeholder="0x..."
-            className={styles.input}
-            {...register('primaryWallet', {
-              pattern: {
-                value: WALLET_REGEXP,
-                message: 'Неверный формат кошелька',
-              },
-            })}
-          />
-          {errors.primaryWallet && <span className={styles.fieldError}>{errors.primaryWallet.message}</span>}
-        </div>
-
         <div className={styles.formFieldLast}>
-          <label htmlFor="secondaryWallet" className={styles.label}>
-            Накопительный счет
+          <label htmlFor="wallet" className={styles.label}>
+            Распределительный счет компании
           </label>
           <input
-            id="secondaryWallet"
+            id="wallet"
             type="text"
             placeholder="0x..."
             className={styles.input}
-            {...register('secondaryWallet', {
+            {...register('wallet', {
               pattern: {
                 value: WALLET_REGEXP,
                 message: 'Неверный формат кошелька',
               },
             })}
           />
-          {errors.secondaryWallet && <span className={styles.fieldError}>{errors.secondaryWallet.message}</span>}
+          {errors.wallet && <span className={styles.fieldError}>{errors.wallet.message}</span>}
         </div>
 
         <div className={styles.buttonRow}>
