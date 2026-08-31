@@ -31,7 +31,7 @@ export default fp(async (fastify) => {
       })
     },
 
-    getClients: async (user, page = 1, limit = CLIENTS_PAGE_LIMIT, query = '', orphansOnly = false) => {
+    getClients: async (user, page = 1, limit = CLIENTS_PAGE_LIMIT, query = '', orphansOnly = false, sortBy = 'id') => {
       const skip = (page - 1) * limit
 
       const where = {
@@ -48,6 +48,15 @@ export default fp(async (fastify) => {
             }
           : {}),
       }
+
+      const orderByMap = {
+        name: [{ firstName: 'asc' }, { lastName: 'asc' }],
+        level: { level: 'desc' },
+        role: { role: 'asc' },
+        score: { score: 'desc' },
+        id: { id: 'desc' },
+      }
+      const orderBy = orderByMap[sortBy] ?? orderByMap.id
 
       const [users, total] = await Promise.all([
         fastify.prisma.user.findMany({
@@ -75,7 +84,7 @@ export default fp(async (fastify) => {
           },
           skip,
           take: limit,
-          orderBy: { id: 'desc' },
+          orderBy,
         }),
         fastify.prisma.user.count({ where }),
       ])

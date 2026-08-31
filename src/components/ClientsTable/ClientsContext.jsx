@@ -17,6 +17,7 @@ export const ClientsProvider = ({ initialUsers, initialPagination, initialOrphan
   const [selectedUser, setSelectedUser] = useState(null)
   const [query, setQuery] = useState('')
   const [orphansOnly, setOrphansOnly] = useState(false)
+  const [sortBy, setSortBy] = useState('id')
   const [loading, setLoading] = useState(false)
 
   const updateSelectedUser = useCallback((data) => {
@@ -25,16 +26,13 @@ export const ClientsProvider = ({ initialUsers, initialPagination, initialOrphan
   }, [])
 
   const fetchClients = useCallback(
-    async (page = pagination.page, searchQuery = query, filterOrphansOnly = orphansOnly) => {
+    async (page = pagination.page, searchQuery = query, filterOrphansOnly = orphansOnly, sortField = sortBy) => {
       setLoading(true)
       try {
         const params = new URLSearchParams({ page, limit: pagination.limit })
-        if (searchQuery) {
-          params.set('query', searchQuery)
-        }
-        if (filterOrphansOnly) {
-          params.set('orphansOnly', 'true')
-        }
+        if (searchQuery) params.set('query', searchQuery)
+        if (filterOrphansOnly) params.set('orphansOnly', 'true')
+        if (sortField) params.set('sortBy', sortField)
 
         const res = await fetch(`/api/admin/clients?${params}`, {
           headers: {
@@ -58,7 +56,7 @@ export const ClientsProvider = ({ initialUsers, initialPagination, initialOrphan
         setLoading(false)
       }
     },
-    [csrfToken, pagination.limit, pagination.page, query, orphansOnly],
+    [csrfToken, pagination.limit, pagination.page, query, orphansOnly, sortBy],
   )
 
   return (
@@ -81,6 +79,8 @@ export const ClientsProvider = ({ initialUsers, initialPagination, initialOrphan
         setQuery,
         orphansOnly,
         setOrphansOnly,
+        sortBy,
+        setSortBy,
       }}
     >
       {children}

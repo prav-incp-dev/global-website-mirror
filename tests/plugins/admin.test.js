@@ -509,5 +509,141 @@ describe('admin plugin', () => {
       expect(result.users[0].email).toBe('orphan-filter@test.com')
       expect(result.total).toBe(1)
     })
+
+    it('sorts by name (alphabetical)', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+      const adminUser = { company: { id: company.id } }
+
+      await createTestUser(app, company.id, {
+        email: 'sort-name-charlie@test.com',
+        firstName: 'Charlie',
+        lastName: 'Zeta',
+      })
+      await createTestUser(app, company.id, {
+        email: 'sort-name-alice@test.com',
+        firstName: 'Alice',
+        lastName: 'Bravo',
+      })
+      await createTestUser(app, company.id, {
+        email: 'sort-name-bob@test.com',
+        firstName: 'Bob',
+        lastName: 'Alpha',
+      })
+
+      const result = await app.admin.getClients(adminUser, 1, 20, '', false, 'name')
+
+      expect(result.users).toHaveLength(3)
+      expect(result.users[0].firstName).toBe('Alice')
+      expect(result.users[1].firstName).toBe('Bob')
+      expect(result.users[2].firstName).toBe('Charlie')
+    })
+
+    it('sorts by level (descending)', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+      const adminUser = { company: { id: company.id } }
+
+      await createTestUser(app, company.id, {
+        email: 'sort-level-high@test.com',
+        firstName: 'High',
+        level: 3,
+      })
+      await createTestUser(app, company.id, {
+        email: 'sort-level-low@test.com',
+        firstName: 'Low',
+        level: 1,
+      })
+      await createTestUser(app, company.id, {
+        email: 'sort-level-mid@test.com',
+        firstName: 'Mid',
+        level: 2,
+      })
+
+      const result = await app.admin.getClients(adminUser, 1, 20, '', false, 'level')
+
+      expect(result.users).toHaveLength(3)
+      expect(result.users[0].level).toBe(3)
+      expect(result.users[1].level).toBe(2)
+      expect(result.users[2].level).toBe(1)
+    })
+
+    it('sorts by role (ascending)', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+      const adminUser = { company: { id: company.id } }
+
+      await createTestUser(app, company.id, {
+        email: 'sort-role-consultant@test.com',
+        firstName: 'Consult',
+        role: 'Consultant',
+      })
+      await createTestUser(app, company.id, {
+        email: 'sort-role-candidate@test.com',
+        firstName: 'Candid',
+        role: 'Candidate',
+      })
+
+      const result = await app.admin.getClients(adminUser, 1, 20, '', false, 'role')
+
+      expect(result.users).toHaveLength(2)
+      expect(result.users[0].role).toBe('Candidate')
+      expect(result.users[1].role).toBe('Consultant')
+    })
+
+    it('sorts by score (descending)', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+      const adminUser = { company: { id: company.id } }
+
+      await createTestUser(app, company.id, {
+        email: 'sort-score-low@test.com',
+        firstName: 'LowScore',
+        score: 100,
+      })
+      await createTestUser(app, company.id, {
+        email: 'sort-score-high@test.com',
+        firstName: 'HighScore',
+        score: 300,
+      })
+      await createTestUser(app, company.id, {
+        email: 'sort-score-mid@test.com',
+        firstName: 'MidScore',
+        score: 200,
+      })
+
+      const result = await app.admin.getClients(adminUser, 1, 20, '', false, 'score')
+
+      expect(result.users).toHaveLength(3)
+      expect(result.users[0].score).toBe(300)
+      expect(result.users[1].score).toBe(200)
+      expect(result.users[2].score).toBe(100)
+    })
+
+    it('defaults to sorting by id descending', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+      const adminUser = { company: { id: company.id } }
+
+      const user1 = await createTestUser(app, company.id, {
+        email: 'sort-default-first@test.com',
+        firstName: 'First',
+      })
+      const user2 = await createTestUser(app, company.id, {
+        email: 'sort-default-second@test.com',
+        firstName: 'Second',
+      })
+      const user3 = await createTestUser(app, company.id, {
+        email: 'sort-default-third@test.com',
+        firstName: 'Third',
+      })
+
+      const result = await app.admin.getClients(adminUser, 1, 20, '', false)
+
+      expect(result.users).toHaveLength(3)
+      expect(result.users[0].id).toBe(user3.id)
+      expect(result.users[1].id).toBe(user2.id)
+      expect(result.users[2].id).toBe(user1.id)
+    })
   })
 })

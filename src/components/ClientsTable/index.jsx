@@ -5,6 +5,7 @@ import InfoIcon from '@/assets/icons/InfoIcon.svg?react'
 import ClientModal from './ClientModal'
 import { ClientsProvider, useClientsContext } from './ClientsContext'
 import { userName } from '@/lib/user'
+import Sorter from '../Sorter'
 
 const ClientsTableInner = () => {
   const {
@@ -19,6 +20,8 @@ const ClientsTableInner = () => {
     setQuery,
     orphansOnly,
     setOrphansOnly,
+    sortBy,
+    setSortBy,
   } = useClientsContext()
   const debounceRef = useRef(null)
 
@@ -31,19 +34,24 @@ const ClientsTableInner = () => {
     }
 
     debounceRef.current = setTimeout(() => {
-      fetchClients(1, value, orphansOnly)
+      fetchClients(1, value, orphansOnly, sortBy)
     }, 300)
   }
 
   const handlePageChange = async (newPage) => {
     if (newPage < 1 || newPage > pagination.totalPages) return
-    await fetchClients(newPage, query, orphansOnly)
+    await fetchClients(newPage, query, orphansOnly, sortBy)
   }
 
   const handleOrphansToggle = () => {
     const next = !orphansOnly
     setOrphansOnly(next)
-    fetchClients(1, query, next)
+    fetchClients(1, query, next, sortBy)
+  }
+
+  const handleSortChange = (value) => {
+    setSortBy(value)
+    fetchClients(1, query, orphansOnly, value)
   }
 
   useEffect(() => {
@@ -89,6 +97,7 @@ const ClientsTableInner = () => {
         >
           Открепленные ({orphansCount})
         </button>
+        <Sorter sortBy={sortBy} onSortChange={handleSortChange} />
         <input
           type="text"
           className={styles.searchInput}

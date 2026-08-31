@@ -484,7 +484,7 @@ describe('GET /api/admin/clients', () => {
 
     expect(response.statusCode).toBe(200)
     expect(response.json()).toEqual({ ...mockResult, orphansCount: 5 })
-    expect(app.admin.getClients).toHaveBeenCalledWith(adminUser, 1, CLIENTS_PAGE_LIMIT, '', false)
+    expect(app.admin.getClients).toHaveBeenCalledWith(adminUser, 1, CLIENTS_PAGE_LIMIT, '', false, 'id')
     expect(app.admin.getOrphansCount).toHaveBeenCalledWith(adminUser, '')
   })
 
@@ -516,7 +516,7 @@ describe('GET /api/admin/clients', () => {
 
     expect(response.statusCode).toBe(200)
     expect(response.json()).toEqual({ ...mockResult, orphansCount: 3 })
-    expect(app.admin.getClients).toHaveBeenCalledWith(adminUser, 2, 5, 'John', false)
+    expect(app.admin.getClients).toHaveBeenCalledWith(adminUser, 2, 5, 'John', false, 'id')
     expect(app.admin.getOrphansCount).toHaveBeenCalledWith(adminUser, 'John')
   })
 
@@ -548,7 +548,7 @@ describe('GET /api/admin/clients', () => {
 
     expect(response.statusCode).toBe(200)
     expect(response.json()).toEqual({ ...mockResult, orphansCount: 0 })
-    expect(app.admin.getClients).toHaveBeenCalledWith(adminUser, 1, CLIENTS_PAGE_LIMIT, '', false)
+    expect(app.admin.getClients).toHaveBeenCalledWith(adminUser, 1, CLIENTS_PAGE_LIMIT, '', false, 'id')
     expect(app.admin.getOrphansCount).toHaveBeenCalledWith(adminUser, '')
   })
 })
