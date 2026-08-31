@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useMemo } from 'react'
+import { createContext, useContext, useState, useCallback } from 'react'
 
 const ClientsContext = createContext(null)
 
@@ -14,18 +14,51 @@ export const ClientsProvider = ({ initialUsers, initialPagination, initialOrphan
   const [users, setUsers] = useState(initialUsers)
   const [pagination, setPagination] = useState(initialPagination)
   const [orphansCount, setOrphansCount] = useState(initialOrphansCount)
-  const [selectedUserId, setSelectedUserId] = useState(null)
+  const [selectedUser, setSelectedUser] = useState(null)
+  const [query, setQuery] = useState('')
+  const [orphansOnly, setOrphansOnly] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  const selectedUser = useMemo(
-    () => (selectedUserId ? (users.find((u) => u.id === selectedUserId) ?? null) : null),
-    [selectedUserId, users],
-  )
+  const updateSelectedUser = useCallback((data) => {
+    setSelectedUser((prev) => (prev ? { ...prev, ...data } : prev))
+    setUsers((prev) => prev.map((u) => (u.id === data.id ? { ...u, ...data } : u)))
+  }, [])
 
-  const updateSelectedUser = useCallback(
-    (data) => {
-      setUsers((prev) => prev.map((u) => (u.id === selectedUserId ? { ...u, ...data } : u)))
+  const fetchClients = useCallback(
+    async (page = pagination.page, searchQuery = query, filterOrphansOnly = orphansOnly) => {
+      setLoading(true)
+      try {
+        const params = new URLSearchParams({ page, limit: pagination.limit })
+        if (searchQuery) {
+          params.set('query', searchQuery)
+        }
+        if (filterOrphansOnly) {
+          params.set('orphansOnly', 'true')
+        }
+
+        const res = await fetch(`/api/admin/clients?${params}`, {
+          headers: {
+            'x-csrf-token': csrfToken,
+          },
+        })
+        const result = await res.json()
+        if (result.users) {
+          setUsers(result.users)
+          setPagination({
+            total: result.total,
+            page: result.page,
+            limit: result.limit,
+            totalPages: result.totalPages,
+          })
+          if (result.orphansCount != null) {
+            setOrphansCount(result.orphansCount)
+          }
+        }
+      } finally {
+        setLoading(false)
+      }
     },
-    [selectedUserId],
+    [csrfToken, pagination.limit, pagination.page, query, orphansOnly],
   )
 
   return (
@@ -37,11 +70,17 @@ export const ClientsProvider = ({ initialUsers, initialPagination, initialOrphan
         setPagination,
         orphansCount,
         setOrphansCount,
+        loading,
+        setLoading,
         csrfToken,
-        selectedUserId,
-        setSelectedUserId,
         selectedUser,
+        setSelectedUser,
         updateSelectedUser,
+        fetchClients,
+        query,
+        setQuery,
+        orphansOnly,
+        setOrphansOnly,
       }}
     >
       {children}

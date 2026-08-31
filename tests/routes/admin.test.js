@@ -1354,6 +1354,71 @@ describe('PUT /api/admin/user/parent', () => {
     // Verify the database was actually updated
     const updatedUser = await app.prisma.user.findUnique({ where: { id: targetUser.id } })
     expect(updatedUser.parentId).toBe(parentUser.id)
+    expect(updatedUser.orphant).toBe(false)
+  })
+
+  it('clears orphant flag when assigning a parent to an orphan', async () => {
+    const adminUser = {
+      id: 1,
+      email: 'admin@test.com',
+      role: 'Admin',
+      company: { id: 1 },
+    }
+
+    const app = await createApp()
+
+    const company = await app.prisma.company.create({
+      data: { name: 'Orphan Clear Company', primaryWallet: '0x3333333333333333333333333333333333333333' },
+    })
+
+    const targetUser = await app.prisma.user.create({
+      data: {
+        email: `orphan-to-parent-${Date.now()}@test.com`,
+        password: 'hashed',
+        role: 'Candidate',
+        firstName: 'Orphan',
+        lastName: 'Child',
+        phone: '+375291000010',
+        companyId: company.id,
+        orphant: true,
+      },
+    })
+
+    const parentUser = await app.prisma.user.create({
+      data: {
+        email: `orphan-to-parent-parent-${Date.now()}@test.com`,
+        password: 'hashed',
+        role: 'Consultant',
+        firstName: 'New',
+        lastName: 'Parent',
+        phone: '+375291000011',
+        companyId: company.id,
+      },
+    })
+
+    adminUser.company.id = company.id
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user/parent',
+      payload: {
+        userId: targetUser.id,
+        parentId: parentUser.id,
+      },
+    })
+
+    expect(response.statusCode).toBe(200)
+
+    const body = response.json()
+    expect(body.success).toBe(true)
+    expect(body.user.id).toBe(targetUser.id)
+    expect(body.user.parentId).toBe(parentUser.id)
+
+    // Verify the database was actually updated
+    const updatedUser = await app.prisma.user.findUnique({ where: { id: targetUser.id } })
+    expect(updatedUser.parentId).toBe(parentUser.id)
+    expect(updatedUser.orphant).toBe(false)
   })
 
   it('successfully sets parentId to null', async () => {
@@ -1417,6 +1482,7 @@ describe('PUT /api/admin/user/parent', () => {
     // Verify the database was actually updated
     const updatedUser = await app.prisma.user.findUnique({ where: { id: targetUser.id } })
     expect(updatedUser.parentId).toBeNull()
+    expect(updatedUser.orphant).toBe(true)
   })
 
   it('returns 500 on unexpected database error', async () => {

@@ -17,7 +17,7 @@ export default fp(async (fastify) => {
         where: {
           role: { not: 'Admin' },
           companyId: user.company.id,
-          parentId: null,
+          orphant: true,
           ...(query
             ? {
                 OR: [
@@ -37,7 +37,7 @@ export default fp(async (fastify) => {
       const where = {
         role: { not: 'Admin' },
         companyId: user.company.id,
-        ...(orphansOnly ? { parentId: null } : {}),
+        ...(orphansOnly ? { orphant: true } : {}),
         ...(query
           ? {
               OR: [

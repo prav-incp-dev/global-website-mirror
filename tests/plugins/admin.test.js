@@ -91,11 +91,13 @@ describe('admin plugin', () => {
         email: 'orphan1@test.com',
         firstName: 'Orphan',
         lastName: 'One',
+        orphant: true,
       })
       await createTestUser(app, company.id, {
         email: 'orphan2@test.com',
         firstName: 'Orphan',
         lastName: 'Two',
+        orphant: true,
       })
       const superParent = await createTestUser(app, company.id, {
         email: 'super-parent@test.com',
@@ -117,7 +119,7 @@ describe('admin plugin', () => {
 
       const count = await app.admin.getOrphansCount(adminUser)
 
-      expect(count).toBe(3)
+      expect(count).toBe(2)
     })
 
     it('returns 0 when there are no orphans', async () => {
@@ -157,7 +159,7 @@ describe('admin plugin', () => {
 
       const count = await app.admin.getOrphansCount(adminUser)
 
-      expect(count).toBe(1)
+      expect(count).toBe(0)
     })
 
     it('excludes Admin users from count', async () => {
@@ -171,6 +173,7 @@ describe('admin plugin', () => {
         firstName: 'Admin',
         lastName: 'Orphan',
         parentId: null,
+        orphant: true,
       })
       await createTestUser(app, company.id, {
         email: 'candidate-orphan@test.com',
@@ -178,6 +181,7 @@ describe('admin plugin', () => {
         firstName: 'Candidate',
         lastName: 'Orphan',
         parentId: null,
+        orphant: true,
       })
 
       const count = await app.admin.getOrphansCount(adminUser)
@@ -195,18 +199,21 @@ describe('admin plugin', () => {
         firstName: 'John',
         lastName: 'Doe',
         parentId: null,
+        orphant: true,
       })
       await createTestUser(app, company.id, {
         email: 'john2@test.com',
         firstName: 'Johnny',
         lastName: 'Smith',
         parentId: null,
+        orphant: true,
       })
       await createTestUser(app, company.id, {
         email: 'jane@test.com',
         firstName: 'Jane',
         lastName: 'Doe',
         parentId: null,
+        orphant: true,
       })
 
       const count = await app.admin.getOrphansCount(adminUser, 'John')
@@ -224,6 +231,7 @@ describe('admin plugin', () => {
         firstName: 'John',
         lastName: 'Doe',
         parentId: null,
+        orphant: true,
       })
 
       const count = await app.admin.getOrphansCount(adminUser, 'Nonexistent')
@@ -241,12 +249,14 @@ describe('admin plugin', () => {
         firstName: 'Alice',
         lastName: 'Smith',
         parentId: null,
+        orphant: true,
       })
       await createTestUser(app, company.id, {
         email: 'other@test.com',
         firstName: 'Bob',
         lastName: 'Jones',
         parentId: null,
+        orphant: true,
       })
 
       const count = await app.admin.getOrphansCount(adminUser, 'matchme')
@@ -472,6 +482,31 @@ describe('admin plugin', () => {
 
       expect(result.users).toHaveLength(1)
       expect(result.users[0].email).toBe('matchme-email@test.com')
+      expect(result.total).toBe(1)
+    })
+
+    it('filters by orphansOnly flag', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+      const adminUser = { company: { id: company.id } }
+
+      await createTestUser(app, company.id, {
+        email: 'orphan-filter@test.com',
+        firstName: 'Orphan',
+        lastName: 'User',
+        orphant: true,
+      })
+      await createTestUser(app, company.id, {
+        email: 'non-orphan-filter@test.com',
+        firstName: 'Normal',
+        lastName: 'User',
+        orphant: false,
+      })
+
+      const result = await app.admin.getClients(adminUser, 1, 20, '', true)
+
+      expect(result.users).toHaveLength(1)
+      expect(result.users[0].email).toBe('orphan-filter@test.com')
       expect(result.total).toBe(1)
     })
   })

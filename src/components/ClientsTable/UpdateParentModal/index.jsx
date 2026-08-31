@@ -5,7 +5,7 @@ import { userName } from '@/lib/user'
 import styles from './index.module.css'
 
 const UpdateParentModal = ({ onClose }) => {
-  const { csrfToken, selectedUser, updateSelectedUser } = useClientsContext()
+  const { csrfToken, selectedUser, updateSelectedUser, fetchClients } = useClientsContext()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
@@ -77,7 +77,10 @@ const UpdateParentModal = ({ onClose }) => {
         return
       }
       const result = await res.json()
-      if (result.success) updateSelectedUser(result.user)
+      if (result.success) {
+        updateSelectedUser(result.user)
+        await fetchClients()
+      }
       onClose()
     } catch {
       console.error('Ошибка при смене родителя')

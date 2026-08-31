@@ -24,7 +24,7 @@ export async function untieUsers(prisma, log = console) {
   if (ids.length > 0) {
     await prisma.user.updateMany({
       where: { id: { in: ids } },
-      data: { parentId: null },
+      data: { parentId: null, orphant: true },
     })
   }
 

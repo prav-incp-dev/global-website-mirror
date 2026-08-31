@@ -226,7 +226,7 @@ export default async (fastify) => {
 
         const updatedUser = await fastify.prisma.user.update({
           where: { id: userId },
-          data: { parentId: parentId ?? null },
+          data: { parentId: parentId ?? null, orphant: parentId == null },
           select: {
             id: true,
             firstName: true,
