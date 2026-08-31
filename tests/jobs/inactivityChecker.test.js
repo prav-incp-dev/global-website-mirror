@@ -59,6 +59,7 @@ describe('untieUsers', () => {
 
     const updated = await app.prisma.user.findUnique({ where: { id: user.id } })
     expect(updated.parentId).toBeNull()
+    expect(updated.orphant).toBe(true)
   })
 
   it('unties Candidate with old interaction', async ({ expect }) => {
@@ -90,6 +91,7 @@ describe('untieUsers', () => {
 
     const updated = await app.prisma.user.findUnique({ where: { id: user.id } })
     expect(updated.parentId).toBeNull()
+    expect(updated.orphant).toBe(true)
   })
 
   it('does not untie user with recent interaction', async ({ expect }) => {
@@ -123,6 +125,7 @@ describe('untieUsers', () => {
 
     const updated = await app.prisma.user.findUnique({ where: { id: user.id } })
     expect(updated.parentId).toBe(parent.id)
+    expect(updated.orphant).toBe(false)
   })
 
   it('does not untie Admin with old interaction', async ({ expect }) => {
@@ -146,6 +149,7 @@ describe('untieUsers', () => {
 
     const updated = await app.prisma.user.findUnique({ where: { id: user.id } })
     expect(updated.parentId).toBe(1)
+    expect(updated.orphant).toBe(false)
   })
 
   it('does not untie user with null parentId', async ({ expect }) => {
@@ -169,6 +173,7 @@ describe('untieUsers', () => {
 
     const updated = await app.prisma.user.findUnique({ where: { id: user.id } })
     expect(updated.parentId).toBeNull()
+    expect(updated.orphant).toBe(false)
   })
 
   it('uses UNTIE_DAYS env var', async ({ expect }) => {
@@ -207,6 +212,7 @@ describe('untieUsers', () => {
 
     const updated = await app.prisma.user.findUnique({ where: { id: user.id } })
     expect(updated.parentId).toBeNull()
+    expect(updated.orphant).toBe(true)
   })
 
   it('logs info about processed count', async ({ expect }) => {

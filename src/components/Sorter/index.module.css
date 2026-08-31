@@ -1,0 +1,70 @@
+.sortWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sortButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  background: transparent;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
+  cursor: pointer;
+  color: #e0e0e0;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.sortButton:hover {
+  border-color: rgba(212, 175, 55, 0.5);
+  background: rgba(212, 175, 55, 0.05);
+}
+
+.sortButtonActive {
+  background: rgba(212, 175, 55, 0.12);
+  border-color: #d4af37;
+  color: #d4af37;
+}
+
+.sortIcon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  color: currentColor;
+}
+
+.sortDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  min-width: 200px;
+  background: #1a1a1a;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
+  padding: 4px 0;
+  list-style: none;
+  margin: 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.sortOption {
+  padding: 10px 14px;
+  font-size: 0.8125rem;
+  color: #e0e0e0;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.sortOption:hover {
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.sortOptionActive {
+  color: #d4af37;
+  font-weight: 500;
+}

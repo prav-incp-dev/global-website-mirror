@@ -48,6 +48,7 @@ CREATE TABLE "User" (
     "groupScore" INTEGER NOT NULL DEFAULT 0,
     "memberId" TEXT,
     "parentId" INTEGER,
+    "orphant" BOOLEAN NOT NULL DEFAULT false,
     "wallet" TEXT,
     "confirmationCode" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

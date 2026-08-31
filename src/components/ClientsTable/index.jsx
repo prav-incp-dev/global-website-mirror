@@ -1,62 +1,29 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useRef, useEffect } from 'react'
 import { UserRole } from '@/generated/prisma/enums'
 import styles from './index.module.css'
 import InfoIcon from '@/assets/icons/InfoIcon.svg?react'
 import ClientModal from './ClientModal'
 import { ClientsProvider, useClientsContext } from './ClientsContext'
 import { userName } from '@/lib/user'
+import Sorter from '../Sorter'
 
 const ClientsTableInner = () => {
   const {
     users,
-    setUsers,
     pagination,
-    setPagination,
     orphansCount,
-    setOrphansCount,
-    csrfToken,
-    selectedUserId,
-    setSelectedUserId,
+    loading,
+    selectedUser,
+    setSelectedUser,
+    fetchClients,
+    query,
+    setQuery,
+    orphansOnly,
+    setOrphansOnly,
+    sortBy,
+    setSortBy,
   } = useClientsContext()
-  const [query, setQuery] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [orphansOnly, setOrphansOnly] = useState(false)
   const debounceRef = useRef(null)
-
-  const fetchClients = useCallback(
-    async (page, searchQuery, filterOrphansOnly) => {
-      setLoading(true)
-
-      const params = new URLSearchParams({ page, limit: pagination.limit })
-      if (searchQuery) {
-        params.set('query', searchQuery)
-      }
-      if (filterOrphansOnly) {
-        params.set('orphansOnly', 'true')
-      }
-
-      const res = await fetch(`/api/admin/clients?${params}`, {
-        headers: {
-          'x-csrf-token': csrfToken,
-        },
-      })
-      const result = await res.json()
-      if (result.users) {
-        setUsers(result.users)
-        setPagination({
-          total: result.total,
-          page: result.page,
-          limit: result.limit,
-          totalPages: result.totalPages,
-        })
-        if (result.orphansCount != null) {
-          setOrphansCount(result.orphansCount)
-        }
-      }
-      setLoading(false)
-    },
-    [csrfToken, pagination.limit, setUsers, setPagination, setOrphansCount],
-  )
 
   const handleSearchChange = (e) => {
     const value = e.target.value
@@ -67,19 +34,24 @@ const ClientsTableInner = () => {
     }
 
     debounceRef.current = setTimeout(() => {
-      fetchClients(1, value, orphansOnly)
+      fetchClients(1, value, orphansOnly, sortBy)
     }, 300)
   }
 
   const handlePageChange = async (newPage) => {
     if (newPage < 1 || newPage > pagination.totalPages) return
-    await fetchClients(newPage, query, orphansOnly)
+    await fetchClients(newPage, query, orphansOnly, sortBy)
   }
 
   const handleOrphansToggle = () => {
     const next = !orphansOnly
     setOrphansOnly(next)
-    fetchClients(1, query, next)
+    fetchClients(1, query, next, sortBy)
+  }
+
+  const handleSortChange = (value) => {
+    setSortBy(value)
+    fetchClients(1, query, orphansOnly, value)
   }
 
   useEffect(() => {
@@ -109,7 +81,7 @@ const ClientsTableInner = () => {
           <span className={styles.candidate}>{user.role === UserRole.Consultant ? 'Консультант' : 'Кандидат'}</span>
         </td>
         <td className={styles.td} title="Данные пользователя">
-          <InfoIcon className={styles.infoIcon} onClick={() => setSelectedUserId(user.id)} />
+          <InfoIcon className={styles.infoIcon} onClick={() => setSelectedUser(user)} />
         </td>
       </tr>
     ))
@@ -121,14 +93,15 @@ const ClientsTableInner = () => {
         <button
           className={`${styles.orphansToggle} ${orphansOnly ? styles.orphansToggleActive : ''}`}
           onClick={handleOrphansToggle}
-          disabled={!orphansCount}
+          disabled={!orphansCount && !orphansOnly}
         >
-          Без родителя ({orphansCount})
+          Открепленные ({orphansCount})
         </button>
+        <Sorter sortBy={sortBy} onSortChange={handleSortChange} />
         <input
           type="text"
           className={styles.searchInput}
-          placeholder="Поиск по имени..."
+          placeholder="Поиск (имя, почта)"
           value={query}
           onChange={handleSearchChange}
         />
@@ -175,7 +148,7 @@ const ClientsTableInner = () => {
         </div>
       )}
 
-      {selectedUserId && <ClientModal onClose={() => setSelectedUserId(null)} />}
+      {selectedUser && <ClientModal onClose={() => setSelectedUser(null)} />}
     </div>
   )
 }
