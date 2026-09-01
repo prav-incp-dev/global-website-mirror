@@ -1,5 +1,5 @@
 import { test, expect } from '../fixtures.js'
-import { getPrisma } from '../db.js'
+import { createTestCompany, createTestUser, createTestInteraction } from '../db.js'
 
 const daysAgo = (n) => new Date(Date.now() - n * 86400000)
 const daysFromNow = (n) => new Date(Date.now() + n * 86400000)
@@ -11,127 +11,64 @@ const toLocalDatetimeString = (date) => {
 }
 
 test.describe('consultant structure tab', () => {
-  let johnId, tomId, teresaId, mariaId
+  let john, tom, teresa, maria
 
   test.beforeEach(async () => {
-    const prisma = getPrisma()
-
+    const company = await createTestCompany('Consultant Structure')
     // Create John — the logged-in consultant
-    const john = await prisma.user.create({
-      data: {
-        email: 'john@example.com',
-        password: 'hashed',
-        role: 'Consultant',
-        nick: '@john',
-        firstName: 'John',
-        lastName: 'Doe',
-        phone: '+375330000100',
-        memberId: 'DOM-00000000-0100',
-        wallet: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-        companyId: 1,
-      },
-    })
-    johnId = john.id
-
+    john = await createTestUser({ firstName: 'John', lastName: 'Doe', role: 'Consultant', companyId: company.id })
     // Create Tom — direct child of John, Consultant
-    const tom = await prisma.user.create({
-      data: {
-        email: 'tom@example.com',
-        password: 'hashed',
-        role: 'Consultant',
-        nick: '@tom',
-        firstName: 'Tom',
-        lastName: 'Smith',
-        phone: '+375330000101',
-        memberId: 'DOM-00000000-0101',
-        wallet: '0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
-        companyId: 1,
-        parentId: johnId,
-      },
-    })
-    tomId = tom.id
+    tom = await createTestUser(
+      { firstName: 'Tom', lastName: 'Smith', role: 'Consultant', companyId: company.id, parentId: john.id },
+      13,
+      2,
+    )
 
     // Create Teresa — child of Tom, Candidate
-    const teresa = await prisma.user.create({
-      data: {
-        email: 'teresa@example.com',
-        password: 'hashed',
-        role: 'Candidate',
-        nick: '@teresa',
-        firstName: 'Teresa',
-        lastName: 'Green',
-        phone: '+375330000102',
-        memberId: 'DOM-00000000-0102',
-        companyId: 1,
-        parentId: tomId,
-      },
-    })
-    teresaId = teresa.id
+    teresa = await createTestUser({ firstName: 'Teresa', lastName: 'Green', role: 'Candidate', companyId: company.id, parentId: tom.id })
 
     // Create Maria — direct child of John, Candidate
-    const maria = await prisma.user.create({
-      data: {
-        email: 'maria@example.com',
-        password: 'hashed',
-        role: 'Candidate',
-        nick: '@maria',
-        firstName: 'Maria',
-        lastName: 'Brown',
-        phone: '+375330000103',
-        memberId: 'DOM-00000000-0103',
-        companyId: 1,
-        parentId: johnId,
-      },
-    })
-    mariaId = maria.id
+    maria = await createTestUser({ firstName: 'Maria', lastName: 'Brown', role: 'Candidate', companyId: company.id, parentId: john.id })
 
     // Tom: one closed interaction 40 days ago (stale)
-    await prisma.interaction.create({
-      data: {
-        status: 'Closed',
-        plannedAt: daysAgo(40),
-        completedAt: daysAgo(40),
-        description: 'Initial meeting with Tom',
-        targetId: tomId,
-      },
+    await createTestInteraction({
+      status: 'Closed',
+      plannedAt: daysAgo(40),
+      completedAt: daysAgo(40),
+      description: 'Initial meeting with Tom',
+      targetId: tom.id,
     })
 
     // Teresa: one closed interaction 14 days ago (not stale)
-    await prisma.interaction.create({
-      data: {
-        status: 'Closed',
-        plannedAt: daysAgo(14),
-        completedAt: daysAgo(14),
-        description: 'Follow-up with Teresa',
-        targetId: teresaId,
-      },
+    await createTestInteraction({
+      status: 'Closed',
+      plannedAt: daysAgo(14),
+      completedAt: daysAgo(14),
+      description: 'Follow-up with Teresa',
+      targetId: teresa.id,
     })
 
     // Teresa: one open interaction today (attention icon)
-    await prisma.interaction.create({
-      data: {
-        status: 'Open',
-        plannedAt: new Date(),
-        description: 'Scheduled call with Teresa',
-        targetId: teresaId,
-      },
+    await createTestInteraction({
+      status: 'Open',
+      plannedAt: new Date(),
+      description: 'Scheduled call with Teresa',
+      targetId: teresa.id,
     })
 
     // Maria: one closed interaction yesterday (not stale)
-    await prisma.interaction.create({
-      data: {
-        status: 'Closed',
-        plannedAt: daysAgo(2),
-        completedAt: daysAgo(2),
-        description: 'Intro with Maria',
-        targetId: mariaId,
-      },
+    await createTestInteraction({
+      status: 'Closed',
+      plannedAt: daysAgo(2),
+      completedAt: daysAgo(2),
+      description: 'Intro with Maria',
+      targetId: maria.id,
     })
   })
 
   test('structure tab full workflow', async ({ loginAs, page }) => {
     // 1. Login as John
-    await loginAs(johnId)
+    await loginAs(john.id)
 
     // 2. Click 'Structure' tab
     await page.getByRole('button', { name: 'Структура' }).click()
@@ -185,16 +122,19 @@ test.describe('consultant structure tab', () => {
 
     const userModal = page.getByRole('heading', { name: 'Информация о пользователе' }).locator('..').locator('..')
 
-    await expect(userModal.getByText('Имя:')).toBeVisible()
-    await expect(userModal.getByText('Фамилия:')).toBeVisible()
-    await expect(userModal.getByText('Статус:')).toBeVisible()
+    const teresaFirstNameRow = userModal.getByText('Имя:').locator('..')
+    await expect(teresaFirstNameRow).toContainText('Teresa')
+    const teresaLastNameRow = userModal.getByText('Фамилия:').locator('..')
+    await expect(teresaLastNameRow).toContainText('Green')
+    const teresaStatusRow = userModal.getByText('Статус:').locator('..')
+    await expect(teresaStatusRow).toContainText('Кандидат')
     await expect(userModal.getByText('Почта:')).not.toBeVisible()
     await expect(userModal.getByText('Номер телефона:')).not.toBeVisible()
     await expect(userModal.getByText('Номер пайщика:')).not.toBeVisible()
     await expect(userModal.getByText('Ник в Телеграм:')).not.toBeVisible()
-    await expect(userModal.getByText('Уровень:')).toBeVisible()
-    await expect(userModal.getByText('Личные продажи:')).toBeVisible()
-    await expect(userModal.getByText('Групповые продажи:')).toBeVisible()
+    await expect(userModal.getByText('Уровень:')).not.toBeVisible()
+    await expect(userModal.getByText('Личные продажи:')).not.toBeVisible()
+    await expect(userModal.getByText('Групповые продажи:')).not.toBeVisible()
     await expect(userModal.getByText('Дата последнего взаимодействия:')).toBeVisible()
     await expect(userModal.getByText('Дата запланированного взаимодействия:')).toBeVisible()
     await expect(userModal.getByRole('button', { name: 'Отметить взаимодействие' })).not.toBeVisible()
@@ -210,6 +150,12 @@ test.describe('consultant structure tab', () => {
 
     const tomModal = page.getByRole('heading', { name: 'Информация о пользователе' }).locator('..').locator('..')
 
+    const tomFirstNameRow = userModal.getByText('Имя:').locator('..')
+    await expect(tomFirstNameRow).toContainText('Tom')
+    const tomLastNameRow = userModal.getByText('Фамилия:').locator('..')
+    await expect(tomLastNameRow).toContainText('Smith')
+    const tomStatusRow = userModal.getByText('Статус:').locator('..')
+    await expect(tomStatusRow).toContainText('Консультант')
     await expect(tomModal.getByText('Имя:')).toBeVisible()
     await expect(tomModal.getByText('Фамилия:')).toBeVisible()
     await expect(tomModal.getByText('Статус:')).toBeVisible()
@@ -218,8 +164,10 @@ test.describe('consultant structure tab', () => {
     await expect(tomModal.getByText('Номер пайщика:')).toBeVisible()
     await expect(tomModal.getByText('Ник в Телеграм:')).toBeVisible()
     await expect(tomModal.getByText('Уровень:')).toBeVisible()
-    await expect(tomModal.getByText('Личные продажи:')).toBeVisible()
-    await expect(tomModal.getByText('Групповые продажи:')).toBeVisible()
+    const tomScoreRow = userModal.getByText('Личные продажи:').locator('..')
+    await expect(tomScoreRow).toContainText('13')
+    const tomGroupScoreRow = userModal.getByText('Групповые продажи:').locator('..')
+    await expect(tomGroupScoreRow).toContainText('2')
     await expect(tomModal.getByText('Дата последнего взаимодействия:')).toBeVisible()
     await expect(tomModal.getByText('Дата запланированного взаимодействия:')).toBeVisible()
     await tomModal.getByRole('button', { name: 'Отметить взаимодействие' }).click()

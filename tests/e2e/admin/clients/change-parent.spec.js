@@ -1,76 +1,26 @@
 import { test, expect } from '../../fixtures.js'
-import { getPrisma } from '../../db.js'
+import { createTestCompany, createTestUser } from '../../db.js'
 
 test.describe('admin clients page', () => {
-  let adminId
+  let admin
 
   test.beforeEach(async () => {
-    const prisma = getPrisma()
-
     // Create a dedicated company and users for this scenario
-    const company = await prisma.company.create({
-      data: {
-        name: 'Orphan Reassign Test Company',
-        wallet: '0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
-      },
-    })
+    const company = await createTestCompany('Orphan Reassign Test Company')
 
-    const admin = await prisma.user.create({
-      data: {
-        email: 'orphan-reassign-admin@example.com',
-        password: 'hashed',
-        role: 'Admin',
-        nick: '@orphan-reassign-admin',
-        firstName: 'OrphanReassign',
-        lastName: 'Admin',
-        phone: '+375290000700',
-        memberId: 'DOM-00000000-0700',
-        wallet: '0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
-        companyId: company.id,
-      },
-    })
-    adminId = admin.id
+    // Create admin user for this company
+    admin = await createTestUser({ firstName: 'Alice', lastName: 'Admin', role: 'Admin', companyId: company.id })
 
     // Tim Bro — Consultant, non-orphant
-    await prisma.user.create({
-      data: {
-        email: 'tim-bro@example.com',
-        password: 'hashed',
-        role: 'Consultant',
-        nick: '@timbro',
-        firstName: 'Tim',
-        lastName: 'Bro',
-        phone: '+375290000701',
-        memberId: 'DOM-00000000-0701',
-        wallet: '0xEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE',
-        level: 1,
-        companyId: company.id,
-        parentId: null,
-        orphant: false,
-      },
-    })
+    await createTestUser({ firstName: 'Tim', lastName: 'Bro', companyId: company.id })
 
     // Tom Begging — Candidate, orphant
-    await prisma.user.create({
-      data: {
-        email: 'tom-begging@example.com',
-        password: 'hashed',
-        role: 'Candidate',
-        nick: '@tombegging',
-        firstName: 'Tom',
-        lastName: 'Begging',
-        phone: '+375290000702',
-        memberId: 'DOM-00000000-0702',
-        wallet: '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF',
-        companyId: company.id,
-        orphant: true,
-      },
-    })
+    await createTestUser({ firstName: 'Tom', lastName: 'Begging', role: 'Candidate', companyId: company.id, orphant: true })
   })
 
   test('change parent flow: clear/set parent', async ({ loginAs, page }) => {
     // Login as admin and navigate to clients page
-    await loginAs(adminId)
+    await loginAs(admin.id)
     await page.goto('/admin')
     await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
     await page.getByRole('button', { name: 'Клиенты' }).click()
@@ -150,7 +100,7 @@ test.describe('admin clients page', () => {
 
   test('orphan reassignment removes user from orphans view', async ({ loginAs, page }) => {
     // 1. Login as admin and navigate to clients page
-    await loginAs(adminId)
+    await loginAs(admin.id)
     await page.goto('/admin')
     await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
     await page.getByRole('button', { name: 'Клиенты' }).click()

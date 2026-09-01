@@ -1,46 +1,25 @@
 import { test, expect } from '../fixtures.js'
-import { getPrisma } from '../db.js'
-import bcrypt from 'bcryptjs'
-
-const passwordHashRounds = 12
-const testPasswordHash = bcrypt.hashSync('password', passwordHashRounds)
+import { createTestCompany, createTestUser } from '../db.js'
 
 test.describe('consultant profile with stats', () => {
+  let parent
+  let consultant
+
   test.beforeEach(async () => {
-    const prisma = getPrisma()
+    const company = await createTestCompany('Consultant Profile Company')
 
     // Create parent consultant
-    const parentConsultant = await prisma.user.create({
-      data: {
-        email: 'parent-consultant@example.com',
-        password: testPasswordHash,
-        role: 'Consultant',
-        nick: '@parentcons',
-        firstName: 'Parent',
-        lastName: 'Consultant',
-        phone: '+375330000010',
-        memberId: 'DOM-00000000-0010',
-        wallet: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-        companyId: 1,
-        level: 3,
-      },
-    })
-
-    // Update existing consultant (id=2) with parent, level, score, groupScore
-    await prisma.user.update({
-      where: { id: 2 },
-      data: {
-        parentId: parentConsultant.id,
-        level: 5,
-        score: 7,
-        groupScore: 60,
-      },
-    })
+    parent = await createTestUser({ firstName: 'Bob', lastName: 'Parent', level: 8, role: 'Consultant', companyId: company.id })
+    consultant = await createTestUser(
+      { firstName: 'Jim', lastName: 'Invited', role: 'Consultant', level: 2, companyId: company.id, parentId: parent.id },
+      7,
+      60,
+    )
   })
 
   test('consultant views profile, edits data, checks payments and stats', async ({ loginAs, page }) => {
-    // Log in as consultant (id=2)
-    await loginAs(2)
+    // Log in as the consultant
+    await loginAs(consultant.id)
 
     // --- Verify invite button is visible ---
     await expect(page.getByRole('button', { name: 'Сгенерировать пригласительную ссылку' })).toBeVisible()
@@ -50,9 +29,9 @@ test.describe('consultant profile with stats', () => {
 
     // --- Verify initial profile data ---
     await expect(page.getByRole('heading', { name: 'Профиль' })).toBeVisible()
-    await expect(page.getByText('Consultant', { exact: true })).toBeVisible()
-    await expect(page.getByText('Inviter', { exact: true })).toBeVisible()
-    await expect(page.getByText('consultant@example.com')).toBeVisible()
+    await expect(page.getByText('Jim', { exact: true })).toBeVisible()
+    await expect(page.getByText('Invited', { exact: true })).toBeVisible()
+    await expect(page.getByText(consultant.email)).toBeVisible()
 
     // --- Verify balance button is visible (consultant has wallet)
     await expect(page.getByRole('button', { name: 'Проверить баланс' })).toBeVisible()
@@ -71,13 +50,13 @@ test.describe('consultant profile with stats', () => {
 
     // --- Edit profile ---
     await page.getByRole('button', { name: 'Редактировать' }).click()
-    await page.locator('#firstName').fill('UpdatedConsultant')
+    await page.locator('#firstName').fill('UpdatedJim')
     await page.locator('#wallet').fill('')
     await page.getByRole('button', { name: 'Сохранить' }).click()
 
     // --- Verify updated data ---
-    await expect(page.getByText('UpdatedConsultant')).toBeVisible()
-    // --- Verify balance button is no longe visible (consultant removed wallet)
+    await expect(page.getByText('UpdatedJim')).toBeVisible()
+    // --- Verify balance button is no longer visible (consultant removed wallet)
     await expect(page.getByRole('button', { name: 'Проверить баланс' })).not.toBeVisible()
 
     // --- Navigate to Покупки tab ---
@@ -88,14 +67,14 @@ test.describe('consultant profile with stats', () => {
     await page.getByRole('button', { name: 'Статистика' }).click()
 
     // --- Verify first table: level, score, groupScore ---
-    await expect(page.getByRole('cell', { name: '5' })).toBeVisible()
+    await expect(page.getByRole('cell', { name: consultant.level })).toBeVisible()
     await expect(page.getByRole('cell', { name: '7' })).toBeVisible()
     await expect(page.getByRole('cell', { name: '60' })).toBeVisible()
 
     // --- Verify Пригласитель section ---
     await expect(page.getByRole('heading', { name: 'Пригласитель' })).toBeVisible()
-    await expect(page.getByRole('cell', { name: '@parentcons' })).toBeVisible()
+    await expect(page.getByRole('cell', { name: parent.nick })).toBeVisible()
     // Parent level = 3 should be in the same row as @parentcons
-    await expect(page.getByText('Пригласитель').locator('..').getByRole('cell', { name: '3' })).toBeVisible()
+    await expect(page.getByText('Пригласитель').locator('..').getByRole('cell', { name: parent.level })).toBeVisible()
   })
 })

@@ -1,98 +1,35 @@
 import { test, expect } from '../../fixtures.js'
-import { getPrisma } from '../../db.js'
+import { createTestCompany, createTestUser } from '../../db.js'
 
 test.describe('admin clients page', () => {
-  let adminId
+  let admin
 
   test.beforeEach(async () => {
-    const prisma = getPrisma()
-
     // Create a separate company for this test to avoid data interference
-    const company = await prisma.company.create({
-      data: {
-        name: 'Test Company',
-        wallet: '0x9999999999999999999999999999999999999999',
-      },
-    })
+    const company = await createTestCompany('Admin Clients Company')
 
     // Create admin user for this company
-    const admin = await prisma.user.create({
-      data: {
-        email: 'test-admin@example.com',
-        password: 'hashed',
-        role: 'Admin',
-        nick: '@test-admin',
-        firstName: 'Test',
-        lastName: 'Admin',
-        phone: '+375290000100',
-        memberId: 'DOM-00000000-1000',
-        wallet: '0x9999999999999999999999999999999999999999',
-        companyId: company.id,
-      },
-    })
-    adminId = admin.id
+    admin = await createTestUser({ firstName: 'Alice', lastName: 'Admin', role: 'Admin', companyId: company.id })
 
     // Create 1 candidate 'Nemo' without parent (orphan)
-    await prisma.user.create({
-      data: {
-        email: 'nemo@example.com',
-        password: 'hashed',
-        role: 'Candidate',
-        nick: '@nemo',
-        firstName: 'Nemo',
-        lastName: 'Fish',
-        phone: '+375290000300',
-        memberId: 'DOM-00000000-0300',
-        wallet: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC',
-        companyId: company.id,
-        orphant: true,
-      },
-    })
+    await createTestUser({ firstName: 'Nemo', lastName: 'Fish', role: 'Candidate', companyId: company.id, orphant: true })
 
     // Create 10 candidates with firstName 'John', no parent (orphans)
     const johns = []
     for (let i = 0; i < 10; i++) {
-      const john = await prisma.user.create({
-        data: {
-          email: `john${i}@example.com`,
-          password: 'hashed',
-          role: 'Candidate',
-          nick: `@john${i}`,
-          firstName: 'John',
-          lastName: `Doe${i}`,
-          phone: `+[PHONE]1${i}`,
-          memberId: `DOM-00000000-01${i}0`,
-          wallet: `0x${String(i).padStart(40, '0')}`,
-          companyId: company.id,
-          orphant: true,
-        },
-      })
+      const john = await createTestUser({ firstName: 'John', lastName: `Doe${i}`, role: 'Candidate', companyId: company.id, orphant: true })
       johns.push(john)
     }
 
     // Create 10 candidates with firstName 'Tom', with parent set to first John
     for (let i = 0; i < 10; i++) {
-      await prisma.user.create({
-        data: {
-          email: `tom${i}@example.com`,
-          password: 'hashed',
-          role: 'Candidate',
-          nick: `@tom${i}`,
-          firstName: 'Tom',
-          lastName: `Smith${i}`,
-          phone: `+[PHONE]2${i}`,
-          memberId: `DOM-00000000-02${i}0`,
-          wallet: `0x${String(10 + i).padStart(40, '0')}`,
-          companyId: company.id,
-          parentId: johns[0].id,
-        },
-      })
+      await createTestUser({ firstName: 'Tom', lastName: `Smith${i}`, role: 'Candidate', companyId: company.id, parentId: johns[0].id })
     }
   })
 
   test('clients page full workflow', async ({ loginAs, page }) => {
     // 1. Login as admin
-    await loginAs(adminId)
+    await loginAs(admin.id)
     await page.goto('/admin')
     await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
 

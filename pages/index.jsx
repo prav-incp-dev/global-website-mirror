@@ -24,6 +24,7 @@ export const getData = async ({ server, req, reply }) => {
   const csrfToken = reply.generateCsrf()
   const payments = await server.payment.getPayments(user)
   const descendants = await server.user.getDescendants(user)
+  const { score, groupScore } = await server.user.getScores(user)
   const staleDays = parseInt(process.env.STALE_INTERACTION_DAYS, 10) || 30
   const currentUserId = user.id
 
@@ -39,8 +40,8 @@ export const getData = async ({ server, req, reply }) => {
       parent: user.parent,
       role: user.role,
       level: user.level,
-      score: user.score,
-      groupScore: user.groupScore,
+      score,
+      groupScore,
       companyName: user.company?.name ?? null,
       companyWallet: user.company?.wallet ?? null,
     },

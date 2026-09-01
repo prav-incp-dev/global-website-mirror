@@ -35,26 +35,6 @@
   border-color: #d4af37;
 }
 
-.checkboxRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  justify-content: center;
-}
-
-.checkbox {
-  width: 20px;
-  height: 20px;
-  accent-color: #d4af37;
-  cursor: pointer;
-}
-
-.checkboxLabel {
-  font-size: 0.9375rem;
-  color: #f5f5f5;
-  cursor: pointer;
-}
-
 .error {
   margin: 0;
   color: #ff8b8b;

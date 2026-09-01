@@ -6,22 +6,17 @@ import styles from './index.module.css'
 
 const MIN_LEVEL = 1
 const MAX_LEVEL = 10
-const MIN_SCORE = 0
-const MAX_SCORE = 1000000
 
-const UpdateClientModal = ({ onClose }) => {
+const UpdateLevelModal = ({ onClose }) => {
   const { csrfToken, selectedUser, updateSelectedUser } = useClientsContext()
 
   const [level, setLevel] = useState(selectedUser.level)
-  const [score, setScore] = useState(selectedUser.score)
   const [levelConfirmed, setLevelConfirmed] = useState(selectedUser.levelConfirmed)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   const isChanged = () => {
-    return (
-      level !== selectedUser.level || score !== selectedUser.score || levelConfirmed !== selectedUser.levelConfirmed
-    )
+    return level !== selectedUser.level || levelConfirmed !== selectedUser.levelConfirmed
   }
 
   const handleSave = async () => {
@@ -31,12 +26,11 @@ const UpdateClientModal = ({ onClose }) => {
     try {
       const payload = {
         userId: selectedUser.id,
-        level: level,
-        score: score,
-        levelConfirmed: levelConfirmed,
+        level,
+        levelConfirmed,
       }
 
-      const res = await fetch('/api/admin/user', {
+      const res = await fetch('/api/admin/user/level', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -61,24 +55,10 @@ const UpdateClientModal = ({ onClose }) => {
     }
   }
 
-  if (!selectedUser) return null
-
   return (
-    <Modal title="Установить достижения" isStatic onClose={onClose}>
+    <Modal title="Установить уровень" isStatic onClose={onClose}>
       <div className={styles.container}>
         {error && <p className={styles.error}>{error}</p>}
-
-        <div className={styles.fieldGroup}>
-          <label className={styles.label}>Личные продажи (score)</label>
-          <input
-            type="number"
-            className={styles.input}
-            value={score}
-            onChange={(e) => setScore(Math.min(MAX_SCORE, Math.max(MIN_SCORE, Number(e.target.value))))}
-            min={MIN_SCORE}
-            max={MAX_SCORE}
-          />
-        </div>
 
         <div className={styles.fieldGroup}>
           <label className={styles.label}>Уровень</label>
@@ -106,4 +86,4 @@ const UpdateClientModal = ({ onClose }) => {
   )
 }
 
-export default UpdateClientModal
+export default UpdateLevelModal

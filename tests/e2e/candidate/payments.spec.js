@@ -1,17 +1,17 @@
 import { test, expect } from '../fixtures.js'
-import { getPrisma } from '../db.js'
+import { createTestCompany, createTestUser } from '../db.js'
 
 test.describe('candidate payment flow', () => {
-  test('wallet setup unlocks purchase button and stepper works', async ({ loginAs, page }) => {
-    // Clear wallet value of candidate user in DB
-    const prisma = getPrisma()
-    await prisma.user.update({
-      where: { id: 3 },
-      data: { wallet: null },
-    })
+  let candidate
 
+  test.beforeEach(async () => {
+    const company = await createTestCompany('Candidate Payment Company')
+    candidate = await createTestUser({ firstName: 'Candidate', lastName: 'User', role: 'Candidate', companyId: company.id, wallet: null })
+  })
+
+  test('wallet setup unlocks purchase button and stepper works', async ({ loginAs, page }) => {
     // Login as candidate
-    await loginAs(3)
+    await loginAs(candidate.id)
 
     // Click 'Покупки' tab — verify button disabled + error message
     await page.getByRole('button', { name: 'Покупки' }).click()
