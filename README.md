@@ -305,3 +305,42 @@ mailcatcher
 - Веб-интерфейс: `http://localhost:1080` (просмотр перехваченных писем в браузере)
 
 Убедитесь, что MailCatcher запущен перед запуском сервера бэкенда.
+
+## Обработка криптоплатежей
+
+### Anvil локально
+
+Anvil - быстрый локальный сервер для разработки и тестирования криптоплатежей, часть [Foundry](https://www.getfoundry.sh/).
+
+Установка:
+
+```bash
+brew bundle install
+```
+
+Сидирование блокчейна (для кошелька с Seed Phrase, который виден в логе запуска Anvil):
+
+```bash
+npm run anvil:seed
+```
+
+Запуск (в отдельном окне терминала)
+
+```bash
+npm run anvil:start
+```
+
+### Настройка [Rabby Wallet](https://rabby.io/)
+
+Добавление тестового кошелька
+* Import Seed Phrase: test test test test test test test test test test test junk
+
+Настройка Custom Network в Rabby Wallet
+* Chain ID: 97
+* Network Name: Local Anvil
+* RPC URL: http://127.0.0.1:8545
+* Currency symbol: tBNB
+
+Добавление токена в Custom Network
+* Chain: Local Anvil
+* Token Address: 0x700b6A60ce7EaaEA56F065753d8dcB9653dbAD35

@@ -18,7 +18,11 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:mutation": "npx --yes --package @stryker-mutator/core@^9.6.1 --package @stryker-mutator/vitest-runner@^9.6.1 stryker run",
-    "test:mutate:files": "npx -y --package @stryker-mutator/core@^9.6.1 --package @stryker-mutator/vitest-runner@^9.6.1 stryker run --mutate"
+    "test:mutate:files": "npx -y --package @stryker-mutator/core@^9.6.1 --package @stryker-mutator/vitest-runner@^9.6.1 stryker run --mutate",
+    "anvil:dev": "anvil --chain-id 97 --dump-state anvil/state.seed.json",
+    "forge:deploy:usdt": "forge script anvil/script/DeployUSDT.s.sol --rpc-url http://127.0.0.1:8545 --broadcast",
+    "anvil:seed": "cp -p anvil/state.seed.json anvil/state.json",
+    "anvil:start": "anvil --chain-id 97 --state anvil"
   },
   "keywords": [],
   "author": "",

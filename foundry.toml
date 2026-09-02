@@ -1,0 +1,7 @@
+[profile.default]
+src = "anvil"
+out = "dist/sol"
+libs = ["lib"]
+ignored_error_codes = [6335]
+cache_path = "dist/anvil/cache"
+broadcast = "dist/anvil/broadcast"
