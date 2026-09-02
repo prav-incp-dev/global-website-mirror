@@ -1,8 +1,8 @@
 import { describe, it, onTestFinished, vi } from 'vitest'
 import { createApp } from '../helpers'
-import { untieUsers } from '../../src/jobs/inactivityChecker.js'
+import { orphantUsers } from '../../src/jobs/inactivityChecker.js'
 
-describe('untieUsers', () => {
+describe('orphantUsers', () => {
   const baseUser = {
     password: 'hash',
     companyId: 1,
@@ -30,7 +30,7 @@ describe('untieUsers', () => {
     return user
   }
 
-  it('unties Consultant with old interaction', async ({ expect }) => {
+  it('orphans Consultant with old interaction', async ({ expect }) => {
     const app = await createApp()
 
     const oldDate = new Date('2026-01-15T10:00:00Z')
@@ -55,14 +55,14 @@ describe('untieUsers', () => {
       oldDate,
     )
 
-    await untieUsers(app.prisma, silentLogger)
+    await orphantUsers(app.prisma, silentLogger)
 
     const updated = await app.prisma.user.findUnique({ where: { id: user.id } })
     expect(updated.parentId).toBeNull()
     expect(updated.orphant).toBe(true)
   })
 
-  it('unties Candidate with old interaction', async ({ expect }) => {
+  it('orphants Candidate with old interaction', async ({ expect }) => {
     const app = await createApp()
 
     const oldDate = new Date('2026-01-15T10:00:00Z')
@@ -87,14 +87,14 @@ describe('untieUsers', () => {
       oldDate,
     )
 
-    await untieUsers(app.prisma, silentLogger)
+    await orphantUsers(app.prisma, silentLogger)
 
     const updated = await app.prisma.user.findUnique({ where: { id: user.id } })
     expect(updated.parentId).toBeNull()
     expect(updated.orphant).toBe(true)
   })
 
-  it('does not untie user with recent interaction', async ({ expect }) => {
+  it('does not orphant user with recent interaction', async ({ expect }) => {
     const app = await createApp()
 
     const recentDate = new Date()
@@ -121,14 +121,14 @@ describe('untieUsers', () => {
       recentDate,
     )
 
-    await untieUsers(app.prisma, silentLogger)
+    await orphantUsers(app.prisma, silentLogger)
 
     const updated = await app.prisma.user.findUnique({ where: { id: user.id } })
     expect(updated.parentId).toBe(parent.id)
     expect(updated.orphant).toBe(false)
   })
 
-  it('does not untie Admin with old interaction', async ({ expect }) => {
+  it('does not orphant Admin with old interaction', async ({ expect }) => {
     const app = await createApp()
 
     const oldDate = new Date('2026-01-15T10:00:00Z')
@@ -145,14 +145,14 @@ describe('untieUsers', () => {
       oldDate,
     )
 
-    await untieUsers(app.prisma, silentLogger)
+    await orphantUsers(app.prisma, silentLogger)
 
     const updated = await app.prisma.user.findUnique({ where: { id: user.id } })
     expect(updated.parentId).toBe(1)
     expect(updated.orphant).toBe(false)
   })
 
-  it('does not untie user with null parentId', async ({ expect }) => {
+  it('does not orphant user with null parentId', async ({ expect }) => {
     const app = await createApp()
 
     const oldDate = new Date('2026-01-15T10:00:00Z')
@@ -169,20 +169,20 @@ describe('untieUsers', () => {
       oldDate,
     )
 
-    await untieUsers(app.prisma, silentLogger)
+    await orphantUsers(app.prisma, silentLogger)
 
     const updated = await app.prisma.user.findUnique({ where: { id: user.id } })
     expect(updated.parentId).toBeNull()
     expect(updated.orphant).toBe(false)
   })
 
-  it('uses UNTIE_DAYS env var', async ({ expect }) => {
-    const originalUntieDays = process.env.UNTIE_DAYS
-    process.env.UNTIE_DAYS = '60'
+  it('uses ORPHANT_DAYS env var', async ({ expect }) => {
+    const originalorphantDays = process.env.ORPHANT_DAYS
+    process.env.ORPHANT_DAYS = '60'
 
     const app = await createApp()
     onTestFinished(async () => {
-      process.env.UNTIE_DAYS = originalUntieDays
+      process.env.ORPHANT_DAYS = originalorphantDays
     })
 
     const oldDate = new Date('2026-06-01T10:00:00Z')
@@ -200,15 +200,15 @@ describe('untieUsers', () => {
       {
         ...baseUser,
         role: 'Consultant',
-        email: `inactivity-custom-untie-${Date.now()}@test.com`,
+        email: `inactivity-custom-orphant-${Date.now()}@test.com`,
         phone: `+10001010${String(Date.now()).slice(-4)}`,
         parentId: parent.id,
       },
       oldDate,
     )
 
-    // UNTIE_DAYS=60 — oldDate (June 1) is more than 60 days ago from now (Aug 21)
-    await untieUsers(app.prisma, silentLogger)
+    // ORPHANT_DAYS=60 — oldDate (June 1) is more than 60 days ago from now (Aug 21)
+    await orphantUsers(app.prisma, silentLogger)
 
     const updated = await app.prisma.user.findUnique({ where: { id: user.id } })
     expect(updated.parentId).toBeNull()
@@ -219,8 +219,8 @@ describe('untieUsers', () => {
     const app = await createApp()
 
     const logSpy = vi.fn()
-    await untieUsers(app.prisma, { info: logSpy })
+    await orphantUsers(app.prisma, { info: logSpy })
 
-    expect(logSpy).toHaveBeenCalledWith(expect.stringMatching(/^\d+ stale users untied from their parents$/))
+    expect(logSpy).toHaveBeenCalledWith(expect.stringMatching(/^\d+ stale users are orphaned from their parents$/))
   })
 })
