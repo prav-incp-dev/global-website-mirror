@@ -63,8 +63,6 @@ model User {
   phone                 String        @unique
   level                 Int           @default(0)
   levelConfirmed        Boolean       @default(true)
-  score                 Int           @default(0)
-  groupScore            Int           @default(0)
   memberId              String?       @unique
   parentId              Int?
   parent                User?         @relation("UserParent", fields: [parentId], references: [id])

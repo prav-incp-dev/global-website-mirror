@@ -1471,7 +1471,6 @@ describe('PUT /api/admin/user/level', () => {
         phone: `+375291${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`,
         level: 1,
         levelConfirmed: true,
-        score: 10,
         ...data,
       },
     })
@@ -1689,8 +1688,6 @@ describe('PUT /api/admin/user/level', () => {
     const updatedUser = await app.prisma.user.findUnique({ where: { id: targetUser.id } })
     expect(updatedUser.level).toBe(3)
     expect(updatedUser.levelConfirmed).toBe(false)
-    expect(updatedUser.score).toBe(10)
-    expect(updatedUser.groupScore).toBe(0)
   })
 
   it('returns 500 on unexpected database error', async () => {
@@ -1730,8 +1727,6 @@ describe('PUT /api/admin/user/wages', () => {
         phone: `+375294${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`,
         level: 1,
         levelConfirmed: true,
-        score: 0,
-        groupScore: 0,
         ...data,
       },
     })

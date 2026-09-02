@@ -13,6 +13,9 @@ const baseUser = {
   companyId: 1,
 }
 
+const daysAgo = (days) => new Date(Date.now() - days * 86400000).toISOString()
+const daysFromNow = (days) => new Date(Date.now() + days * 86400000).toISOString()
+
 describe('POST /api/interaction/complete', () => {
   it('returns 401 when user is not authenticated', async () => {
     const app = await createApp()
@@ -22,7 +25,7 @@ describe('POST /api/interaction/complete', () => {
       method: 'POST',
       url: '/api/interaction/complete',
       payload: {
-        completedAt: '2026-08-15T10:00:00Z',
+        completedAt: daysAgo(10),
         description: 'Test interaction',
         targetId: 1,
       },
@@ -40,7 +43,7 @@ describe('POST /api/interaction/complete', () => {
       method: 'POST',
       url: '/api/interaction/complete',
       payload: {
-        completedAt: '2026-08-15T10:00:00Z',
+        completedAt: daysAgo(10),
         description: 'Test interaction',
         targetId: 1,
       },
@@ -73,7 +76,7 @@ describe('POST /api/interaction/complete', () => {
 
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(consultant)
 
-    const completedAt = '2026-08-15T10:00:00Z'
+    const completedAt = daysAgo(10)
     const description = 'Completed onboarding call'
 
     const response = await app.inject({
@@ -120,10 +123,11 @@ describe('POST /api/interaction/complete', () => {
     })
 
     // Create an existing open interaction
+    const existingOpenPlannedAt = daysFromNow(5)
     await app.prisma.interaction.create({
       data: {
         status: 'Open',
-        plannedAt: new Date('2026-08-20T14:00:00Z'),
+        plannedAt: new Date(existingOpenPlannedAt),
         completedAt: null,
         description: 'Scheduled call',
         initiatorId: consultant.id,
@@ -133,7 +137,7 @@ describe('POST /api/interaction/complete', () => {
 
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(consultant)
 
-    const completedAt = '2026-08-15T10:00:00Z'
+    const completedAt = daysAgo(10)
     const description = 'Call completed'
 
     const response = await app.inject({
@@ -154,7 +158,7 @@ describe('POST /api/interaction/complete', () => {
     expect(body.interaction.description).toBe(description)
     expect(new Date(body.interaction.completedAt).toISOString()).toBe(new Date(completedAt).toISOString())
     // plannedAt should remain unchanged from the original
-    expect(new Date(body.interaction.plannedAt).toISOString()).toBe(new Date('2026-08-20T14:00:00Z').toISOString())
+    expect(new Date(body.interaction.plannedAt).toISOString()).toBe(new Date(existingOpenPlannedAt).toISOString())
   })
 
   it('returns 400 when completedAt is in the future', async () => {
@@ -202,7 +206,7 @@ describe('POST /api/interaction/complete', () => {
       method: 'POST',
       url: '/api/interaction/complete',
       payload: {
-        completedAt: '2026-08-15T10:00:00Z',
+        completedAt: daysAgo(10),
         description: 'Admin completed interaction',
         targetId: target.id,
       },
@@ -226,7 +230,7 @@ describe('POST /api/interaction/schedule', () => {
       method: 'POST',
       url: '/api/interaction/schedule',
       payload: {
-        plannedAt: '2026-09-01T10:00:00Z',
+        plannedAt: daysFromNow(30),
         targetId: 1,
       },
     })
@@ -243,7 +247,7 @@ describe('POST /api/interaction/schedule', () => {
       method: 'POST',
       url: '/api/interaction/schedule',
       payload: {
-        plannedAt: '2026-09-01T10:00:00Z',
+        plannedAt: daysFromNow(30),
         targetId: 1,
       },
     })
@@ -275,7 +279,7 @@ describe('POST /api/interaction/schedule', () => {
 
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(consultant)
 
-    const plannedAt = '2026-09-01T14:00:00Z'
+    const plannedAt = daysFromNow(30)
 
     const response = await app.inject({
       method: 'POST',
@@ -320,10 +324,11 @@ describe('POST /api/interaction/schedule', () => {
     })
 
     // Create an existing open interaction with reminderSent already sent
+    const existingOpenPlannedAt = daysFromNow(10)
     await app.prisma.interaction.create({
       data: {
         status: 'Open',
-        plannedAt: new Date('2026-09-10T10:00:00Z'),
+        plannedAt: new Date(existingOpenPlannedAt),
         completedAt: null,
         description: 'Scheduled call',
         initiatorId: consultant.id,
@@ -334,7 +339,7 @@ describe('POST /api/interaction/schedule', () => {
 
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(consultant)
 
-    const newPlannedAt = '2026-09-15T10:00:00Z'
+    const newPlannedAt = daysFromNow(15)
 
     const response = await app.inject({
       method: 'POST',
@@ -398,7 +403,7 @@ describe('POST /api/interaction/schedule', () => {
       method: 'POST',
       url: '/api/interaction/schedule',
       payload: {
-        plannedAt: '2026-09-20T10:00:00Z',
+        plannedAt: daysFromNow(20),
         targetId: target.id,
       },
     })

@@ -641,8 +641,6 @@ describe('admin plugin', () => {
       const user = result.users.find((u) => u.email === 'no-wages@test.com')
 
       expect(user).toBeTruthy()
-      expect(user.score).toBe(0)
-      expect(user.groupScore).toBe(0)
     })
 
     it('sums score and groupScore across multiple wages per user', async () => {
@@ -679,7 +677,6 @@ describe('admin plugin', () => {
       const first = await createTestUser(app, company.id, {
         email: 'agg-first@test.com',
         firstName: 'AggFirst',
-        score: 999,
       })
       const third = await createTestUser(app, company.id, {
         email: 'agg-third@test.com',
@@ -688,7 +685,6 @@ describe('admin plugin', () => {
       const second = await createTestUser(app, company.id, {
         email: 'agg-second@test.com',
         firstName: 'AggSecond',
-        score: 1,
       })
 
       await app.prisma.wage.create({
@@ -780,8 +776,6 @@ describe('admin plugin', () => {
           companyId,
           level: 1,
           levelConfirmed: true,
-          score: 0,
-          groupScore: 0,
           ...overrides,
         },
       })

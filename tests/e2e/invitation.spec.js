@@ -84,7 +84,7 @@ test.describe('generate invitation link', () => {
 
     // Verify modal is closed and we are back on the profile page
     await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
-    await expect(page.getByText('admin@example.com')).toBeVisible()
+    await expect(page.getByText(admin.email)).toBeVisible()
   })
 
   test('It generates different invitation tokens each time', async ({ context, page, loginAs }) => {
