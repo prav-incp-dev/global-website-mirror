@@ -43,8 +43,7 @@ describe('admin plugin', () => {
       const foundCompany = {
         id: 1,
         name: 'Our House MLM',
-        primaryWallet: '0x1234567890abcdef1234567890abcdef12345678',
-        secondaryWallet: null,
+        wallet: '0x1234567890abcdef1234567890abcdef12345678',
       }
 
       const app = await createApp()
@@ -596,20 +595,27 @@ describe('admin plugin', () => {
       const company = await createTestCompany(app)
       const adminUser = { company: { id: company.id } }
 
-      await createTestUser(app, company.id, {
+      const low = await createTestUser(app, company.id, {
         email: 'sort-score-low@test.com',
         firstName: 'LowScore',
-        score: 100,
       })
-      await createTestUser(app, company.id, {
+      const high = await createTestUser(app, company.id, {
         email: 'sort-score-high@test.com',
         firstName: 'HighScore',
-        score: 300,
       })
-      await createTestUser(app, company.id, {
+      const mid = await createTestUser(app, company.id, {
         email: 'sort-score-mid@test.com',
         firstName: 'MidScore',
-        score: 200,
+      })
+
+      await app.prisma.wage.create({
+        data: { companyId: company.id, userId: low.id, score: 100, groupScore: 100, amount: 0 },
+      })
+      await app.prisma.wage.create({
+        data: { companyId: company.id, userId: high.id, score: 300, groupScore: 300, amount: 0 },
+      })
+      await app.prisma.wage.create({
+        data: { companyId: company.id, userId: mid.id, score: 200, groupScore: 200, amount: 0 },
       })
 
       const result = await app.admin.getClients(adminUser, 1, 20, '', false, 'score')
@@ -618,6 +624,111 @@ describe('admin plugin', () => {
       expect(result.users[0].score).toBe(300)
       expect(result.users[1].score).toBe(200)
       expect(result.users[2].score).toBe(100)
+    })
+
+    it('returns score 0 and groupScore 0 for users without wages', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+      const adminUser = { company: { id: company.id } }
+
+      await createTestUser(app, company.id, {
+        email: 'no-wages@test.com',
+        firstName: 'NoWage',
+      })
+
+      const result = await app.admin.getClients(adminUser, 1, 20, '')
+
+      const user = result.users.find((u) => u.email === 'no-wages@test.com')
+
+      expect(user).toBeTruthy()
+    })
+
+    it('sums score and groupScore across multiple wages per user', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+      const adminUser = { company: { id: company.id } }
+
+      const user = await createTestUser(app, company.id, {
+        email: 'multi-wages@test.com',
+        firstName: 'MultiWage',
+      })
+
+      await app.prisma.wage.create({
+        data: { companyId: company.id, userId: user.id, score: 10, groupScore: 5, amount: 0 },
+      })
+      await app.prisma.wage.create({
+        data: { companyId: company.id, userId: user.id, score: 20, groupScore: 15, amount: 0 },
+      })
+
+      const result = await app.admin.getClients(adminUser, 1, 20, '')
+
+      const found = result.users.find((u) => u.email === 'multi-wages@test.com')
+
+      expect(found).toBeTruthy()
+      expect(found.score).toBe(30)
+      expect(found.groupScore).toBe(20)
+    })
+
+    it('sorts by score using aggregated wage sums (not stored score column)', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+      const adminUser = { company: { id: company.id } }
+
+      const first = await createTestUser(app, company.id, {
+        email: 'agg-first@test.com',
+        firstName: 'AggFirst',
+      })
+      const third = await createTestUser(app, company.id, {
+        email: 'agg-third@test.com',
+        firstName: 'AggThird',
+      })
+      const second = await createTestUser(app, company.id, {
+        email: 'agg-second@test.com',
+        firstName: 'AggSecond',
+      })
+
+      await app.prisma.wage.create({
+        data: { companyId: company.id, userId: first.id, score: 10, groupScore: 0, amount: 0 },
+      })
+      await app.prisma.wage.create({
+        data: { companyId: company.id, userId: second.id, score: 30, groupScore: 0, amount: 0 },
+      })
+      await app.prisma.wage.create({
+        data: { companyId: company.id, userId: third.id, score: 20, groupScore: 0, amount: 0 },
+      })
+
+      const result = await app.admin.getClients(adminUser, 1, 20, '', false, 'score')
+
+      expect(result.users).toHaveLength(3)
+      // Sorted by aggregated wage sums: second(30), third(20), first(10)
+      expect(result.users[0].firstName).toBe('AggSecond')
+      expect(result.users[1].firstName).toBe('AggThird')
+      expect(result.users[2].firstName).toBe('AggFirst')
+    })
+
+    it('maps parent object using parentId left join', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+      const adminUser = { company: { id: company.id } }
+
+      const parent = await createTestUser(app, company.id, {
+        email: 'parent-join@test.com',
+        firstName: 'Parent',
+        lastName: 'Join',
+      })
+      await createTestUser(app, company.id, {
+        email: 'child-join@test.com',
+        firstName: 'Child',
+        parentId: parent.id,
+      })
+
+      const result = await app.admin.getClients(adminUser, 1, 20, '')
+
+      const child = result.users.find((u) => u.email === 'child-join@test.com')
+
+      expect(child).toBeTruthy()
+      expect(child.parent).toEqual({ firstName: 'Parent', lastName: 'Join' })
+      expect(child.parentId).toBe(parent.id)
     })
 
     it('defaults to sorting by id descending', async () => {
@@ -644,6 +755,140 @@ describe('admin plugin', () => {
       expect(result.users[0].id).toBe(user3.id)
       expect(result.users[1].id).toBe(user2.id)
       expect(result.users[2].id).toBe(user1.id)
+    })
+  })
+  describe('setScores', () => {
+    const createTestCompany = async (app) => {
+      return app.prisma.company.create({
+        data: { name: `SetScores Company ${Date.now()}` },
+      })
+    }
+
+    const createTestUser = async (app, companyId, overrides = {}) => {
+      return app.prisma.user.create({
+        data: {
+          email: `set-scores-${Date.now()}-${Math.random()}@test.com`,
+          password: 'hash',
+          role: 'Consultant',
+          firstName: 'Score',
+          lastName: 'Target',
+          phone: `+7${Date.now()}${Math.floor(Math.random() * 100)}`,
+          companyId,
+          level: 1,
+          levelConfirmed: true,
+          ...overrides,
+        },
+      })
+    }
+
+    const createTestWage = async (app, companyId, userId, overrides = {}) => {
+      return app.prisma.wage.create({
+        data: {
+          companyId,
+          userId,
+          score: 0,
+          groupScore: 0,
+          amount: 0,
+          ...overrides,
+        },
+      })
+    }
+
+    it('creates a new wage with zero amount when no wages exist', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+      const user = await createTestUser(app, company.id)
+
+      const result = await app.admin.setScores(user, { score: 10, groupScore: 20 })
+
+      expect(result).toEqual({ success: true })
+
+      const wages = await app.prisma.wage.findMany({ where: { userId: user.id } })
+      expect(wages).toHaveLength(1)
+      expect(wages[0].companyId).toBe(company.id)
+      expect(wages[0].userId).toBe(user.id)
+      expect(wages[0].score).toBe(10)
+      expect(wages[0].groupScore).toBe(20)
+      expect(wages[0].amount.toString()).toBe('0')
+    })
+
+    it('modifies the existing zero-amount wage in place', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+      const user = await createTestUser(app, company.id)
+      await createTestWage(app, company.id, user.id)
+
+      const result = await app.admin.setScores(user, { score: 30, groupScore: 40 })
+
+      expect(result).toEqual({ success: true })
+
+      const wages = await app.prisma.wage.findMany({ where: { userId: user.id } })
+      expect(wages).toHaveLength(1)
+      expect(wages[0].score).toBe(30)
+      expect(wages[0].groupScore).toBe(40)
+      expect(wages[0].amount.toString()).toBe('0')
+    })
+
+    it('updates the first wage by id ascending when multiple zero-amount wages exist', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+      const user = await createTestUser(app, company.id)
+      const firstWage = await createTestWage(app, company.id, user.id, { score: 7, groupScore: 8 })
+      const secondWage = await createTestWage(app, company.id, user.id, { score: 5, groupScore: 6 })
+
+      const result = await app.admin.setScores(user, { score: 50, groupScore: 60 })
+
+      expect(result).toEqual({ success: true })
+
+      const wages = await app.prisma.wage.findMany({ where: { userId: user.id }, orderBy: { id: 'asc' } })
+      expect(wages).toHaveLength(2)
+      expect(wages[0].id).toBe(firstWage.id)
+      expect(wages[0].score).toBe(50)
+      expect(wages[0].groupScore).toBe(60)
+      expect(wages[1].id).toBe(secondWage.id)
+      expect(wages[1].score).toBe(5)
+      expect(wages[1].groupScore).toBe(6)
+    })
+
+    it('returns an error when the user already has a wage with non-zero amount', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+      const user = await createTestUser(app, company.id)
+      const existingWage = await createTestWage(app, company.id, user.id, {
+        score: 100,
+        groupScore: 100,
+        amount: 500,
+      })
+
+      const result = await app.admin.setScores(user, { score: 10, groupScore: 20 })
+
+      expect(result).toEqual({ error: 'У пользователя уже есть продажи' })
+
+      // No changes were made
+      const wages = await app.prisma.wage.findMany({ where: { userId: user.id } })
+      expect(wages).toHaveLength(1)
+      expect(wages[0].id).toBe(existingWage.id)
+      expect(wages[0].score).toBe(100)
+      expect(wages[0].groupScore).toBe(100)
+      expect(wages[0].amount.toString()).toBe('500')
+    })
+
+    it('handles setting scores back to zero', async () => {
+      const app = await createApp()
+      const company = await createTestCompany(app)
+      const user = await createTestUser(app, company.id)
+
+      const firstResult = await app.admin.setScores(user, { score: 10, groupScore: 20 })
+      expect(firstResult).toEqual({ success: true })
+
+      const secondResult = await app.admin.setScores(user, { score: 0, groupScore: 0 })
+      expect(secondResult).toEqual({ success: true })
+
+      const wages = await app.prisma.wage.findMany({ where: { userId: user.id } })
+      expect(wages).toHaveLength(1)
+      expect(wages[0].score).toBe(0)
+      expect(wages[0].groupScore).toBe(0)
+      expect(wages[0].amount.toString()).toBe('0')
     })
   })
 })

@@ -30,7 +30,7 @@ const candidateUser = {
   role: UserRole.Candidate,
   company: {
     id: 1,
-    primaryWallet: '0x1111111111111111111111111111111111111111',
+    wallet: '0x1111111111111111111111111111111111111111',
   },
 }
 
@@ -88,7 +88,7 @@ describe('payments routes', () => {
       status: PaymentStatus.Completed,
       txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       fromWallet: '0x2222222222222222222222222222222222222222',
-      toWallet: candidateUser.company.primaryWallet,
+      toWallet: candidateUser.company.wallet,
       chainId: 97,
       tokenSymbol: 'USDT',
       tokenContract: '0x3333333333333333333333333333333333333333',
@@ -121,7 +121,7 @@ describe('payments routes', () => {
       status: PaymentStatus.Completed,
       txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       fromWallet: '0x2222222222222222222222222222222222222222',
-      toWallet: candidateUser.company.primaryWallet,
+      toWallet: candidateUser.company.wallet,
       chainId: 97,
       tokenSymbol: 'USDT',
       tokenContract: '0x3333333333333333333333333333333333333333',
@@ -212,7 +212,7 @@ describe('payments routes', () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue({
       ...candidateUser,
-      company: { id: 1, primaryWallet: null },
+      company: { id: 1, wallet: null },
     })
 
     const response = await app.inject({
@@ -412,7 +412,7 @@ describe('payments routes', () => {
       status: PaymentStatus.Pending,
       txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       fromWallet: '0x2222222222222222222222222222222222222222',
-      toWallet: candidateUser.company.primaryWallet,
+      toWallet: candidateUser.company.wallet,
       chainId: 97,
       tokenSymbol: 'USDT',
       tokenContract: '0x3333333333333333333333333333333333333333',
@@ -889,7 +889,7 @@ describe('payments routes', () => {
       status: PaymentStatus.Completed,
       txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       fromWallet: '0x2222222222222222222222222222222222222222',
-      toWallet: candidateUser.company.primaryWallet,
+      toWallet: candidateUser.company.wallet,
       chainId: 97,
       tokenSymbol: 'USDT',
       tokenContract: '0x3333333333333333333333333333333333333333',
@@ -908,7 +908,7 @@ describe('payments routes', () => {
       status: PaymentStatus.ToCancel,
       txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       fromWallet: '0x2222222222222222222222222222222222222222',
-      toWallet: candidateUser.company.primaryWallet,
+      toWallet: candidateUser.company.wallet,
       chainId: 97,
       tokenSymbol: 'USDT',
       tokenContract: '0x3333333333333333333333333333333333333333',

@@ -2,12 +2,14 @@ import { useState } from 'react'
 import Modal from '../../Modal'
 import CompleteInteractionModal from '../CompleteInteractionModal'
 import ScheduleInteractionModal from '../ScheduleInteractionModal'
+import { UserRole } from '@/generated/prisma/enums'
 import styles from './index.module.css'
 
 const UserModal = ({ data, csrfToken, currentUserId, onClose }) => {
   const [showCompleteModal, setShowCompleteModal] = useState(false)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
   const isDirectChild = data.parentId === currentUserId
+  const isConsultant = data.role === UserRole.Consultant
 
   return (
     <Modal title="Информация о пользователе" onClose={onClose}>
@@ -42,18 +44,20 @@ const UserModal = ({ data, csrfToken, currentUserId, onClose }) => {
             <span className={styles.value}>{data.nick || '—'}</span>
           </div>,
         ]}
-        <div className={styles.infoRow}>
-          <span className={styles.label}>Уровень:</span>
-          <span className={styles.value}>{data.level}</span>
-        </div>
-        <div className={styles.infoRow}>
-          <span className={styles.label}>Личные продажи:</span>
-          <span className={styles.value}>{data.score}</span>
-        </div>
-        <div className={styles.infoRow}>
-          <span className={styles.label}>Групповые продажи:</span>
-          <span className={styles.value}>{data.groupScore}</span>
-        </div>
+        {isConsultant && [
+          <div className={styles.infoRow} key="level">
+            <span className={styles.label}>Уровень:</span>
+            <span className={styles.value}>{data.level}</span>
+          </div>,
+          <div className={styles.infoRow} key="score">
+            <span className={styles.label}>Личные продажи:</span>
+            <span className={styles.value}>{data.score}</span>
+          </div>,
+          <div className={styles.infoRow} key="groupScore">
+            <span className={styles.label}>Групповые продажи:</span>
+            <span className={styles.value}>{data.groupScore}</span>
+          </div>,
+        ]}
         <div className={styles.infoRow}>
           <span className={styles.label}>Дата последнего взаимодействия:</span>
           <span className={styles.value}>{data.lastInteractionDate?.toLocaleDateString('ru-RU') || '—'}</span>

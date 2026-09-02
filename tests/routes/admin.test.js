@@ -2,6 +2,12 @@ import { describe, expect, it, vi } from 'vitest'
 import { createNoCsrfApp as createApp } from '../helpers'
 import { CLIENTS_PAGE_LIMIT } from '../../src/plugins/admin.js'
 
+const createCompany = async (app, name) => {
+  return app.prisma.company.create({
+    data: { name },
+  })
+}
+
 describe('PUT /api/admin/profile', () => {
   it('returns 403 when user is not authenticated', async () => {
     const app = await createApp()
@@ -224,7 +230,7 @@ describe('PUT /api/admin/company', () => {
     expect(response.json().message).toContain('required')
   })
 
-  it('returns 400 when primaryWallet has invalid format', async () => {
+  it('returns 400 when wallet has invalid format', async () => {
     const adminUser = {
       id: 1,
       email: 'admin@example.com',
@@ -240,36 +246,12 @@ describe('PUT /api/admin/company', () => {
       url: '/api/admin/company',
       payload: {
         name: 'Test Company',
-        primaryWallet: 'invalid-wallet',
+        wallet: 'invalid-wallet',
       },
     })
 
     expect(response.statusCode).toBe(400)
-    expect(response.json().message).toContain('primaryWallet')
-  })
-
-  it('returns 400 when secondaryWallet has invalid format', async () => {
-    const adminUser = {
-      id: 1,
-      email: 'admin@example.com',
-      role: 'Admin',
-      company: { id: 1 },
-    }
-
-    const app = await createApp()
-    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
-
-    const response = await app.inject({
-      method: 'PUT',
-      url: '/api/admin/company',
-      payload: {
-        name: 'Test Company',
-        secondaryWallet: 'invalid-wallet',
-      },
-    })
-
-    expect(response.statusCode).toBe(400)
-    expect(response.json().message).toContain('secondaryWallet')
+    expect(response.json().message).toContain('wallet')
   })
 
   it('returns 409 when company name is already taken', async () => {
@@ -330,8 +312,7 @@ describe('PUT /api/admin/company', () => {
     const updatedCompany = {
       id: 1,
       name: 'Updated Company',
-      primaryWallet: '0x1234567890abcdef1234567890abcdef12345678',
-      secondaryWallet: null,
+      wallet: '0x1234567890abcdef1234567890abcdef12345678',
     }
 
     const app = await createApp()
@@ -343,7 +324,7 @@ describe('PUT /api/admin/company', () => {
       url: '/api/admin/company',
       payload: {
         name: 'Updated Company',
-        primaryWallet: '0x1234567890abcdef1234567890abcdef12345678',
+        wallet: '0x1234567890abcdef1234567890abcdef12345678',
       },
     })
 
@@ -353,21 +334,19 @@ describe('PUT /api/admin/company', () => {
       company: {
         id: 1,
         name: 'Updated Company',
-        primaryWallet: '0x1234567890abcdef1234567890abcdef12345678',
-        secondaryWallet: null,
+        wallet: '0x1234567890abcdef1234567890abcdef12345678',
       },
     })
     expect(app.prisma.company.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: {
         name: 'Updated Company',
-        primaryWallet: '0x1234567890abcdef1234567890abcdef12345678',
-        secondaryWallet: null,
+        wallet: '0x1234567890abcdef1234567890abcdef12345678',
       },
     })
   })
 
-  it('returns 200 when wallets are empty strings', async () => {
+  it('returns 200 when wallet is an empty string', async () => {
     const adminUser = {
       id: 1,
       email: 'admin@example.com',
@@ -378,8 +357,7 @@ describe('PUT /api/admin/company', () => {
     const updatedCompany = {
       id: 1,
       name: 'Test Company',
-      primaryWallet: null,
-      secondaryWallet: null,
+      wallet: null,
     }
 
     const app = await createApp()
@@ -391,8 +369,7 @@ describe('PUT /api/admin/company', () => {
       url: '/api/admin/company',
       payload: {
         name: 'Test Company',
-        primaryWallet: '',
-        secondaryWallet: '',
+        wallet: '',
       },
     })
 
@@ -402,16 +379,14 @@ describe('PUT /api/admin/company', () => {
       company: {
         id: 1,
         name: 'Test Company',
-        primaryWallet: null,
-        secondaryWallet: null,
+        wallet: null,
       },
     })
     expect(app.prisma.company.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: {
         name: 'Test Company',
-        primaryWallet: null,
-        secondaryWallet: null,
+        wallet: null,
       },
     })
   })
@@ -628,9 +603,7 @@ describe('GET /api/admin/clients/search', () => {
   it('returns matching users by firstName using real DB', async () => {
     const app = await createApp()
 
-    const company = await app.prisma.company.create({
-      data: { name: 'Search Test Company 1', primaryWallet: '0x1111111111111111111111111111111111111111' },
-    })
+    const company = await createCompany(app, 'Search Test Company 1')
 
     const adminUser = {
       id: 1,
@@ -687,9 +660,7 @@ describe('GET /api/admin/clients/search', () => {
   it('returns matching users by lastName using real DB', async () => {
     const app = await createApp()
 
-    const company = await app.prisma.company.create({
-      data: { name: 'Search Test Company 2', primaryWallet: '0x2222222222222222222222222222222222222222' },
-    })
+    const company = await createCompany(app, 'Search Test Company 2')
 
     const adminUser = {
       id: 1,
@@ -744,9 +715,7 @@ describe('GET /api/admin/clients/search', () => {
   it('returns empty array when no match', async () => {
     const app = await createApp()
 
-    const company = await app.prisma.company.create({
-      data: { name: 'Search Test Company 3', primaryWallet: '0x3333333333333333333333333333333333333333' },
-    })
+    const company = await createCompany(app, 'Search Test Company 3')
 
     const adminUser = {
       id: 1,
@@ -784,9 +753,7 @@ describe('GET /api/admin/clients/search', () => {
   it('search is case-insensitive', async () => {
     const app = await createApp()
 
-    const company = await app.prisma.company.create({
-      data: { name: 'Search Test Company 4', primaryWallet: '0x4444444444444444444444444444444444444444' },
-    })
+    const company = await createCompany(app, 'Search Test Company 4')
 
     const adminUser = {
       id: 1,
@@ -825,9 +792,7 @@ describe('GET /api/admin/clients/search', () => {
   it('excludes admin users from results', async () => {
     const app = await createApp()
 
-    const company = await app.prisma.company.create({
-      data: { name: 'Search Test Company 5', primaryWallet: '0x5555555555555555555555555555555555555555' },
-    })
+    const company = await createCompany(app, 'Search Test Company 5')
 
     const adminUser = {
       id: 1,
@@ -886,13 +851,9 @@ describe('GET /api/admin/clients/search', () => {
   it('scopes search to the admin company', async () => {
     const app = await createApp()
 
-    const companyA = await app.prisma.company.create({
-      data: { name: 'Search Test Company A', primaryWallet: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1' },
-    })
+    const companyA = await createCompany(app, 'Search Test Company A')
 
-    const companyB = await app.prisma.company.create({
-      data: { name: 'Search Test Company B', primaryWallet: '0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB' },
-    })
+    const companyB = await createCompany(app, 'Search Test Company B')
 
     const adminUser = {
       id: 1,
@@ -949,9 +910,7 @@ describe('GET /api/admin/clients/search', () => {
   it('returns up to 20 users', async () => {
     const app = await createApp()
 
-    const company = await app.prisma.company.create({
-      data: { name: 'Search Test Company 6', primaryWallet: '0x6666666666666666666666666666666666666666' },
-    })
+    const company = await createCompany(app, 'Search Test Company 6')
 
     const adminUser = {
       id: 1,
@@ -1115,9 +1074,7 @@ describe('PUT /api/admin/user/parent', () => {
 
     const app = await createApp()
 
-    const company = await app.prisma.company.create({
-      data: { name: 'Self Parent Test Company', primaryWallet: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2' },
-    })
+    const company = await createCompany(app, 'Self Parent Test Company')
 
     const user = await app.prisma.user.create({
       data: {
@@ -1157,13 +1114,9 @@ describe('PUT /api/admin/user/parent', () => {
 
     const app = await createApp()
 
-    const companyA = await app.prisma.company.create({
-      data: { name: 'Company A for Cross Company', primaryWallet: '0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB' },
-    })
+    const companyA = await createCompany(app, 'Company A for Cross Company')
 
-    const companyB = await app.prisma.company.create({
-      data: { name: 'Company B for Cross Company', primaryWallet: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' },
-    })
+    const companyB = await createCompany(app, 'Company B for Cross Company')
 
     const userInCompanyB = await app.prisma.user.create({
       data: {
@@ -1203,9 +1156,7 @@ describe('PUT /api/admin/user/parent', () => {
 
     const app = await createApp()
 
-    const company = await app.prisma.company.create({
-      data: { name: 'Parent Not Found Company', primaryWallet: '0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD' },
-    })
+    const company = await createCompany(app, 'Parent Not Found Company')
 
     const user = await app.prisma.user.create({
       data: {
@@ -1245,13 +1196,9 @@ describe('PUT /api/admin/user/parent', () => {
 
     const app = await createApp()
 
-    const companyA = await app.prisma.company.create({
-      data: { name: 'Parent Cross Company A', primaryWallet: '0xEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE' },
-    })
+    const companyA = await createCompany(app, 'Parent Cross Company A')
 
-    const companyB = await app.prisma.company.create({
-      data: { name: 'Parent Cross Company B', primaryWallet: '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF' },
-    })
+    const companyB = await createCompany(app, 'Parent Cross Company B')
 
     const userInCompanyA = await app.prisma.user.create({
       data: {
@@ -1302,9 +1249,7 @@ describe('PUT /api/admin/user/parent', () => {
 
     const app = await createApp()
 
-    const company = await app.prisma.company.create({
-      data: { name: 'Success Parent Update Company', primaryWallet: '0x1111111111111111111111111111111111111111' },
-    })
+    const company = await createCompany(app, 'Success Parent Update Company')
 
     const targetUser = await app.prisma.user.create({
       data: {
@@ -1367,9 +1312,7 @@ describe('PUT /api/admin/user/parent', () => {
 
     const app = await createApp()
 
-    const company = await app.prisma.company.create({
-      data: { name: 'Orphan Clear Company', primaryWallet: '0x3333333333333333333333333333333333333333' },
-    })
+    const company = await createCompany(app, 'Orphan Clear Company')
 
     const targetUser = await app.prisma.user.create({
       data: {
@@ -1431,9 +1374,7 @@ describe('PUT /api/admin/user/parent', () => {
 
     const app = await createApp()
 
-    const company = await app.prisma.company.create({
-      data: { name: 'Null Parent Update Company', primaryWallet: '0x2222222222222222222222222222222222222222' },
-    })
+    const company = await createCompany(app, 'Null Parent Update Company')
 
     const parentUser = await app.prisma.user.create({
       data: {
@@ -1510,19 +1451,13 @@ describe('PUT /api/admin/user/parent', () => {
     expect(response.json()).toEqual({ error: 'Ошибка обновления родителя' })
   })
 })
-describe('PUT /api/admin/user', () => {
+describe('PUT /api/admin/user/level', () => {
   const createAdminUser = () => ({
     id: 1,
     email: 'admin@test.com',
     role: 'Admin',
     company: { id: 1 },
   })
-
-  const createCompany = async (app, name, wallet) => {
-    return app.prisma.company.create({
-      data: { name, primaryWallet: wallet },
-    })
-  }
 
   const createUser = async (app, overrides = {}) => {
     const { emailPrefix, ...data } = overrides
@@ -1536,11 +1471,17 @@ describe('PUT /api/admin/user', () => {
         phone: `+375291${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`,
         level: 1,
         levelConfirmed: true,
-        score: 10,
         ...data,
       },
     })
   }
+
+  const validPayload = (userId, overrides = {}) => ({
+    userId,
+    level: 2,
+    levelConfirmed: true,
+    ...overrides,
+  })
 
   it('returns 403 when user is not authenticated', async () => {
     const app = await createApp()
@@ -1548,8 +1489,8 @@ describe('PUT /api/admin/user', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user',
-      payload: { userId: 1, level: 2 },
+      url: '/api/admin/user/level',
+      payload: validPayload(1),
     })
 
     expect(response.statusCode).toBe(403)
@@ -1567,8 +1508,8 @@ describe('PUT /api/admin/user', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user',
-      payload: { userId: 1, level: 2 },
+      url: '/api/admin/user/level',
+      payload: validPayload(1),
     })
 
     expect(response.statusCode).toBe(403)
@@ -1581,32 +1522,40 @@ describe('PUT /api/admin/user', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user',
-      payload: { level: 2 },
+      url: '/api/admin/user/level',
+      payload: { level: 2, levelConfirmed: true },
     })
 
     expect(response.statusCode).toBe(400)
     expect(response.json().message).toContain('required')
   })
 
-  it('returns 400 when no updatable fields are provided', async () => {
+  it('returns 400 when level is missing', async () => {
     const app = await createApp()
-    const company = await createCompany(app, 'Empty Fields Company', '0x9999999999999999999999999999999999999999')
-
-    const targetUser = await createUser(app, { companyId: company.id })
-
-    const adminUser = createAdminUser()
-    adminUser.company.id = company.id
-    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user',
-      payload: { userId: targetUser.id },
+      url: '/api/admin/user/level',
+      payload: { userId: 1, levelConfirmed: true },
     })
 
     expect(response.statusCode).toBe(400)
-    expect(response.json()).toEqual({ error: 'Нет полей для обновления' })
+    expect(response.json().message).toContain('required')
+  })
+
+  it('returns 400 when levelConfirmed is missing', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user/level',
+      payload: { userId: 1, level: 2 },
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(response.json().message).toContain('required')
   })
 
   it('returns 400 when level is below minimum', async () => {
@@ -1615,8 +1564,8 @@ describe('PUT /api/admin/user', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user',
-      payload: { userId: 1, level: 0 },
+      url: '/api/admin/user/level',
+      payload: { userId: 1, level: 0, levelConfirmed: true },
     })
 
     expect(response.statusCode).toBe(400)
@@ -1628,21 +1577,21 @@ describe('PUT /api/admin/user', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user',
-      payload: { userId: 1, level: 11 },
+      url: '/api/admin/user/level',
+      payload: { userId: 1, level: 11, levelConfirmed: true },
     })
 
     expect(response.statusCode).toBe(400)
   })
 
-  it('returns 400 when score is negative', async () => {
+  it('returns 400 when levelConfirmed is not a boolean', async () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user',
-      payload: { userId: 1, score: -1 },
+      url: '/api/admin/user/level',
+      payload: { userId: 1, level: 2, levelConfirmed: 'yes' },
     })
 
     expect(response.statusCode).toBe(400)
@@ -1650,15 +1599,15 @@ describe('PUT /api/admin/user', () => {
 
   it('returns 404 when target user does not exist', async () => {
     const app = await createApp()
-    const company = await createCompany(app, 'Not Found Company', '0x1111111111111111111111111111111111111111')
+    const company = await createCompany(app, 'Level Not Found Company')
     const adminUser = createAdminUser()
     adminUser.company.id = company.id
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user',
-      payload: { userId: 999999, level: 2 },
+      url: '/api/admin/user/level',
+      payload: { userId: 999999, level: 2, levelConfirmed: true },
     })
 
     expect(response.statusCode).toBe(404)
@@ -1667,8 +1616,8 @@ describe('PUT /api/admin/user', () => {
 
   it('returns 403 when target user is in a different company', async () => {
     const app = await createApp()
-    const companyA = await createCompany(app, 'Company A', '0x2222222222222222222222222222222222222222')
-    const companyB = await createCompany(app, 'Company B', '0x3333333333333333333333333333333333333333')
+    const companyA = await createCompany(app, 'Level Company A')
+    const companyB = await createCompany(app, 'Level Company B')
 
     const targetUser = await createUser(app, { companyId: companyB.id })
 
@@ -1678,8 +1627,8 @@ describe('PUT /api/admin/user', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user',
-      payload: { userId: targetUser.id, level: 2 },
+      url: '/api/admin/user/level',
+      payload: { userId: targetUser.id, level: 2, levelConfirmed: true },
     })
 
     expect(response.statusCode).toBe(403)
@@ -1688,7 +1637,7 @@ describe('PUT /api/admin/user', () => {
 
   it('returns 400 when target user is not a Consultant', async () => {
     const app = await createApp()
-    const company = await createCompany(app, 'Non Consultant Company', '0x4444444444444444444444444444444444444444')
+    const company = await createCompany(app, 'Level Non Consultant Company')
 
     const targetUser = await createUser(app, {
       companyId: company.id,
@@ -1702,17 +1651,17 @@ describe('PUT /api/admin/user', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user',
-      payload: { userId: targetUser.id, level: 2 },
+      url: '/api/admin/user/level',
+      payload: { userId: targetUser.id, level: 2, levelConfirmed: true },
     })
 
     expect(response.statusCode).toBe(400)
     expect(response.json()).toEqual({ error: 'Обновлять уровень можно только консультантам' })
   })
 
-  it('successfully updates all three fields', async () => {
+  it('successfully updates level and levelConfirmed without touching scores', async () => {
     const app = await createApp()
-    const company = await createCompany(app, 'Update All Company', '0x5555555555555555555555555555555555555555')
+    const company = await createCompany(app, 'Level Update Company')
 
     const targetUser = await createUser(app, { companyId: company.id })
 
@@ -1722,110 +1671,23 @@ describe('PUT /api/admin/user', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user',
-      payload: { userId: targetUser.id, level: 3, levelConfirmed: false, score: 150 },
+      url: '/api/admin/user/level',
+      payload: { userId: targetUser.id, level: 3, levelConfirmed: false },
     })
 
     expect(response.statusCode).toBe(200)
 
     const body = response.json()
     expect(body.success).toBe(true)
-    expect(body.user.id).toBe(targetUser.id)
-    expect(body.user.level).toBe(3)
-    expect(body.user.levelConfirmed).toBe(false)
-    expect(body.user.score).toBe(150)
+    expect(body.user).toEqual({
+      id: targetUser.id,
+      level: 3,
+      levelConfirmed: false,
+    })
 
-    // Verify the database was actually updated
     const updatedUser = await app.prisma.user.findUnique({ where: { id: targetUser.id } })
     expect(updatedUser.level).toBe(3)
     expect(updatedUser.levelConfirmed).toBe(false)
-    expect(updatedUser.score).toBe(150)
-  })
-
-  it('successfully updates only level, leaving other fields unchanged', async () => {
-    const app = await createApp()
-    const company = await createCompany(app, 'Partial Level Company', '0x6666666666666666666666666666666666666666')
-
-    const targetUser = await createUser(app, { companyId: company.id })
-
-    const adminUser = createAdminUser()
-    adminUser.company.id = company.id
-    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
-
-    const response = await app.inject({
-      method: 'PUT',
-      url: '/api/admin/user',
-      payload: { userId: targetUser.id, level: 4 },
-    })
-
-    expect(response.statusCode).toBe(200)
-
-    const body = response.json()
-    expect(body.success).toBe(true)
-    expect(body.user.level).toBe(4)
-    expect(body.user.levelConfirmed).toBe(true)
-    expect(body.user.score).toBe(10)
-
-    const updatedUser = await app.prisma.user.findUnique({ where: { id: targetUser.id } })
-    expect(updatedUser.level).toBe(4)
-    expect(updatedUser.levelConfirmed).toBe(true)
-    expect(updatedUser.score).toBe(10)
-  })
-
-  it('successfully updates only levelConfirmed to false', async () => {
-    const app = await createApp()
-    const company = await createCompany(app, 'Partial Confirmed Company', '0x7777777777777777777777777777777777777777')
-
-    const targetUser = await createUser(app, { companyId: company.id })
-
-    const adminUser = createAdminUser()
-    adminUser.company.id = company.id
-    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
-
-    const response = await app.inject({
-      method: 'PUT',
-      url: '/api/admin/user',
-      payload: { userId: targetUser.id, levelConfirmed: false },
-    })
-
-    expect(response.statusCode).toBe(200)
-
-    const body = response.json()
-    expect(body.success).toBe(true)
-    expect(body.user.levelConfirmed).toBe(false)
-    expect(body.user.level).toBe(1)
-    expect(body.user.score).toBe(10)
-
-    const updatedUser = await app.prisma.user.findUnique({ where: { id: targetUser.id } })
-    expect(updatedUser.levelConfirmed).toBe(false)
-  })
-
-  it('successfully updates only score', async () => {
-    const app = await createApp()
-    const company = await createCompany(app, 'Partial Score Company', '0x8888888888888888888888888888888888888888')
-
-    const targetUser = await createUser(app, { companyId: company.id })
-
-    const adminUser = createAdminUser()
-    adminUser.company.id = company.id
-    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
-
-    const response = await app.inject({
-      method: 'PUT',
-      url: '/api/admin/user',
-      payload: { userId: targetUser.id, score: 250 },
-    })
-
-    expect(response.statusCode).toBe(200)
-
-    const body = response.json()
-    expect(body.success).toBe(true)
-    expect(body.user.score).toBe(250)
-    expect(body.user.level).toBe(1)
-    expect(body.user.levelConfirmed).toBe(true)
-
-    const updatedUser = await app.prisma.user.findUnique({ where: { id: targetUser.id } })
-    expect(updatedUser.score).toBe(250)
   })
 
   it('returns 500 on unexpected database error', async () => {
@@ -1836,8 +1698,280 @@ describe('PUT /api/admin/user', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user',
-      payload: { userId: 1, level: 2 },
+      url: '/api/admin/user/level',
+      payload: { userId: 1, level: 2, levelConfirmed: true },
+    })
+
+    expect(response.statusCode).toBe(500)
+    expect(response.json()).toEqual({ error: 'Ошибка обновления пользователя' })
+  })
+})
+
+describe('PUT /api/admin/user/wages', () => {
+  const createAdminUser = () => ({
+    id: 1,
+    email: 'admin@test.com',
+    role: 'Admin',
+    company: { id: 1 },
+  })
+
+  const createUser = async (app, overrides = {}) => {
+    const { emailPrefix, ...data } = overrides
+    return app.prisma.user.create({
+      data: {
+        email: `${emailPrefix || 'wages-user'}-${Date.now()}@test.com`,
+        password: 'hashed',
+        role: 'Consultant',
+        firstName: 'Wages',
+        lastName: 'User',
+        phone: `+375294${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`,
+        level: 1,
+        levelConfirmed: true,
+        ...data,
+      },
+    })
+  }
+
+  it('returns 403 when user is not authenticated', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user/wages',
+      payload: { userId: 1, score: 10, groupScore: 20 },
+    })
+
+    expect(response.statusCode).toBe(403)
+    expect(response.json()).toEqual({ error: 'Доступ запрещен' })
+  })
+
+  it('returns 403 when user is not Admin', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue({
+      id: 1,
+      email: 'candidate@test.com',
+      role: 'Candidate',
+      company: { id: 1 },
+    })
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user/wages',
+      payload: { userId: 1, score: 10, groupScore: 20 },
+    })
+
+    expect(response.statusCode).toBe(403)
+    expect(response.json()).toEqual({ error: 'Доступ запрещен' })
+  })
+
+  it('returns 400 when userId is missing', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user/wages',
+      payload: { score: 10, groupScore: 20 },
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(response.json().message).toContain('userId')
+  })
+
+  it('returns 400 when score is missing', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user/wages',
+      payload: { userId: 1, groupScore: 20 },
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(response.json().message).toContain('score')
+  })
+
+  it('returns 400 when groupScore is missing', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user/wages',
+      payload: { userId: 1, score: 10 },
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(response.json().message).toContain('groupScore')
+  })
+
+  it('returns 400 when score is negative', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user/wages',
+      payload: { userId: 1, score: -1, groupScore: 20 },
+    })
+
+    expect(response.statusCode).toBe(400)
+  })
+
+  it('returns 400 when groupScore is negative', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user/wages',
+      payload: { userId: 1, score: 10, groupScore: -1 },
+    })
+
+    expect(response.statusCode).toBe(400)
+  })
+
+  it('returns 404 when target user does not exist', async () => {
+    const app = await createApp()
+    const company = await createCompany(app, 'Wages Not Found Company')
+    const adminUser = createAdminUser()
+    adminUser.company.id = company.id
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user/wages',
+      payload: { userId: 999999, score: 10, groupScore: 20 },
+    })
+
+    expect(response.statusCode).toBe(404)
+    expect(response.json()).toEqual({ error: 'Пользователь не найден' })
+  })
+
+  it('returns 403 when target user is in a different company', async () => {
+    const app = await createApp()
+    const companyA = await createCompany(app, 'Wages Company A')
+    const companyB = await createCompany(app, 'Wages Company B')
+
+    const targetUser = await createUser(app, { companyId: companyB.id })
+
+    const adminUser = createAdminUser()
+    adminUser.company.id = companyA.id
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user/wages',
+      payload: { userId: targetUser.id, score: 10, groupScore: 20 },
+    })
+
+    expect(response.statusCode).toBe(403)
+    expect(response.json()).toEqual({ error: 'Доступ запрещен' })
+  })
+
+  it('returns 400 when target user is not a Consultant', async () => {
+    const app = await createApp()
+    const company = await createCompany(app, 'Wages Non Consultant Company')
+
+    const targetUser = await createUser(app, {
+      companyId: company.id,
+      emailPrefix: 'wages-candidate',
+      role: 'Candidate',
+    })
+
+    const adminUser = createAdminUser()
+    adminUser.company.id = company.id
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user/wages',
+      payload: { userId: targetUser.id, score: 10, groupScore: 20 },
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(response.json()).toEqual({ error: 'Устанавливать единицы можно только консультантам' })
+  })
+
+  it('returns 200 and delegates to setScores when it succeeds', async () => {
+    const app = await createApp()
+    const company = await createCompany(app, 'Wages Delegation Company')
+
+    const targetUser = await createUser(app, { companyId: company.id })
+
+    const adminUser = createAdminUser()
+    adminUser.company.id = company.id
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+    const setScoresSpy = vi.spyOn(app.admin, 'setScores').mockResolvedValue({ success: true })
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user/wages',
+      payload: { userId: targetUser.id, score: 10, groupScore: 20 },
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual({ success: true, score: 10, groupScore: 20 })
+    expect(setScoresSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ id: targetUser.id, companyId: company.id, role: 'Consultant' }),
+      { score: 10, groupScore: 20 },
+    )
+  })
+
+  it('returns 400 with the setScores error message when setScores returns an error', async () => {
+    const app = await createApp()
+    const company = await createCompany(app, 'Wages Delegation Error Company')
+
+    const targetUser = await createUser(app, { companyId: company.id })
+
+    const adminUser = createAdminUser()
+    adminUser.company.id = company.id
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+    vi.spyOn(app.admin, 'setScores').mockResolvedValue({ error: 'Some setScores error' })
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user/wages',
+      payload: { userId: targetUser.id, score: 10, groupScore: 20 },
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(response.json()).toEqual({ error: 'Some setScores error' })
+  })
+
+  it('returns 500 when setScores throws', async () => {
+    const app = await createApp()
+    const company = await createCompany(app, 'Wages Delegation Throw Company')
+
+    const targetUser = await createUser(app, { companyId: company.id })
+
+    const adminUser = createAdminUser()
+    adminUser.company.id = company.id
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+    vi.spyOn(app.admin, 'setScores').mockRejectedValue(new Error('Database connection failed'))
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user/wages',
+      payload: { userId: targetUser.id, score: 10, groupScore: 20 },
+    })
+
+    expect(response.statusCode).toBe(500)
+    expect(response.json()).toEqual({ error: 'Ошибка обновления пользователя' })
+  })
+
+  it('returns 500 on unexpected database error', async () => {
+    const app = await createApp()
+    const adminUser = createAdminUser()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+    vi.spyOn(app.prisma.user, 'findUnique').mockRejectedValue(new Error('Database connection failed'))
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/user/wages',
+      payload: { userId: 1, score: 10, groupScore: 20 },
     })
 
     expect(response.statusCode).toBe(500)

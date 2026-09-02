@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useClientsContext } from '../ClientsContext'
 import Modal from '../../Modal'
 import UpdateParentModal from '../UpdateParentModal'
-import UpdateClientModal from '../UpdateClientModal'
+import UpdateScoresModal from '../UpdateScoresModal'
+import UpdateLevelModal from '../UpdateLevelModal'
 import { UserRole } from '@/generated/prisma/enums'
 import { userName } from '@/lib/user'
 import styles from './index.module.css'
@@ -10,7 +11,8 @@ import styles from './index.module.css'
 const ClientModal = ({ onClose }) => {
   const { selectedUser } = useClientsContext()
   const [showChangeParent, setShowChangeParent] = useState(false)
-  const [showUpdateModal, setShowUpdateModal] = useState(false)
+  const [showUpdateScores, setShowUpdateScores] = useState(false)
+  const [showUpdateLevel, setShowUpdateLevel] = useState(false)
 
   if (!selectedUser) return null
 
@@ -25,7 +27,8 @@ const ClientModal = ({ onClose }) => {
   return (
     <Modal title="Информация о пользователе" onClose={onClose}>
       {showChangeParent && <UpdateParentModal onClose={() => setShowChangeParent(false)} />}
-      {showUpdateModal && <UpdateClientModal onClose={() => setShowUpdateModal(false)} />}
+      {showUpdateScores && <UpdateScoresModal onClose={() => setShowUpdateScores(false)} />}
+      {showUpdateLevel && <UpdateLevelModal onClose={() => setShowUpdateLevel(false)} />}
       <div className={styles.infoTable}>
         <div className={styles.infoRow}>
           <span className={styles.label}>Имя:</span>
@@ -86,9 +89,14 @@ const ClientModal = ({ onClose }) => {
           Изменить родителя
         </button>
         {isConsultant && (
-          <button className={styles.actionButton} onClick={() => setShowUpdateModal(true)}>
-            Изменить достижения
-          </button>
+          <>
+            <button className={styles.actionButton} onClick={() => setShowUpdateScores(true)}>
+              Изменить единицы
+            </button>
+            <button className={styles.actionButton} onClick={() => setShowUpdateLevel(true)}>
+              Изменить уровень
+            </button>
+          </>
         )}
       </div>
     </Modal>

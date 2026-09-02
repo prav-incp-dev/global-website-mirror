@@ -51,13 +51,7 @@ export default async (fastify) => {
         required: ['name'],
         properties: {
           name: { type: 'string' },
-          primaryWallet: {
-            anyOf: [
-              { type: 'string', format: 'wallet' },
-              { type: 'string', maxLength: 0 },
-            ],
-          },
-          secondaryWallet: {
+          wallet: {
             anyOf: [
               { type: 'string', format: 'wallet' },
               { type: 'string', maxLength: 0 },
@@ -72,15 +66,14 @@ export default async (fastify) => {
         return reply.code(403).send({ error: 'Доступ запрещен' })
       }
 
-      const { name, primaryWallet, secondaryWallet } = req.body
+      const { name, wallet } = req.body
 
       try {
         const company = await fastify.prisma.company.update({
           where: { id: user.company.id },
           data: {
             name,
-            primaryWallet: primaryWallet || null,
-            secondaryWallet: secondaryWallet || null,
+            wallet: wallet || null,
           },
         })
 
@@ -89,8 +82,7 @@ export default async (fastify) => {
           company: {
             id: company.id,
             name: company.name,
-            primaryWallet: company.primaryWallet,
-            secondaryWallet: company.secondaryWallet,
+            wallet: company.wallet,
           },
         })
       } catch (err) {
@@ -250,16 +242,15 @@ export default async (fastify) => {
     },
   })
 
-  fastify.put('/api/admin/user', {
+  fastify.put('/api/admin/user/level', {
     schema: {
       body: {
         type: 'object',
-        required: ['userId'],
+        required: ['userId', 'level', 'levelConfirmed'],
         properties: {
           userId: { type: 'integer', minimum: 1 },
           level: { type: 'integer', minimum: 1, maximum: 10 },
           levelConfirmed: { type: 'boolean' },
-          score: { type: 'integer', minimum: 0 },
         },
       },
     },
@@ -269,7 +260,7 @@ export default async (fastify) => {
         return reply.code(403).send({ error: 'Доступ запрещен' })
       }
 
-      const { userId, level, levelConfirmed, score } = req.body
+      const { userId, level, levelConfirmed } = req.body
 
       try {
         const targetUser = await fastify.prisma.user.findUnique({
@@ -289,27 +280,68 @@ export default async (fastify) => {
           return reply.code(400).send({ error: 'Обновлять уровень можно только консультантам' })
         }
 
-        const data = {}
-        if (level != null) data.level = level
-        if (levelConfirmed != null) data.levelConfirmed = levelConfirmed
-        if (score != null) data.score = score
-
-        if (Object.keys(data).length === 0) {
-          return reply.code(400).send({ error: 'Нет полей для обновления' })
-        }
-
         const updatedUser = await fastify.prisma.user.update({
           where: { id: userId },
-          data,
+          data: { level, levelConfirmed },
           select: {
             id: true,
             level: true,
             levelConfirmed: true,
-            score: true,
           },
         })
 
         return reply.send({ success: true, user: updatedUser })
+      } catch {
+        return reply.code(500).send({ error: 'Ошибка обновления пользователя' })
+      }
+    },
+  })
+
+  fastify.put('/api/admin/user/wages', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['userId', 'score', 'groupScore'],
+        properties: {
+          userId: { type: 'integer', minimum: 1 },
+          score: { type: 'integer', minimum: 0 },
+          groupScore: { type: 'integer', minimum: 0 },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      const { userId, score, groupScore } = req.body
+
+      try {
+        const targetUser = await fastify.prisma.user.findUnique({
+          where: { id: userId },
+          select: { id: true, companyId: true, role: true },
+        })
+
+        if (!targetUser) {
+          return reply.code(404).send({ error: 'Пользователь не найден' })
+        }
+
+        if (targetUser.companyId !== user.company.id) {
+          return reply.code(403).send({ error: 'Доступ запрещен' })
+        }
+
+        if (targetUser.role !== UserRole.Consultant) {
+          return reply.code(400).send({ error: 'Устанавливать единицы можно только консультантам' })
+        }
+
+        const result = await fastify.admin.setScores(targetUser, { score, groupScore })
+
+        if (result.error) {
+          return reply.code(400).send({ error: result.error })
+        }
+
+        return reply.send({ success: true, score, groupScore })
       } catch {
         return reply.code(500).send({ error: 'Ошибка обновления пользователя' })
       }

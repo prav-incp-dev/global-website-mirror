@@ -286,4 +286,137 @@ describe('user plugin', () => {
       expect(children[0].nextInteractionDate).toBeNull()
     })
   })
+
+  describe('getScores', () => {
+    const createCompany = async (app) => {
+      return app.prisma.company.create({
+        data: { name: `GetScores Company ${Date.now()}-${Math.random()}` },
+      })
+    }
+
+    const createUser = async (app, companyId, role = 'Consultant') => {
+      return app.prisma.user.create({
+        data: {
+          email: `get-scores-${Date.now()}-${Math.random()}@test.com`,
+          password: 'hash',
+          role,
+          firstName: 'Score',
+          lastName: 'User',
+          phone: `+1000003${String(Date.now()).slice(-4)}${Math.floor(Math.random() * 10)}`,
+          companyId,
+        },
+      })
+    }
+
+    it('returns zeros for a Candidate even if they have wages', async ({ expect }) => {
+      const app = await createApp()
+      const company = await createCompany(app)
+      const candidate = await createUser(app, company.id, 'Candidate')
+
+      await app.prisma.wage.create({
+        data: {
+          companyId: company.id,
+          userId: candidate.id,
+          score: 100,
+          groupScore: 200,
+          amount: 0,
+        },
+      })
+
+      const result = await app.user.getScores(candidate)
+
+      expect(result).toEqual({ score: 0, groupScore: 0 })
+    })
+
+    it('returns zeros for a Consultant with no wages', async ({ expect }) => {
+      const app = await createApp()
+      const company = await createCompany(app)
+      const consultant = await createUser(app, company.id, 'Consultant')
+
+      const result = await app.user.getScores(consultant)
+
+      expect(result).toEqual({ score: 0, groupScore: 0 })
+    })
+
+    it('returns aggregated wage sums for a single wage', async ({ expect }) => {
+      const app = await createApp()
+      const company = await createCompany(app)
+      const consultant = await createUser(app, company.id, 'Consultant')
+
+      await app.prisma.wage.create({
+        data: {
+          companyId: company.id,
+          userId: consultant.id,
+          score: 10,
+          groupScore: 20,
+          amount: 0,
+        },
+      })
+
+      const result = await app.user.getScores(consultant)
+
+      expect(result).toEqual({ score: 10, groupScore: 20 })
+    })
+
+    it('sums score and groupScore across multiple wages', async ({ expect }) => {
+      const app = await createApp()
+      const company = await createCompany(app)
+      const consultant = await createUser(app, company.id, 'Consultant')
+
+      await app.prisma.wage.create({
+        data: {
+          companyId: company.id,
+          userId: consultant.id,
+          score: 10,
+          groupScore: 20,
+          amount: 0,
+        },
+      })
+      await app.prisma.wage.create({
+        data: {
+          companyId: company.id,
+          userId: consultant.id,
+          score: 30,
+          groupScore: 40,
+          amount: 0,
+        },
+      })
+
+      const result = await app.user.getScores(consultant)
+
+      expect(result).toEqual({ score: 40, groupScore: 60 })
+    })
+
+    it('ignores other users wages', async ({ expect }) => {
+      const app = await createApp()
+      const company = await createCompany(app)
+      const first = await createUser(app, company.id, 'Consultant')
+      const second = await createUser(app, company.id, 'Consultant')
+
+      await app.prisma.wage.create({
+        data: {
+          companyId: company.id,
+          userId: first.id,
+          score: 10,
+          groupScore: 20,
+          amount: 0,
+        },
+      })
+      await app.prisma.wage.create({
+        data: {
+          companyId: company.id,
+          userId: second.id,
+          score: 50,
+          groupScore: 60,
+          amount: 0,
+        },
+      })
+
+      const firstResult = await app.user.getScores(first)
+      const secondResult = await app.user.getScores(second)
+
+      expect(firstResult).toEqual({ score: 10, groupScore: 20 })
+      expect(secondResult).toEqual({ score: 50, groupScore: 60 })
+    })
+  })
 })

@@ -46,6 +46,23 @@ export default fp(async (server) => {
       return formatUnits(rawBalance, decimals)
     },
 
+    getScores: async (user) => {
+      if (user.role === UserRole.Candidate) {
+        return { score: 0, groupScore: 0 }
+      }
+
+      const wageSums = await server.prisma.wage.groupBy({
+        by: ['userId'],
+        where: { userId: user.id },
+        _sum: { score: true, groupScore: true },
+      })
+
+      return {
+        score: wageSums[0]?._sum?.score ?? 0,
+        groupScore: wageSums[0]?._sum?.groupScore ?? 0,
+      }
+    },
+
     getDescendants: async (user) => {
       if (user.role === UserRole.Candidate) return []
 
@@ -60,6 +77,14 @@ export default fp(async (server) => {
           SELECT u.*
           FROM "User" u
           INNER JOIN user_hierarchy uh ON u."parentId" = uh.id
+        ),
+        wage_sums AS (
+          SELECT
+            "userId",
+            COALESCE(SUM("score"), 0)::int AS "score",
+            COALESCE(SUM("groupScore"), 0)::int AS "groupScore"
+          FROM "Wage"
+          GROUP BY "userId"
         ),
         last_interactions AS (
           SELECT
@@ -76,10 +101,19 @@ export default fp(async (server) => {
           FROM "Interaction"
           WHERE "status" = 'Open'
         )
-        SELECT uh.*, li."lastInteractionDate", ni."plannedAt" AS "nextInteractionDate"
+        SELECT
+          uh."id", uh."email", uh."password", uh."role", uh."companyId", uh."nick",
+          uh."firstName", uh."lastName", uh."phone", uh."level", uh."levelConfirmed",
+          uh."memberId", uh."parentId", uh."orphant", uh."wallet", uh."confirmationCode",
+          uh."createdAt", uh."updatedAt",
+          COALESCE(ws."score", 0)::int AS "score",
+          COALESCE(ws."groupScore", 0)::int AS "groupScore",
+          li."lastInteractionDate",
+          ni."plannedAt" AS "nextInteractionDate"
         FROM user_hierarchy uh
-        LEFT JOIN last_interactions li ON li."targetId" = uh.id
-        LEFT JOIN next_interactions ni ON ni."targetId" = uh.id
+        LEFT JOIN wage_sums ws ON ws."userId" = uh."id"
+        LEFT JOIN last_interactions li ON li."targetId" = uh."id"
+        LEFT JOIN next_interactions ni ON ni."targetId" = uh."id"
       `
 
       return children

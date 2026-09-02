@@ -1,9 +1,19 @@
 import { test, expect } from '../fixtures.js'
+import { createTestCompany, createTestUser } from '../db.js'
 
 test.describe('consultant manages own profile', () => {
+  let parent
+  let candidate
+
+  test.beforeEach(async () => {
+    const company = await createTestCompany('Candidate Profile Company')
+    parent = await createTestUser({ firstName: 'Consultant', lastName: 'Inviter', companyId: company.id })
+    candidate = await createTestUser({ firstName: 'Candidate', lastName: 'User', role: 'Candidate', companyId: company.id, parentId: parent.id })
+  })
+
   test('views profile with inviter, edits data, and verifies email persists', async ({ loginAs, page }) => {
-    // Log in as consultant (userId=3 after seed change)
-    await loginAs(3)
+    // Log in as consultant
+    await loginAs(candidate.id)
     await page.goto('/')
     await page.waitForLoadState('networkidle')
 
@@ -11,10 +21,10 @@ test.describe('consultant manages own profile', () => {
     // --- VIEW MODE: Verify initial data ---
     await expect(page.getByRole('heading', { name: 'Профиль' })).toBeVisible()
     await expect(page.getByText('Candidate', { exact: true })).toBeVisible()
-    await expect(page.getByText('User')).toBeVisible()
-    await expect(page.getByText('candidate@example.com')).toBeVisible()
-    await expect(page.getByText('+375290000033')).toBeVisible()
-    await expect(page.getByText('DOM-00000000-0003')).toBeVisible()
+    await expect(page.getByText('User', { exact: true })).toBeVisible()
+    await expect(page.getByText(candidate.email)).toBeVisible()
+    await expect(page.getByText(candidate.phone)).toBeVisible()
+    await expect(page.getByText(candidate.memberId)).toBeVisible()
 
     // --- Verify balance button is visible (candidate has wallet)
     await expect(page.getByRole('button', { name: 'Проверить баланс' })).toBeVisible()
@@ -33,7 +43,7 @@ test.describe('consultant manages own profile', () => {
 
     // Verify inviter field
     await expect(page.getByText('Ваш пригласитель:')).toBeVisible()
-    await expect(page.getByText('@inviter')).toBeVisible()
+    await expect(page.getByText(parent.nick)).toBeVisible()
 
     // --- EDIT MODE: Update profile ---
     await page.getByRole('button', { name: 'Редактировать' }).click()
@@ -56,7 +66,7 @@ test.describe('consultant manages own profile', () => {
     await expect(page.getByText('0x12345678...33333333')).toBeVisible()
 
     // Email should still be present (not on edit form, so unchanged)
-    await expect(page.getByText('candidate@example.com')).toBeVisible()
+    await expect(page.getByText(candidate.email)).toBeVisible()
 
     // --- Navigate to Покупки tab and back to Профиль ---
     await page.getByRole('button', { name: 'Покупки' }).click()
@@ -69,6 +79,6 @@ test.describe('consultant manages own profile', () => {
     await expect(page.getByText('0099')).toBeVisible()
     await expect(page.getByText('@invited')).toBeVisible()
     await expect(page.getByText('0x12345678...33333333')).toBeVisible()
-    await expect(page.getByText('candidate@example.com')).toBeVisible()
+    await expect(page.getByText(candidate.email)).toBeVisible()
   })
 })

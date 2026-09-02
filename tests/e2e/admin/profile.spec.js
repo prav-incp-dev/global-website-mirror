@@ -1,18 +1,24 @@
 import { test, expect } from '../fixtures.js'
+import { createTestCompany, createTestUser } from '../db.js'
+
 
 test.describe('admin manages own profile', () => {
-  const updatedFirstName = 'Bob'
-  const updatedLastName = 'Updated'
+  let admin
+
+  test.beforeEach(async () => {
+    const company = await createTestCompany('Profile Admin Company')
+    admin = await createTestUser({ firstName: 'Alice', lastName: 'Admin', role: 'Admin', companyId: company.id })
+  })
 
   test('updates profile data successfully', async ({ loginAs, page }) => {
-    await loginAs(1)
+    await loginAs(admin.id)
     await page.goto('/admin')
     await page.waitForLoadState('networkidle')
 
     // Verify initial profile data is displayed
-    await expect(page.getByText('Alice')).toBeVisible()
+    await expect(page.getByText('Alice', { exact: true })).toBeVisible()
     await expect(page.getByText('Admin', { exact: true })).toBeVisible()
-    await expect(page.getByText('admin@example.com')).toBeVisible()
+    await expect(page.getByText(admin.email)).toBeVisible()
 
     // Enter edit mode
     await page.getByRole('button', { name: 'Редактировать' }).click()
@@ -30,21 +36,21 @@ test.describe('admin manages own profile', () => {
     await expect(page.getByText('Обязательное поле')).toHaveCount(1)
 
     // Enter new valid values and save
-    await page.locator('#firstName').fill(updatedFirstName)
-    await page.locator('#lastName').fill(updatedLastName)
+    await page.locator('#firstName').fill('Bob')
+    await page.locator('#lastName').fill('Updated')
     await page.getByRole('button', { name: 'Сохранить' }).click()
 
     // Verify view mode shows updated data
-    await expect(page.getByText(updatedFirstName)).toBeVisible()
-    await expect(page.getByText(updatedLastName)).toBeVisible()
+    await expect(page.getByText('Bob')).toBeVisible()
+    await expect(page.getByText('Updated')).toBeVisible()
 
     // Email should remain unchanged
-    await expect(page.getByText('admin@example.com')).toBeVisible()
+    await expect(page.getByText(admin.email)).toBeVisible()
     await page.getByRole('button', { name: 'Профиль компании' }).click()
     await page.getByRole('button', { name: 'Профиль администратора' }).click()
 
     // Verify updated data are still in place
-    await expect(page.getByText(updatedFirstName)).toBeVisible()
-    await expect(page.getByText(updatedLastName)).toBeVisible()
+    await expect(page.getByText('Bob')).toBeVisible()
+    await expect(page.getByText('Updated')).toBeVisible()
   })
 })

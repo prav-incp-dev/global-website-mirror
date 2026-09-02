@@ -1,115 +1,29 @@
 import { test, expect } from '../../fixtures.js'
-import { getPrisma } from '../../db.js'
+import { createTestCompany, createTestUser } from '../../db.js'
 
 test.describe('ordering clients', () => {
-  let adminId
+  let admin
 
   test.beforeEach(async () => {
-    const prisma = getPrisma()
-
-    const company = await prisma.company.create({
-      data: {
-        name: 'Ordering Test Company',
-        primaryWallet: '0x1111111111111111111111111111111111111111',
-      },
-    })
-
-    const admin = await prisma.user.create({
-      data: {
-        email: 'ordering-admin@example.com',
-        password: 'hashed',
-        role: 'Admin',
-        nick: '@ordering-admin',
-        firstName: 'Ordering',
-        lastName: 'Admin',
-        phone: '+375290000800',
-        memberId: 'DOM-00000000-0800',
-        wallet: '0x1111111111111111111111111111111111111111',
-        companyId: company.id,
-      },
-    })
-    adminId = admin.id
+    const company = await createTestCompany('Ordering Test Company')
+    admin = await createTestUser({ firstName: 'Alice', lastName: 'Admin', role: 'Admin', companyId: company.id })
 
     // Alice — Candidate, level 3, score 100
-    await prisma.user.create({
-      data: {
-        email: 'alice@example.com',
-        password: 'hashed',
-        role: 'Candidate',
-        nick: '@alice',
-        firstName: 'Alice',
-        lastName: 'Anderson',
-        phone: '+375290000801',
-        memberId: 'DOM-00000000-0801',
-        wallet: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-        companyId: company.id,
-        level: 3,
-        score: 100,
-        parentId: null,
-      },
-    })
+    await createTestUser({ firstName: 'Alice', lastName: 'Anderson', role: 'Candidate', level: 3, companyId: company.id }, 100)
 
     // Bob — Consultant, level 1, score 300
-    await prisma.user.create({
-      data: {
-        email: 'bob@example.com',
-        password: 'hashed',
-        role: 'Consultant',
-        nick: '@bob',
-        firstName: 'Bob',
-        lastName: 'Brown',
-        phone: '+375290000802',
-        memberId: 'DOM-00000000-0802',
-        wallet: '0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
-        companyId: company.id,
-        level: 1,
-        score: 300,
-        parentId: null,
-      },
-    })
+    await createTestUser({ firstName: 'Bob', lastName: 'Brown', role: 'Consultant', level: 1, companyId: company.id }, 300)
 
     // Charlie — Candidate, level 2, score 200
-    await prisma.user.create({
-      data: {
-        email: 'charlie@example.com',
-        password: 'hashed',
-        role: 'Candidate',
-        nick: '@charlie',
-        firstName: 'Charlie',
-        lastName: 'Clark',
-        phone: '+375290000803',
-        memberId: 'DOM-00000000-0803',
-        wallet: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC',
-        companyId: company.id,
-        level: 2,
-        score: 200,
-        parentId: null,
-      },
-    })
+    await createTestUser({ firstName: 'Charlie', lastName: 'Clark', role: 'Candidate', level: 2, companyId: company.id }, 200)
 
     // David — Consultant, level 4, score 50 (created last = highest id)
-    await prisma.user.create({
-      data: {
-        email: 'david@example.com',
-        password: 'hashed',
-        role: 'Consultant',
-        nick: '@david',
-        firstName: 'David',
-        lastName: 'Davis',
-        phone: '+375290000804',
-        memberId: 'DOM-00000000-0804',
-        wallet: '0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
-        companyId: company.id,
-        level: 4,
-        score: 50,
-        parentId: null,
-      },
-    })
+    await createTestUser({ firstName: 'David', lastName: 'Davis', role: 'Consultant', level: 4, companyId: company.id }, 50)
   })
 
   test('ordering clients by different criteria', async ({ loginAs, page }) => {
     // 1. Login as admin and navigate to clients page
-    await loginAs(adminId)
+    await loginAs(admin.id)
     await page.goto('/admin')
     await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
     await page.getByRole('button', { name: 'Клиенты' }).click()

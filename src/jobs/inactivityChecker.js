@@ -1,10 +1,10 @@
 import { UserRole } from '../generated/prisma/client'
 
-export async function untieUsers(prisma, log = console) {
-  const untieDays = parseInt(process.env.UNTIE_DAYS, 10) || 40
-  const untieDate = new Date()
-  untieDate.setDate(untieDate.getDate() - untieDays)
-  untieDate.setHours(23, 59, 59, 999)
+export async function orphantUsers(prisma, log = console) {
+  const orphantDays = parseInt(process.env.ORPHANT_DAYS, 10) || 40
+  const orphantDate = new Date()
+  orphantDate.setDate(orphantDate.getDate() - orphantDays)
+  orphantDate.setHours(23, 59, 59, 999)
 
   const staleUsers = await prisma.$queryRaw`
     SELECT u.id
@@ -16,7 +16,7 @@ export async function untieUsers(prisma, log = console) {
         FROM "Interaction" i
         WHERE i."targetId" = u.id
           AND i.status = 'Closed'
-      ) < ${untieDate}
+      ) < ${orphantDate}
   `
 
   const ids = staleUsers.map((u) => u.id)
@@ -28,5 +28,5 @@ export async function untieUsers(prisma, log = console) {
     })
   }
 
-  log.info(`${ids.length} stale users untied from their parents`)
+  log.info(`${ids.length} stale users are orphaned from their parents`)
 }

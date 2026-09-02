@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures.js'
+import { createTestCompany, createTestUser } from './db.js'
 import jwt from 'jsonwebtoken'
 
 /**
@@ -25,17 +26,29 @@ const getInvitationTokenFromModal = async (page) => {
 }
 
 test.describe('generate invitation link', () => {
+  let admin
+  let consultant
+
+  test.beforeEach(async () => {
+    const company = await createTestCompany('Invitation Company')
+
+    // Create admin
+    admin = await createTestUser({ firstName: 'Alice', lastName: 'Admin', role: 'Admin', companyId: company.id })
+    // Create consultant
+    consultant = await createTestUser({ firstName: 'Bob', lastName: 'Consultant', role: 'Consultant', companyId: company.id })
+  })
+
   test('Admin generates invitation link with owner=null', async ({ context, page, loginAs }) => {
     // Grant clipboard permissions so the copy button works
     await context.grantPermissions(['clipboard-read', 'clipboard-write'])
 
     // Login as admin (user id = 1)
-    await loginAs(1)
+    await loginAs(admin.id)
 
     // Verify admin email is visible on profile
     await expect(page).toHaveURL('http://127.0.0.1:3101/admin')
     await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
-    await expect(page.getByText('admin@example.com')).toBeVisible()
+    await expect(page.getByText(admin.email)).toBeVisible()
 
     // Click "Generate invitation" button
     const inviteButton = page.locator('button', { hasText: 'Сгенерировать пригласительную ссылку' })
@@ -71,14 +84,14 @@ test.describe('generate invitation link', () => {
 
     // Verify modal is closed and we are back on the profile page
     await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
-    await expect(page.getByText('admin@example.com')).toBeVisible()
+    await expect(page.getByText(admin.email)).toBeVisible()
   })
 
   test('It generates different invitation tokens each time', async ({ context, page, loginAs }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write'])
-    await loginAs(2)
+    await loginAs(consultant.id)
     await expect(page).not.toHaveURL(/\/auth$/)
-    await expect(page.getByText('consultant@example.com')).toBeVisible()
+    await expect(page.getByText(consultant.email)).toBeVisible()
     await expect(page.locator('text=Ник в Телеграм')).toBeVisible()
 
     // First token
@@ -106,11 +119,11 @@ test.describe('generate invitation link', () => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write'])
 
     // Login as consultant (user id = 2)
-    await loginAs(2)
+    await loginAs(consultant.id)
     await expect(page).not.toHaveURL(/\/auth$/)
 
     // Verify consultant email is visible on profile
-    await expect(page.getByText('consultant@example.com')).toBeVisible()
+    await expect(page.getByText(consultant.email)).toBeVisible()
 
     // Wait for the profile card to be fully rendered
     await expect(page.locator('text=Ник в Телеграм')).toBeVisible()
@@ -138,7 +151,7 @@ test.describe('generate invitation link', () => {
     // Decode the JWT and verify its payload
     const decoded = jwt.decode(token)
     // Consultant is the second user created, so id should be 2
-    expect(decoded.owner).toBe(2)
+    expect(decoded.owner).toBe(consultant.id)
     expect(decoded).toHaveProperty('inviteCode')
     expect(typeof decoded.inviteCode).toBe('string')
     expect(decoded.inviteCode).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
@@ -150,6 +163,6 @@ test.describe('generate invitation link', () => {
 
     // Verify modal is closed and we are back on the profile page
     await expect(page.getByRole('heading', { name: 'Профиль' })).toBeVisible()
-    await expect(page.getByText('consultant@example.com')).toBeVisible()
+    await expect(page.getByText(consultant.email)).toBeVisible()
   })
 })

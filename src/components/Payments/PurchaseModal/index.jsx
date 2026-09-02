@@ -40,7 +40,7 @@ const PurchaseModal = ({ onClose, onCreate, profile, csrfToken }) => {
         throw new Error('Кошелек не найден. Установите MetaMask или Trust Wallet.')
       }
 
-      const companyWallet = getAddress(profile.companyPrimaryWallet)
+      const companyWallet = getAddress(profile.companyWallet)
       const tokenAddress = getAddress(usdtAddress)
 
       // Step 1: Init payment on server
