@@ -21,69 +21,16 @@ const passwordHashRounds = 12
 const testPasswordHash = bcrypt.hashSync('password', passwordHashRounds)
 
 /**
- * Resets the test database to a known seeded state.
+ * Resets the test database to a clean state.
  *
- * Truncates all tables and re-inserts the seed data so every E2E
- * test starts from the same baseline.
+ * Truncates all tables so every E2E test starts from the same baseline.
+ * Tests create their own data via the createTest* helpers.
  */
 export const resetDatabase = async () => {
   // TRUNCATE with RESTART IDENTITY CASCADE handles FK constraints
   // regardless of table order and resets any sequences.
   // Keep this table list in sync with Prisma models used by E2E scenarios.
   await prisma.$executeRaw`TRUNCATE TABLE "Interaction", "Wage", "Payment", "Order", "User", "Company", "ServiceWallet", "UsedInvite" RESTART IDENTITY CASCADE`
-
-  const company = await prisma.company.create({
-    data: {
-      name: 'Our House MLM',
-      wallet: '0x1111111111111111111111111111111111111111',
-    },
-  })
-
-  await prisma.user.create({
-    data: {
-      email: 'admin@example.com',
-      password: testPasswordHash,
-      role: 'Admin',
-      nick: 'admin',
-      firstName: 'Alice',
-      lastName: 'Admin',
-      phone: '+375290000001',
-      memberId: 'DOM-00000000-0001',
-      wallet: '0xABCDEF1234567890',
-      companyId: company.id,
-    },
-  })
-
-  const consultant = await prisma.user.create({
-    data: {
-      email: 'consultant@example.com',
-      password: testPasswordHash,
-      role: 'Consultant',
-      nick: '@inviter',
-      firstName: 'Consultant',
-      lastName: 'Inviter',
-      phone: '+375330000022',
-      memberId: 'DOM-00000000-0002',
-      wallet: '0x1234567890abcdef1234567890abcdef11111111',
-      companyId: company.id,
-    },
-  })
-
-  await prisma.user.create({
-    data: {
-      email: 'candidate@example.com',
-      password: testPasswordHash,
-      role: 'Candidate',
-      nick: '@candidate',
-      firstName: 'Candidate',
-      lastName: 'User',
-      phone: '+375290000033',
-      memberId: 'DOM-00000000-0003',
-      wallet: '0x1234567890abcdef1234567890abcdef22222222',
-      companyId: company.id,
-      parentId: consultant.id,
-    },
-  })
 }
 
 const random40 = () => {

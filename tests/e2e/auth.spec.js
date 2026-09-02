@@ -2,6 +2,7 @@ import { test, expect } from './fixtures.js'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { createTestCompany, createTestUser } from './db.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixturePath = path.join(__dirname, '..', 'fixtures', 'last-email.json')
@@ -17,6 +18,15 @@ const getConfirmationCode = async () => {
   if (match) return match[1]
 }
 
+let admin
+let consultant
+
+test.beforeEach(async () => {
+  const company = await createTestCompany('Auth Test Company')
+  admin = await createTestUser({ firstName: 'Alice', lastName: 'Admin', role: 'Admin', companyId: company.id })
+  consultant = await createTestUser({ firstName: 'Consult', lastName: 'User', role: 'Consultant', companyId: company.id })
+})
+
 test.describe('login flow with 2FA', () => {
   test('logs in with email + password, enters confirmation code, and redirects to profile page', async ({ page }) => {
     await page.goto('/auth')
@@ -25,9 +35,9 @@ test.describe('login flow with 2FA', () => {
     const emailInput = page.locator('#email')
     const passwordInput = page.locator('#password')
 
-    await emailInput.fill('consultant@example.com')
+    await emailInput.fill(consultant.email)
     await passwordInput.fill('password')
-    await expect(emailInput).toHaveValue('consultant@example.com')
+    await expect(emailInput).toHaveValue(consultant.email)
     await expect(passwordInput).toHaveValue('password')
     await page.getByRole('button', { name: 'Войти' }).click()
 
@@ -45,7 +55,7 @@ test.describe('login flow with 2FA', () => {
 
     await expect(page).toHaveURL('http://127.0.0.1:3101/')
     await expect(page.getByRole('heading', { name: 'Профиль' })).toBeVisible()
-    await expect(page.getByText('consultant@example.com')).toBeVisible()
+    await expect(page.getByText(consultant.email)).toBeVisible()
   })
 
   test('shows error on invalid credentials', async ({ page }) => {
@@ -55,9 +65,9 @@ test.describe('login flow with 2FA', () => {
     const emailInput = page.locator('#email')
     const passwordInput = page.locator('#password')
 
-    await emailInput.fill('admin@example.com')
+    await emailInput.fill(admin.email)
     await passwordInput.fill('wrong-password')
-    await expect(emailInput).toHaveValue('admin@example.com')
+    await expect(emailInput).toHaveValue(admin.email)
     await expect(passwordInput).toHaveValue('wrong-password')
     await page.getByRole('button', { name: 'Войти' }).click()
 
@@ -72,7 +82,7 @@ test.describe('login flow with 2FA', () => {
     const emailInput = page.locator('#email')
     const passwordInput = page.locator('#password')
 
-    await emailInput.fill('admin@example.com')
+    await emailInput.fill(admin.email)
     await passwordInput.fill('password')
     await page.getByRole('button', { name: 'Войти' }).click()
 
@@ -95,7 +105,7 @@ test.describe('login flow with 2FA', () => {
     const emailInput = page.locator('#email')
     const passwordInput = page.locator('#password')
 
-    await emailInput.fill('consultant@example.com')
+    await emailInput.fill(consultant.email)
     await passwordInput.fill('password')
     await page.getByRole('button', { name: 'Войти' }).click()
 
@@ -124,7 +134,7 @@ test.describe('login flow with 2FA', () => {
     // Should successfully log in and redirect to profile page
     await expect(page).toHaveURL('http://127.0.0.1:3101/')
     await expect(page.getByRole('heading', { name: 'Профиль' })).toBeVisible()
-    await expect(page.getByText('consultant@example.com')).toBeVisible()
+    await expect(page.getByText(consultant.email)).toBeVisible()
   })
 
   test('admin gets to admin panel', async ({ page }) => {
@@ -134,7 +144,7 @@ test.describe('login flow with 2FA', () => {
     const emailInput = page.locator('#email')
     const passwordInput = page.locator('#password')
 
-    await emailInput.fill('admin@example.com')
+    await emailInput.fill(admin.email)
     await passwordInput.fill('password')
     await page.getByRole('button', { name: 'Войти' }).click()
 
@@ -153,7 +163,7 @@ test.describe('login flow with 2FA', () => {
     // Should successfully log in and redirect to profile page
     await expect(page).toHaveURL('http://127.0.0.1:3101/admin')
     await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
-    await expect(page.getByText('admin@example.com')).toBeVisible()
+    await expect(page.getByText(admin.email)).toBeVisible()
   })
 
   test('logout case', async ({ page }) => {
@@ -163,7 +173,7 @@ test.describe('login flow with 2FA', () => {
     const emailInput = page.locator('#email')
     const passwordInput = page.locator('#password')
 
-    await emailInput.fill('admin@example.com')
+    await emailInput.fill(admin.email)
     await passwordInput.fill('password')
     await page.getByRole('button', { name: 'Войти' }).click()
 
@@ -177,7 +187,7 @@ test.describe('login flow with 2FA', () => {
     // Verify we are logged in
     await expect(page).toHaveURL('http://127.0.0.1:3101/admin')
     await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
-    await expect(page.getByText('admin@example.com')).toBeVisible()
+    await expect(page.getByText(admin.email)).toBeVisible()
 
     // Click logout
     await page.getByRole('button', { name: 'Выйти' }).click()
@@ -206,7 +216,7 @@ test.describe('forgot password flow', () => {
 
     // Enter email and submit
     const emailInput = page.locator('#email')
-    await emailInput.fill('admin@example.com')
+    await emailInput.fill(admin.email)
     await page.getByRole('button', { name: 'Отправить ссылку' }).click()
 
     // Should show success message
@@ -243,7 +253,7 @@ test.describe('forgot password flow', () => {
     await page.getByRole('heading', { name: 'Вход в систему' }).waitFor()
     const loginEmailInput = page.locator('#email')
     const loginPasswordInput = page.locator('#password')
-    await loginEmailInput.fill('admin@example.com')
+    await loginEmailInput.fill(admin.email)
     await loginPasswordInput.fill('newpassword123')
     await page.getByRole('button', { name: 'Войти' }).click()
 

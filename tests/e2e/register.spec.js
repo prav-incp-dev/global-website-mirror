@@ -1,7 +1,7 @@
 import { test, expect } from './fixtures.js'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
-import { resetDatabase, getPrisma } from './db.js'
+import { createTestCompany, createTestUser, getPrisma } from './db.js'
 
 const SESSION_SECRET = process.env.SESSION_SECRET || 'test-session-secret-not-for-production'
 const BASE_URL = 'http://127.0.0.1:3101'
@@ -11,6 +11,13 @@ const generateInviteToken = ({ owner, inviteCode, expiresIn = '24h' }) => {
 }
 
 test.describe('registration flow', () => {
+  let admin
+
+  test.beforeEach(async () => {
+    const company = await createTestCompany('Register Test Company')
+    admin = await createTestUser({ firstName: 'Alice', lastName: 'Admin', role: 'Admin', companyId: company.id })
+  })
+
   test('redirects to /auth when accessing /register without a token', async ({ page }) => {
     await page.goto('/register')
     await page.waitForLoadState('networkidle')
@@ -32,8 +39,6 @@ test.describe('registration flow', () => {
   })
 
   test('redirects to /auth when inviteCode was already used', async ({ page }) => {
-    await resetDatabase()
-
     const inviteCode = crypto.randomUUID()
 
     // Mark the invite code as used directly in the database
@@ -49,8 +54,6 @@ test.describe('registration flow', () => {
   })
 
   test('registers a new user with valid token and no owner field (parentId = null)', async ({ page }) => {
-    await resetDatabase()
-
     const inviteCode = crypto.randomUUID()
     const token = generateInviteToken({ owner: null, inviteCode })
 
@@ -82,8 +85,6 @@ test.describe('registration flow', () => {
   })
 
   test('registers a new user with valid token and owner=null (parentId = null)', async ({ page }) => {
-    await resetDatabase()
-
     const inviteCode = crypto.randomUUID()
     const token = generateInviteToken({ owner: null, inviteCode })
 
@@ -113,11 +114,9 @@ test.describe('registration flow', () => {
     expect(user.parentId).toBeNull()
   })
 
-  test('registers a new user with valid token and owner=1 (parentId = 1)', async ({ page }) => {
-    await resetDatabase()
-
+  test('registers a new user with valid token and owner=admin (parentId = admin.id)', async ({ page }) => {
     const inviteCode = crypto.randomUUID()
-    const token = generateInviteToken({ owner: 1, inviteCode })
+    const token = generateInviteToken({ owner: admin.id, inviteCode })
 
     await page.goto(`/register?token=${token}`)
     await page.waitForLoadState('networkidle')
@@ -138,16 +137,14 @@ test.describe('registration flow', () => {
 
     await expect(page).toHaveURL(`${BASE_URL}/auth`)
 
-    // Verify the user was created with parentId = 1
+    // Verify the user was created with parentId = admin.id
     const prisma = getPrisma()
     const user = await prisma.user.findUnique({ where: { email: 'withowner.user@example.com' } })
     expect(user).not.toBeNull()
-    expect(user.parentId).toBe(1)
+    expect(user.parentId).toBe(admin.id)
   })
 
   test('shows client validation error for invalid email format', async ({ page }) => {
-    await resetDatabase()
-
     const inviteCode = crypto.randomUUID()
     const token = generateInviteToken({ owner: null, inviteCode })
 
@@ -167,8 +164,6 @@ test.describe('registration flow', () => {
   })
 
   test('shows client validation error when passwords do not match', async ({ page }) => {
-    await resetDatabase()
-
     const inviteCode = crypto.randomUUID()
     const token = generateInviteToken({ owner: null, inviteCode })
 
@@ -188,15 +183,13 @@ test.describe('registration flow', () => {
   })
 
   test('shows server validation error for duplicate email', async ({ page }) => {
-    await resetDatabase()
-
     const inviteCode = crypto.randomUUID()
     const token = generateInviteToken({ owner: null, inviteCode })
 
     await page.goto(`/register?token=${token}`)
     await page.waitForLoadState('networkidle')
 
-    await page.locator('#email').fill('admin@example.com')
+    await page.locator('#email').fill(admin.email)
     await page.locator('#firstName').fill('Another')
     await page.locator('#phone').fill('+7 (495) 000-00-00')
     await page.locator('#password').fill('password123')
