@@ -5,7 +5,7 @@ import styles from './index.module.css'
 const STATUS_LABELS = {
   Pending: 'В ожидании',
   Completed: 'Оплачен',
-  ToCancel: 'К отмене',
+  ToRefund: 'К возврату',
   Canceled: 'Отменен',
   Failed: 'Ошибка',
 }
@@ -29,7 +29,7 @@ const PaymentsList = ({ payments, csrfToken, onCancel }) => {
     setCancelingPaymentId(paymentId)
 
     try {
-      const response = await fetch(`/api/payments/${paymentId}/cancel`, {
+      const response = await fetch(`/api/payments/${paymentId}/request-refund`, {
         method: 'POST',
         headers: {
           'x-csrf-token': csrfToken,
@@ -58,7 +58,7 @@ const PaymentsList = ({ payments, csrfToken, onCancel }) => {
       ) : (
         <div className={styles.historyList}>
           {payments.map((payment) => {
-            const canCancel = payment.status === PaymentStatus.Completed && payment.canCancel
+            const canCancel = payment.status === PaymentStatus.Completed && payment.canRequestRefund
 
             return (
               <div key={payment.id} className={styles.historyItem}>

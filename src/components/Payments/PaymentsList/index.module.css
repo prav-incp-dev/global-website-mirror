@@ -78,9 +78,14 @@
   border-color: rgba(111, 220, 140, 0.45);
 }
 
-.statusToCancel {
+.statusToRefund {
   color: #f2c06a;
   border-color: rgba(242, 192, 106, 0.45);
+}
+
+.statusRefunded {
+  color: #a46dff;
+  border-color: rgba(164, 109, 255, 0.45);
 }
 
 .statusCanceled {

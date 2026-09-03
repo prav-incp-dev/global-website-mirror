@@ -1,5 +1,5 @@
 import { PaymentStatus, UserRole } from '../generated/prisma/client'
-import { canCancelPayment, serializePayment, verifyPaymentOnChain } from '../lib/payment'
+import { canRequestRefund, serializePayment, verifyPaymentOnChain } from '../lib/payment'
 import { PRICE_MAP } from '../lib/pricing'
 import { usdtAddress, usdtDecimals, chainId } from '../lib/chain.js'
 
@@ -221,7 +221,7 @@ export default async (fastify) => {
     },
   })
 
-  fastify.post('/api/payments/:id/cancel', {
+  fastify.post('/api/payments/:id/request-refund', {
     schema: {
       params: {
         type: 'object',
@@ -248,15 +248,15 @@ export default async (fastify) => {
         return reply.code(404).send({ error: 'Платеж не найден' })
       }
 
-      if (!canCancelPayment(payment)) {
+      if (!canRequestRefund(payment)) {
         return reply.code(409).send({ error: 'Запрос на отмену можно оставить только в течение 24 часов' })
       }
 
       const updatedPayment = await fastify.prisma.payment.update({
         where: { id: payment.id },
         data: {
-          status: PaymentStatus.ToCancel,
-          cancelRequestedAt: new Date(),
+          status: PaymentStatus.ToRefund,
+          refundRequestedAt: new Date(),
         },
         include: {
           order: true,

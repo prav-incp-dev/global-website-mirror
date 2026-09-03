@@ -14,7 +14,7 @@ const transferEventAbi = {
   ],
 }
 
-const canCancelPayment = (payment) => {
+const canRequestRefund = (payment) => {
   if (payment.status !== PaymentStatus.Completed) return false
   return Date.now() - new Date(payment.createdAt).getTime() <= PAYMENT_WINDOW_MS
 }
@@ -68,13 +68,14 @@ const serializePayment = (payment) => {
     tokenDecimals: payment.tokenDecimals,
     createdAt: payment.createdAt,
     updatedAt: payment.updatedAt,
-    cancelRequestedAt: payment.cancelRequestedAt,
-    canceledAt: payment.canceledAt,
+    refundRequestedAt: payment.refundRequestedAt,
+    refundedAt: payment.refundedAt,
+
     // Decorated fields
     quantity: payment.order?.quantity ?? null,
     amountUsd: Number(payment.amount),
-    canCancel: canCancelPayment(payment),
+    canRequestRefund: canRequestRefund(payment),
   }
 }
 
-export { PAYMENT_WINDOW_MS, canCancelPayment, serializePayment, verifyPaymentOnChain }
+export { PAYMENT_WINDOW_MS, canRequestRefund, serializePayment, verifyPaymentOnChain }

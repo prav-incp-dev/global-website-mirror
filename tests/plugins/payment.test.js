@@ -37,8 +37,8 @@ describe('payment plugin', () => {
         tokenDecimals: 18,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        cancelRequestedAt: null,
-        canceledAt: null,
+        refundRequestedAt: null,
+        refundedAt: null,
         order: { quantity: 2 },
       },
       {
@@ -55,8 +55,8 @@ describe('payment plugin', () => {
         tokenDecimals: 18,
         createdAt: new Date(Date.now() - 100000).toISOString(),
         updatedAt: new Date(Date.now() - 100000).toISOString(),
-        cancelRequestedAt: null,
-        canceledAt: null,
+        refundRequestedAt: null,
+        refundedAt: null,
         order: null,
       },
     ]

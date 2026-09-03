@@ -93,8 +93,8 @@ describe('payments routes', () => {
       tokenSymbol: 'USDT',
       tokenContract: '0x3333333333333333333333333333333333333333',
       tokenDecimals: 18,
-      cancelRequestedAt: null,
-      canceledAt: null,
+      refundRequestedAt: null,
+      refundedAt: null,
       createdAt: now,
       updatedAt: now,
       order: { id: 7, quantity: 1 },
@@ -128,9 +128,9 @@ describe('payments routes', () => {
       tokenDecimals: 18,
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
-      cancelRequestedAt: null,
-      canceledAt: null,
-      canCancel: true,
+      refundRequestedAt: null,
+      refundedAt: null,
+      canRequestRefund: true,
     })
   })
 
@@ -149,8 +149,8 @@ describe('payments routes', () => {
       tokenSymbol: 'USDT',
       tokenContract: '0x3333333333333333333333333333333333333333',
       tokenDecimals: 18,
-      cancelRequestedAt: null,
-      canceledAt: null,
+      refundRequestedAt: null,
+      refundedAt: null,
       createdAt: now,
       updatedAt: now,
       order: { id: 77, quantity: 1 },
@@ -417,8 +417,8 @@ describe('payments routes', () => {
       tokenSymbol: 'USDT',
       tokenContract: '0x3333333333333333333333333333333333333333',
       tokenDecimals: 18,
-      cancelRequestedAt: null,
-      canceledAt: null,
+      refundRequestedAt: null,
+      refundedAt: null,
       createdAt: now,
       updatedAt: now,
       order: { id: 7, quantity: 1 },
@@ -656,8 +656,8 @@ describe('payments routes', () => {
       status: PaymentStatus.Completed,
       chainId: 97,
       tokenSymbol: 'USDT',
-      cancelRequestedAt: null,
-      canceledAt: null,
+      refundRequestedAt: null,
+      refundedAt: null,
       createdAt: now,
       updatedAt: now,
     }
@@ -686,8 +686,8 @@ describe('payments routes', () => {
       status: PaymentStatus.Completed,
       chainId: 97,
       tokenSymbol: 'USDT',
-      cancelRequestedAt: null,
-      canceledAt: null,
+      refundRequestedAt: null,
+      refundedAt: null,
       createdAt: now,
       updatedAt: now,
     }
@@ -836,22 +836,22 @@ describe('payments routes', () => {
     expect(response.json()).toEqual({ error: 'Ошибка верификации платежа' })
   })
 
-  // --- POST /api/payments/:id/cancel ---
+  // --- POST /api/payments/:id/request-refund ---
 
-  it('POST /api/payments/:id/cancel returns 403 when user is not authenticated', async () => {
+  it('POST /api/payments/:id/request-refund returns 403 when user is not authenticated', async () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
 
     const response = await app.inject({
       method: 'POST',
-      url: '/api/payments/11/cancel',
+      url: '/api/payments/11/request-refund',
     })
 
     expect(response.statusCode).toBe(403)
     expect(response.json()).toEqual({ error: 'Доступ запрещен' })
   })
 
-  it('POST /api/payments/:id/cancel returns 409 for too old payment', async () => {
+  it('POST /api/payments/:id/request-refund returns 409 for too old payment', async () => {
     const oldDate = new Date(Date.now() - PAYMENT_WINDOW_MS - 1000)
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
@@ -867,7 +867,7 @@ describe('payments routes', () => {
 
     const response = await app.inject({
       method: 'POST',
-      url: '/api/payments/11/cancel',
+      url: '/api/payments/11/request-refund',
     })
 
     expect(response.statusCode).toBe(409)
@@ -875,7 +875,7 @@ describe('payments routes', () => {
     expect(app.prisma.payment.update).not.toHaveBeenCalled()
   })
 
-  it('POST /api/payments/:id/cancel marks payment as ToCancel', async () => {
+  it('POST /api/payments/:id/request-refund marks payment as ToRefund', async () => {
     const createdAt = new Date(Date.now() - 2 * 60 * 60 * 1000)
     const updatedAt = new Date('2026-07-30T12:00:00.000Z')
 
@@ -894,8 +894,8 @@ describe('payments routes', () => {
       tokenSymbol: 'USDT',
       tokenContract: '0x3333333333333333333333333333333333333333',
       tokenDecimals: 18,
-      cancelRequestedAt: null,
-      canceledAt: null,
+      refundRequestedAt: null,
+      refundedAt: null,
       createdAt,
       updatedAt: createdAt,
       order: { id: 7, quantity: 1 },
@@ -905,7 +905,7 @@ describe('payments routes', () => {
       orderId: 7,
       userId: candidateUser.id,
       amount: 1200,
-      status: PaymentStatus.ToCancel,
+      status: PaymentStatus.ToRefund,
       txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       fromWallet: '0x2222222222222222222222222222222222222222',
       toWallet: candidateUser.company.wallet,
@@ -913,8 +913,8 @@ describe('payments routes', () => {
       tokenSymbol: 'USDT',
       tokenContract: '0x3333333333333333333333333333333333333333',
       tokenDecimals: 18,
-      cancelRequestedAt: updatedAt,
-      canceledAt: null,
+      refundRequestedAt: updatedAt,
+      refundedAt: null,
       createdAt,
       updatedAt,
       order: { id: 7, quantity: 1 },
@@ -922,30 +922,30 @@ describe('payments routes', () => {
 
     const response = await app.inject({
       method: 'POST',
-      url: '/api/payments/11/cancel',
+      url: '/api/payments/11/request-refund',
     })
 
     expect(response.statusCode).toBe(200)
     expect(response.json().success).toBe(true)
-    expect(response.json().payment.status).toBe(PaymentStatus.ToCancel)
-    expect(response.json().payment.canCancel).toBe(false)
+    expect(response.json().payment.status).toBe(PaymentStatus.ToRefund)
+    expect(response.json().payment.canRequestRefund).toBe(false)
     expect(app.prisma.payment.update).toHaveBeenCalledTimes(1)
   })
 
-  it('POST /api/payments/:id/cancel returns 403 when user is Admin', async () => {
+  it('POST /api/payments/:id/request-refund returns 403 when user is Admin', async () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue({ id: 1, role: UserRole.Admin })
 
     const response = await app.inject({
       method: 'POST',
-      url: '/api/payments/11/cancel',
+      url: '/api/payments/11/request-refund',
     })
 
     expect(response.statusCode).toBe(403)
     expect(response.json()).toEqual({ error: 'Доступ запрещен' })
   })
 
-  it('POST /api/payments/:id/cancel returns 404 when payment not found', async () => {
+  it('POST /api/payments/:id/request-refund returns 404 when payment not found', async () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
     vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue(null)
@@ -953,7 +953,7 @@ describe('payments routes', () => {
 
     const response = await app.inject({
       method: 'POST',
-      url: '/api/payments/99999/cancel',
+      url: '/api/payments/99999/request-refund',
     })
 
     expect(response.statusCode).toBe(404)
@@ -961,7 +961,7 @@ describe('payments routes', () => {
     expect(app.prisma.payment.update).not.toHaveBeenCalled()
   })
 
-  it('POST /api/payments/:id/cancel returns 404 when payment belongs to another user', async () => {
+  it('POST /api/payments/:id/request-refund returns 404 when payment belongs to another user', async () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
     vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
@@ -976,7 +976,7 @@ describe('payments routes', () => {
 
     const response = await app.inject({
       method: 'POST',
-      url: '/api/payments/11/cancel',
+      url: '/api/payments/11/request-refund',
     })
 
     expect(response.statusCode).toBe(404)

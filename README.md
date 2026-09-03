@@ -243,9 +243,9 @@ npm run test:e2e
 | `txHash`            | String? (уникальный)                                     | Хэш транзакции                       |
 | `fromWallet`        | String?                                                  | Кошелёк отправителя                  |
 | `toWallet`          | String                                                   | Кошелёк получателя                   |
-| `status`            | Enum: `Pending`, `Completed`, `ToCancel`, `Canceled`, `Failed` | Статус платежа               |
-| `cancelRequestedAt` | DateTime?                                                | Запрос на отмену                     |
-| `canceledAt`        | DateTime?                                                | Дата отмены                           |
+| `status`            | Enum: `Pending`, `Completed`, `ToRefund`, `Refunded`, `Canceled`, `Failed` | Статус платежа               |
+| `refundRequestedAt` | DateTime?                                                | Запрос на возврат (дата)                    |
+| `refundedAt`        | DateTime?                                                | Дата возврата                         |
 | `createdAt`         | DateTime                                                 | Дата создания                         |
 | `updatedAt`         | DateTime                                                 | Дата обновления                       |
 
