@@ -13,7 +13,23 @@ describe('payment plugin', () => {
 
     expect(result).toEqual([])
     expect(app.prisma.payment.findMany).toHaveBeenCalledWith({
-      where: { userId: 1 },
+      where: { userId: 1, status: { not: PaymentStatus.Canceled } },
+      include: { order: true },
+      orderBy: { createdAt: 'desc' },
+    })
+  })
+
+  it('getPayments returns empty array when user has only cancelled payments', async ({ expect }) => {
+    const app = await createApp()
+
+    vi.spyOn(app.prisma.payment, 'findMany').mockResolvedValue([])
+
+    const user = { id: 1 }
+    const result = await app.payment.getPayments(user)
+
+    expect(result).toEqual([])
+    expect(app.prisma.payment.findMany).toHaveBeenCalledWith({
+      where: { userId: 1, status: { not: PaymentStatus.Canceled } },
       include: { order: true },
       orderBy: { createdAt: 'desc' },
     })
@@ -75,7 +91,64 @@ describe('payment plugin', () => {
     expect(result[1].quantity).toBeNull()
 
     expect(app.prisma.payment.findMany).toHaveBeenCalledWith({
-      where: { userId: 1 },
+      where: { userId: 1, status: { not: PaymentStatus.Canceled } },
+      include: { order: true },
+      orderBy: { createdAt: 'desc' },
+    })
+  })
+
+  it('getPayments filters out cancelled payments via status query', async ({ expect }) => {
+    const app = await createApp()
+
+    const mockPayments = [
+      {
+        id: 1,
+        orderId: 10,
+        amount: '100.50',
+        status: PaymentStatus.Pending,
+        txHash: null,
+        fromWallet: null,
+        toWallet: '0xto',
+        chainId: 97,
+        tokenSymbol: 'USDT',
+        tokenContract: '0xtoken',
+        tokenDecimals: 18,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        refundRequestedAt: null,
+        refundedAt: null,
+        order: { quantity: 2 },
+      },
+      {
+        id: 2,
+        orderId: 11,
+        amount: '200',
+        status: PaymentStatus.Canceled,
+        txHash: null,
+        fromWallet: null,
+        toWallet: '0xto2',
+        chainId: 97,
+        tokenSymbol: 'USDT',
+        tokenContract: '0xtoken2',
+        tokenDecimals: 18,
+        createdAt: new Date(Date.now() - 100000).toISOString(),
+        updatedAt: new Date(Date.now() - 100000).toISOString(),
+        refundRequestedAt: null,
+        refundedAt: null,
+        order: { quantity: 1 },
+      },
+    ]
+
+    vi.spyOn(app.prisma.payment, 'findMany').mockResolvedValue(mockPayments.filter((p) => p.status !== PaymentStatus.Canceled))
+
+    const user = { id: 1 }
+    const result = await app.payment.getPayments(user)
+
+    expect(result).toHaveLength(1)
+    expect(result[0].id).toBe(1)
+    expect(result[0].status).toBe(PaymentStatus.Pending)
+    expect(app.prisma.payment.findMany).toHaveBeenCalledWith({
+      where: { userId: 1, status: { not: PaymentStatus.Canceled } },
       include: { order: true },
       orderBy: { createdAt: 'desc' },
     })

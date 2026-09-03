@@ -197,30 +197,6 @@ export default async (fastify) => {
     },
   })
 
-  fastify.get('/api/payments', {
-    handler: async (req, reply) => {
-      const user = await fastify.auth.getUser(req)
-      if (!user || user.role === UserRole.Admin) {
-        return reply.code(403).send({ error: 'Доступ запрещен' })
-      }
-
-      const payments = await fastify.prisma.payment.findMany({
-        where: { userId: user.id },
-        include: {
-          order: true,
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      })
-
-      return reply.send({
-        success: true,
-        payments: payments.map(serializePayment),
-      })
-    },
-  })
-
   fastify.post('/api/payments/:id/request-refund', {
     schema: {
       params: {
@@ -258,6 +234,56 @@ export default async (fastify) => {
           status: PaymentStatus.ToRefund,
           refundRequestedAt: new Date(),
         },
+        include: {
+          order: true,
+        },
+      })
+
+      return reply.send({
+        success: true,
+        payment: serializePayment(updatedPayment),
+      })
+    },
+  })
+
+  fastify.post('/api/payments/:id/cancel', {
+    schema: {
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'integer', minimum: 1 },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role === UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      const payment = await fastify.prisma.payment.findUnique({
+        where: { id: req.params.id },
+        include: {
+          order: true,
+        },
+      })
+
+      if (!payment || payment.userId !== user.id) {
+        return reply.code(404).send({ error: 'Платеж не найден' })
+      }
+
+      if (payment.status !== PaymentStatus.Pending) {
+        return reply.code(409).send({ error: 'Платеж уже не в ожидании' })
+      }
+
+      if (payment.txHash !== null) {
+        return reply.code(409).send({ error: 'Транзакция уже привязана к платежу' })
+      }
+
+      const updatedPayment = await fastify.prisma.payment.update({
+        where: { id: payment.id },
+        data: { status: PaymentStatus.Canceled },
         include: {
           order: true,
         },
