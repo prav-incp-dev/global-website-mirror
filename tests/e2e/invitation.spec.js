@@ -35,7 +35,12 @@ test.describe('generate invitation link', () => {
     // Create admin
     admin = await createTestUser({ firstName: 'Alice', lastName: 'Admin', role: 'Admin', companyId: company.id })
     // Create consultant
-    consultant = await createTestUser({ firstName: 'Bob', lastName: 'Consultant', role: 'Consultant', companyId: company.id })
+    consultant = await createTestUser({
+      firstName: 'Bob',
+      lastName: 'Consultant',
+      role: 'Consultant',
+      companyId: company.id,
+    })
   })
 
   test('Admin generates invitation link with owner=null', async ({ context, page, loginAs }) => {

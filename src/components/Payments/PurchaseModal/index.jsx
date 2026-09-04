@@ -72,7 +72,7 @@ const PurchaseModal = ({ onClose, onCreate, profile, csrfToken }) => {
         'Content-Type': 'application/json',
         'x-csrf-token': csrfToken,
       },
-      body: JSON.stringify({})
+      body: JSON.stringify({}),
     })
 
     const result = await response.json()

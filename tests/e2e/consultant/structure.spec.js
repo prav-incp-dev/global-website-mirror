@@ -25,10 +25,22 @@ test.describe('consultant structure tab', () => {
     )
 
     // Create Teresa — child of Tom, Candidate
-    teresa = await createTestUser({ firstName: 'Teresa', lastName: 'Green', role: 'Candidate', companyId: company.id, parentId: tom.id })
+    teresa = await createTestUser({
+      firstName: 'Teresa',
+      lastName: 'Green',
+      role: 'Candidate',
+      companyId: company.id,
+      parentId: tom.id,
+    })
 
     // Create Maria — direct child of John, Candidate
-    maria = await createTestUser({ firstName: 'Maria', lastName: 'Brown', role: 'Candidate', companyId: company.id, parentId: john.id })
+    maria = await createTestUser({
+      firstName: 'Maria',
+      lastName: 'Brown',
+      role: 'Candidate',
+      companyId: company.id,
+      parentId: john.id,
+    })
 
     // Tom: one closed interaction 40 days ago (stale)
     await createTestInteraction({

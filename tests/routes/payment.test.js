@@ -844,7 +844,7 @@ describe('payments routes', () => {
     expect(response.json()).toEqual({ error: 'Платеж не найден' })
     expect(app.prisma.payment.update).not.toHaveBeenCalled()
   })
-// --- POST /api/payments/:id/cancel ---
+  // --- POST /api/payments/:id/cancel ---
 
   it('POST /api/payments/:id/cancel returns 403 when user is not authenticated', async () => {
     const app = await createApp()

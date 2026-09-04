@@ -49,7 +49,12 @@ describe('checkPayments', () => {
     // txHash is @unique — generate a unique one unless the caller explicitly
     // passes null (payment without txHash) or a specific value.
     const resolvedTxHash = txHash === undefined ? `0x${crypto.randomBytes(32).toString('hex')}` : txHash
-    const orderStatus = status === PaymentStatus.Completed ? OrderStatus.Paid : status === PaymentStatus.Canceled ? OrderStatus.Canceled : OrderStatus.Pending
+    const orderStatus =
+      status === PaymentStatus.Completed
+        ? OrderStatus.Paid
+        : status === PaymentStatus.Canceled
+          ? OrderStatus.Canceled
+          : OrderStatus.Pending
     const order = await app.prisma.order.create({
       data: {
         userId: user.id,
@@ -100,7 +105,9 @@ describe('checkPayments', () => {
     expect(updatedOrder.status).toBe(OrderStatus.Canceled)
   })
 
-  it('cancels only the pending payment without txHash, leaving the verifyable one to verify path', async ({ expect }) => {
+  it('cancels only the pending payment without txHash, leaving the verifyable one to verify path', async ({
+    expect,
+  }) => {
     const app = await createApp()
     const user = await createUser(app)
     const noTxHash = await createPayment(app, user, { status: PaymentStatus.Pending, txHash: null })
@@ -168,7 +175,9 @@ describe('checkPayments', () => {
     expect(updatedOrder.status).toBe(OrderStatus.Pending) // order untouched on failure
   })
 
-  it('assigns uid to paid payment older than 24h with no uid and promotes candidate to consultant', async ({ expect }) => {
+  it('assigns uid to paid payment older than 24h with no uid and promotes candidate to consultant', async ({
+    expect,
+  }) => {
     const app = await createApp()
     const user = await createUser(app, { memberId: 'DOM-00000000-1234' })
     const oldPayment = await createPayment(app, user, {
@@ -221,7 +230,7 @@ describe('checkPayments', () => {
     expect(updatedUser.role).toBe(UserRole.Consultant)
     expect(updatedUser.level).toBe(5)
   })
-it('logs summary counts at the end', async ({ expect }) => {
+  it('logs summary counts at the end', async ({ expect }) => {
     const app = await createApp()
     const user = await createUser(app, { memberId: 'DOM-00000000-5678' })
 
@@ -236,8 +245,6 @@ it('logs summary counts at the end', async ({ expect }) => {
 
     await checkPayments(app.prisma, silentLogger)
 
-    expect(silentLogger.info).toHaveBeenCalledWith(
-      '1 payments canceled, 1 payments verified, 1 payments finalized',
-    )
+    expect(silentLogger.info).toHaveBeenCalledWith('1 payments canceled, 1 payments verified, 1 payments finalized')
   })
 })

@@ -78,22 +78,22 @@ npm start
 
 ## Доступные скрипты
 
-| Команда                   | Описание                                           |
-| ------------------------- | -------------------------------------------------- |
-| `npm run dev`             | Запуск в режиме разработки                         |
-| `npm run build`           | Сборка Vite                                        |
-| `npm start`               | Запуск в продакшен-режиме                          |
-| `npm run db:seed`         | Сидирование БД (компания, пользователи, оплата)    |
-| `npm run db:migrate`      | Миграции БД + генерация Prisma Client              |
-| `npm run db:test:setup`   | Создание и сидирование тестовой БД                 |
-| `npm run lint`            | Проверка кода ESLint                               |
-| `npm run lint:fix`        | Автоисправление ESLint                             |
-| `npm run format`          | Форматирование кода Prettier                       |
-| `npm test`                | Запуск Vitest (одиночный прогон)                   |
-| `npm run test:coverage`   | Vitest с покрытием кода                            |
-| `npm run test:e2e`        | E2E тесты Playwright                               |
-| `npm run test:e2e:headed` | E2E Playwright в headed-режиме                     |
-| `npm run job:reminders`   | Запуск фоновой задачи напоминаний                  |
+| Команда                   | Описание                                        |
+| ------------------------- | ----------------------------------------------- |
+| `npm run dev`             | Запуск в режиме разработки                      |
+| `npm run build`           | Сборка Vite                                     |
+| `npm start`               | Запуск в продакшен-режиме                       |
+| `npm run db:seed`         | Сидирование БД (компания, пользователи, оплата) |
+| `npm run db:migrate`      | Миграции БД + генерация Prisma Client           |
+| `npm run db:test:setup`   | Создание и сидирование тестовой БД              |
+| `npm run lint`            | Проверка кода ESLint                            |
+| `npm run lint:fix`        | Автоисправление ESLint                          |
+| `npm run format`          | Форматирование кода Prettier                    |
+| `npm test`                | Запуск Vitest (одиночный прогон)                |
+| `npm run test:coverage`   | Vitest с покрытием кода                         |
+| `npm run test:e2e`        | E2E тесты Playwright                            |
+| `npm run test:e2e:headed` | E2E Playwright в headed-режиме                  |
+| `npm run job:reminders`   | Запуск фоновой задачи напоминаний               |
 
 ## Тестирование
 
@@ -157,26 +157,26 @@ npm run test:e2e
 
 ### User
 
-| Поле              | Тип                                      | Описание                                     |
-| ----------------- | ---------------------------------------- | -------------------------------------------- |
-| `id`              | Int (авто)                               | Уникальный идентификатор                     |
-| `email`           | String (уникальный)                      | Email пользователя                           |
-| `password`        | String                                   | Хэш пароля                                   |
-| `role`            | Enum: `Admin`, `Candidate`, `Consultant` | Роль пользователя (по умолчанию `Candidate`) |
-| `companyId`       | Int (FK → `Company`)                     | Привязка к компании                          |
-| `nick`            | String? (уникальный)                     | Ник в Телеграм                               |
-| `firstName`       | String?                                  | Имя                                          |
-| `lastName`        | String?                                  | Фамилия                                      |
-| `phone`           | String (уникальный)                      | Телефон                                      |
-| `level`           | Int (default 0)                          | Уровень (для консультантов)                  |
-| `levelConfirmed`  | Boolean (default true)                   | Подтверждён ли уровень                       |
-| `memberId`        | String? (уникальный)                     | Номер пайщика                                |
-| `parentId`        | Int? (FK → `User`)                       | Родительский пользователь (реферал)          |
-| `orphant`         | Boolean (default false)                  | Признак «осиротевшего» пользователя          |
-| `wallet`          | String?                                  | Кошелёк                                      |
-| `confirmationCode`| String?                                  | Код подтверждения 2FA/смены пароля           |
-| `createdAt`       | DateTime                                 | Дата создания                                |
-| `updatedAt`       | DateTime                                 | Дата обновления                              |
+| Поле               | Тип                                      | Описание                                     |
+| ------------------ | ---------------------------------------- | -------------------------------------------- |
+| `id`               | Int (авто)                               | Уникальный идентификатор                     |
+| `email`            | String (уникальный)                      | Email пользователя                           |
+| `password`         | String                                   | Хэш пароля                                   |
+| `role`             | Enum: `Admin`, `Candidate`, `Consultant` | Роль пользователя (по умолчанию `Candidate`) |
+| `companyId`        | Int (FK → `Company`)                     | Привязка к компании                          |
+| `nick`             | String? (уникальный)                     | Ник в Телеграм                               |
+| `firstName`        | String?                                  | Имя                                          |
+| `lastName`         | String?                                  | Фамилия                                      |
+| `phone`            | String (уникальный)                      | Телефон                                      |
+| `level`            | Int (default 0)                          | Уровень (для консультантов)                  |
+| `levelConfirmed`   | Boolean (default true)                   | Подтверждён ли уровень                       |
+| `memberId`         | String? (уникальный)                     | Номер пайщика                                |
+| `parentId`         | Int? (FK → `User`)                       | Родительский пользователь (реферал)          |
+| `orphant`          | Boolean (default false)                  | Признак «осиротевшего» пользователя          |
+| `wallet`           | String?                                  | Кошелёк                                      |
+| `confirmationCode` | String?                                  | Код подтверждения 2FA/смены пароля           |
+| `createdAt`        | DateTime                                 | Дата создания                                |
+| `updatedAt`        | DateTime                                 | Дата обновления                              |
 
 ### ServiceWallet
 
@@ -209,61 +209,61 @@ npm run test:e2e
 
 ### UsedInvite
 
-| Поле        | Тип                  | Описание                       |
-| ----------- | -------------------- | ------------------------------ |
-| `id`        | Int (авто)           | Уникальный идентификатор       |
-| `code`      | String (уникальный)  | Код приглашения (был использован) |
-| `createdAt` | DateTime             | Дата создания                  |
+| Поле        | Тип                 | Описание                          |
+| ----------- | ------------------- | --------------------------------- |
+| `id`        | Int (авто)          | Уникальный идентификатор          |
+| `code`      | String (уникальный) | Код приглашения (был использован) |
+| `createdAt` | DateTime            | Дата создания                     |
 
 ### Order
 
-| Поле          | Тип                          | Описание                  |
-| ------------- | ---------------------------- | ------------------------- |
-| `id`          | Int (авто)                   | Уникальный идентификатор  |
-| `userId`      | Int (FK → `User`)            | Покупатель                |
-| `quantity`    | Int                          | Количество               |
-| `totalAmount` | Decimal(12,2)                | Сумма заказа              |
-| `status`      | Enum: `Pending`, `Paid`, `Canceled` | Статус заказа      |
-| `createdAt`   | DateTime                     | Дата создания             |
-| `updatedAt`   | DateTime                     | Дата обновления           |
+| Поле          | Тип                                 | Описание                 |
+| ------------- | ----------------------------------- | ------------------------ |
+| `id`          | Int (авто)                          | Уникальный идентификатор |
+| `userId`      | Int (FK → `User`)                   | Покупатель               |
+| `quantity`    | Int                                 | Количество               |
+| `totalAmount` | Decimal(12,2)                       | Сумма заказа             |
+| `status`      | Enum: `Pending`, `Paid`, `Canceled` | Статус заказа            |
+| `createdAt`   | DateTime                            | Дата создания            |
+| `updatedAt`   | DateTime                            | Дата обновления          |
 
 ### Payment
 
-| Поле                | Тип                                                      | Описание                             |
-| ------------------- | -------------------------------------------------------- | ------------------------------------ |
-| `id`                | Int (авто)                                               | Уникальный идентификатор             |
-| `uid`               | String? (уникальный)                                     | Уникальный идентификатор платежа     |
-| `orderId`           | Int (FK → `Order`, уникальный)                           | Заказ                                |
-| `userId`            | Int (FK → `User`)                                        | Плательщик                           |
-| `companyId`         | Int (FK → `Company`)                                     | Компания                             |
-| `amount`            | Decimal(12,2)                                            | Сумма платежа                        |
-| `tokenSymbol`       | String (default `"USDT"`)                                | Символ токена                        |
-| `tokenContract`     | String                                                   | Адрес контракта токена               |
-| `tokenDecimals`     | Int                                                      | Десятичные знаки токена              |
-| `chainId`           | Int                                                      | ID сети                              |
-| `txHash`            | String? (уникальный)                                     | Хэш транзакции                       |
-| `fromWallet`        | String?                                                  | Кошелёк отправителя                  |
-| `toWallet`          | String                                                   | Кошелёк получателя                   |
-| `status`            | Enum: `Pending`, `Completed`, `ToRefund`, `Refunded`, `Canceled`, `Failed` | Статус платежа               |
-| `refundRequestedAt` | DateTime?                                                | Запрос на возврат (дата)                    |
-| `refundedAt`        | DateTime?                                                | Дата возврата                         |
-| `createdAt`         | DateTime                                                 | Дата создания                         |
-| `updatedAt`         | DateTime                                                 | Дата обновления                       |
+| Поле                | Тип                                                                        | Описание                         |
+| ------------------- | -------------------------------------------------------------------------- | -------------------------------- |
+| `id`                | Int (авто)                                                                 | Уникальный идентификатор         |
+| `uid`               | String? (уникальный)                                                       | Уникальный идентификатор платежа |
+| `orderId`           | Int (FK → `Order`, уникальный)                                             | Заказ                            |
+| `userId`            | Int (FK → `User`)                                                          | Плательщик                       |
+| `companyId`         | Int (FK → `Company`)                                                       | Компания                         |
+| `amount`            | Decimal(12,2)                                                              | Сумма платежа                    |
+| `tokenSymbol`       | String (default `"USDT"`)                                                  | Символ токена                    |
+| `tokenContract`     | String                                                                     | Адрес контракта токена           |
+| `tokenDecimals`     | Int                                                                        | Десятичные знаки токена          |
+| `chainId`           | Int                                                                        | ID сети                          |
+| `txHash`            | String? (уникальный)                                                       | Хэш транзакции                   |
+| `fromWallet`        | String?                                                                    | Кошелёк отправителя              |
+| `toWallet`          | String                                                                     | Кошелёк получателя               |
+| `status`            | Enum: `Pending`, `Completed`, `ToRefund`, `Refunded`, `Canceled`, `Failed` | Статус платежа                   |
+| `refundRequestedAt` | DateTime?                                                                  | Запрос на возврат (дата)         |
+| `refundedAt`        | DateTime?                                                                  | Дата возврата                    |
+| `createdAt`         | DateTime                                                                   | Дата создания                    |
+| `updatedAt`         | DateTime                                                                   | Дата обновления                  |
 
 ### Interaction
 
-| Поле          | Тип                                              | Описание                             |
-| ------------- | ------------------------------------------------ | ------------------------------------ |
-| `id`          | Int (авто)                                       | Уникальный идентификатор             |
-| `status`      | Enum: `Open`, `Closed` (default `Open`)          | Статус взаимодействия                |
-| `plannedAt`   | DateTime                                         | Запланированная дата                 |
-| `completedAt` | DateTime?                                        | Дата завершения                      |
-| `description` | String                                           | Описание                             |
-| `reminderSent`| Boolean (default false)                          | Отправлено ли напоминание            |
-| `initiatorId` | Int? (FK → `User`)                               | Кто инициировал (null = регистрация) |
-| `targetId`    | Int (FK → `User`)                                | Целевой пользователь                 |
-| `createdAt`   | DateTime                                         | Дата создания                        |
-| `updatedAt`   | DateTime                                         | Дата обновления                      |
+| Поле           | Тип                                     | Описание                             |
+| -------------- | --------------------------------------- | ------------------------------------ |
+| `id`           | Int (авто)                              | Уникальный идентификатор             |
+| `status`       | Enum: `Open`, `Closed` (default `Open`) | Статус взаимодействия                |
+| `plannedAt`    | DateTime                                | Запланированная дата                 |
+| `completedAt`  | DateTime?                               | Дата завершения                      |
+| `description`  | String                                  | Описание                             |
+| `reminderSent` | Boolean (default false)                 | Отправлено ли напоминание            |
+| `initiatorId`  | Int? (FK → `User`)                      | Кто инициировал (null = регистрация) |
+| `targetId`     | Int (FK → `User`)                       | Целевой пользователь                 |
+| `createdAt`    | DateTime                                | Дата создания                        |
+| `updatedAt`    | DateTime                                | Дата обновления                      |
 
 ## Структура проекта
 
@@ -334,14 +334,17 @@ npm run anvil:start
 ### Настройка [Rabby Wallet](https://rabby.io/)
 
 Добавление тестового кошелька
-* Import Seed Phrase: test test test test test test test test test test test junk
+
+- Import Seed Phrase: test test test test test test test test test test test junk
 
 Настройка Custom Network в Rabby Wallet
-* Chain ID: 97
-* Network Name: Local Anvil
-* RPC URL: http://127.0.0.1:8545
-* Currency symbol: tBNB
+
+- Chain ID: 97
+- Network Name: Local Anvil
+- RPC URL: http://127.0.0.1:8545
+- Currency symbol: tBNB
 
 Добавление токена в Custom Network
-* Chain: Local Anvil
-* Token Address: 0x700b6A60ce7EaaEA56F065753d8dcB9653dbAD35
+
+- Chain: Local Anvil
+- Token Address: 0x700b6A60ce7EaaEA56F065753d8dcB9653dbAD35

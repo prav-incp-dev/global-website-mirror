@@ -9,9 +9,22 @@ test.describe('consultant profile with stats', () => {
     const company = await createTestCompany('Consultant Profile Company')
 
     // Create parent consultant
-    parent = await createTestUser({ firstName: 'Bob', lastName: 'Parent', level: 8, role: 'Consultant', companyId: company.id })
+    parent = await createTestUser({
+      firstName: 'Bob',
+      lastName: 'Parent',
+      level: 8,
+      role: 'Consultant',
+      companyId: company.id,
+    })
     consultant = await createTestUser(
-      { firstName: 'Jim', lastName: 'Invited', role: 'Consultant', level: 2, companyId: company.id, parentId: parent.id },
+      {
+        firstName: 'Jim',
+        lastName: 'Invited',
+        role: 'Consultant',
+        level: 2,
+        companyId: company.id,
+        parentId: parent.id,
+      },
       7,
       60,
     )

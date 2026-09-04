@@ -24,7 +24,12 @@ let consultant
 test.beforeEach(async () => {
   const company = await createTestCompany('Auth Test Company')
   admin = await createTestUser({ firstName: 'Alice', lastName: 'Admin', role: 'Admin', companyId: company.id })
-  consultant = await createTestUser({ firstName: 'Consult', lastName: 'User', role: 'Consultant', companyId: company.id })
+  consultant = await createTestUser({
+    firstName: 'Consult',
+    lastName: 'User',
+    role: 'Consultant',
+    companyId: company.id,
+  })
 })
 
 test.describe('login flow with 2FA', () => {

@@ -37,7 +37,6 @@ async function verifyPayments(prisma, payments = []) {
           data: { status: OrderStatus.Paid },
         }),
       ])
-
     } catch {
       await prisma.payment.update({
         where: { id: payment.id },
@@ -103,7 +102,7 @@ export async function checkPayments(prisma, log = console) {
   const paymentsToVerify = await prisma.payment.findMany({
     where: {
       status: PaymentStatus.Pending,
-      txHash: { not: null }
+      txHash: { not: null },
     },
     select: {
       id: true,
@@ -134,6 +133,7 @@ export async function checkPayments(prisma, log = console) {
 
   await finalizePayment(prisma, paymentsToFinalize, log)
 
-  log.info(`${paymentsToCancel.length} payments canceled, ${paymentsToVerify.length} payments verified, ${paymentsToFinalize.length} payments finalized`)
+  log.info(
+    `${paymentsToCancel.length} payments canceled, ${paymentsToVerify.length} payments verified, ${paymentsToFinalize.length} payments finalized`,
+  )
 }
-

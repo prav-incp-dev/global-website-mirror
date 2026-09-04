@@ -139,7 +139,9 @@ describe('payment plugin', () => {
       },
     ]
 
-    vi.spyOn(app.prisma.payment, 'findMany').mockResolvedValue(mockPayments.filter((p) => p.status !== PaymentStatus.Canceled))
+    vi.spyOn(app.prisma.payment, 'findMany').mockResolvedValue(
+      mockPayments.filter((p) => p.status !== PaymentStatus.Canceled),
+    )
 
     const user = { id: 1 }
     const result = await app.payment.getPayments(user)

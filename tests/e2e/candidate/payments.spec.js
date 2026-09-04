@@ -6,7 +6,13 @@ test.describe('candidate payment flow', () => {
 
   test.beforeEach(async () => {
     const company = await createTestCompany('Candidate Payment Company')
-    candidate = await createTestUser({ firstName: 'Candidate', lastName: 'User', role: 'Candidate', companyId: company.id, wallet: null })
+    candidate = await createTestUser({
+      firstName: 'Candidate',
+      lastName: 'User',
+      role: 'Candidate',
+      companyId: company.id,
+      wallet: null,
+    })
   })
 
   test('wallet setup unlocks purchase button and stepper works', async ({ loginAs, page }) => {

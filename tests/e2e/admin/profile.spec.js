@@ -1,7 +1,6 @@
 import { test, expect } from '../fixtures.js'
 import { createTestCompany, createTestUser } from '../db.js'
 
-
 test.describe('admin manages own profile', () => {
   let admin
 
