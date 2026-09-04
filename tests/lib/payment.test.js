@@ -1,6 +1,6 @@
 import { test } from 'vitest'
 import { PaymentStatus } from '@/generated/prisma/enums'
-import { PAYMENT_WINDOW_MS, canRequestRefund, serializePayment } from '@/lib/payment'
+import { HOURS24, canRequestRefund, serializePayment } from '@/lib/payment'
 
 describe('payment helpers', () => {
   test('canRequestRefund returns false when status is not Completed', ({ expect }) => {
@@ -9,7 +9,7 @@ describe('payment helpers', () => {
   })
 
   test('canRequestRefund returns false when createdAt is outside 24h window', ({ expect }) => {
-    const oldDate = new Date(Date.now() - PAYMENT_WINDOW_MS - 1000).toISOString()
+    const oldDate = new Date(Date.now() - HOURS24 - 1000).toISOString()
     const payment = { status: PaymentStatus.Completed, createdAt: oldDate }
     expect(canRequestRefund(payment)).toBe(false)
   })

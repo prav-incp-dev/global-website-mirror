@@ -2,7 +2,7 @@ import { PaymentStatus } from '../generated/prisma/enums'
 import { getAddress, parseUnits, parseEventLogs } from 'viem'
 import { getPublicClient } from './chain.js'
 
-const PAYMENT_WINDOW_MS = 24 * 60 * 60 * 1000
+const HOURS24 = 24 * 60 * 60 * 1000
 
 const transferEventAbi = {
   type: 'event',
@@ -16,7 +16,7 @@ const transferEventAbi = {
 
 const canRequestRefund = (payment) => {
   if (payment.status !== PaymentStatus.Completed) return false
-  return Date.now() - new Date(payment.createdAt).getTime() <= PAYMENT_WINDOW_MS
+  return Date.now() - new Date(payment.createdAt).getTime() <= HOURS24
 }
 
 const verifyPaymentOnChain = async (payment) => {
@@ -78,4 +78,4 @@ const serializePayment = (payment) => {
   }
 }
 
-export { PAYMENT_WINDOW_MS, canRequestRefund, serializePayment, verifyPaymentOnChain }
+export { HOURS24, canRequestRefund, serializePayment, verifyPaymentOnChain }

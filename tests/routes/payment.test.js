@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createNoCsrfApp as createApp } from '../helpers'
 import { OrderStatus, PaymentStatus, UserRole } from '../../src/generated/prisma/client'
-import { PAYMENT_WINDOW_MS } from '@/lib/payment.js'
+import { HOURS24 } from '@/lib/payment.js'
 
 const getTransactionReceipt = vi.fn()
 const mockGetTransactionReceipt = async () => getTransactionReceipt
@@ -713,7 +713,7 @@ describe('payments routes', () => {
   })
 
   it('POST /api/payments/:id/request-refund returns 409 for too old payment', async () => {
-    const oldDate = new Date(Date.now() - PAYMENT_WINDOW_MS - 1000)
+    const oldDate = new Date(Date.now() - HOURS24 - 1000)
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
     vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
