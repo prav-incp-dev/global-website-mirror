@@ -5,7 +5,7 @@ import styles from './index.module.css'
 const STATUS_LABELS = {
   Pending: 'В ожидании',
   Completed: 'Оплачен',
-  ToRefund: 'К возврату',
+  ToRefund: 'Ожидает отмены',
   Canceled: 'Отменен',
   Failed: 'Ошибка',
 }
