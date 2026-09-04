@@ -133,6 +133,7 @@ model Order {
 
 model Payment {
   id                Int           @id @default(autoincrement())
+  uid               String?       @unique
   orderId           Int           @unique
   order             Order         @relation(fields: [orderId], references: [id])
   userId            Int

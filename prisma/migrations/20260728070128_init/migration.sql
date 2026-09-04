@@ -101,6 +101,7 @@ CREATE TABLE "Order" (
 -- CreateTable
 CREATE TABLE "Payment" (
     "id" SERIAL NOT NULL,
+    "uid" TEXT,
     "orderId" INTEGER NOT NULL,
     "userId" INTEGER NOT NULL,
     "companyId" INTEGER NOT NULL,
@@ -159,6 +160,9 @@ CREATE INDEX "Wage_paymentId_idx" ON "Wage"("paymentId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Payment_orderId_key" ON "Payment"("orderId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Payment_uid_key" ON "Payment"("uid");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Payment_txHash_key" ON "Payment"("txHash");
