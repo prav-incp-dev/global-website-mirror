@@ -1,4 +1,4 @@
-import { PaymentStatus, UserRole } from '../generated/prisma/client'
+import { OrderStatus, PaymentStatus, UserRole } from '../generated/prisma/client'
 import { canRequestRefund, serializePayment, verifyPaymentOnChain } from '../lib/payment'
 import { PRICE_MAP } from '../lib/pricing'
 import { usdtAddress, usdtDecimals, chainId } from '../lib/chain.js'
@@ -33,7 +33,7 @@ export default async (fastify) => {
             userId: user.id,
             quantity,
             totalAmount: amountUsd,
-            status: 'Pending',
+            status: OrderStatus.Pending,
             payment: {
               create: {
                 userId: user.id,
@@ -170,7 +170,7 @@ export default async (fastify) => {
           }),
           fastify.prisma.order.update({
             where: { id: payment.orderId },
-            data: { status: 'Paid' },
+            data: { status: OrderStatus.Paid },
           }),
         ])
 
@@ -281,13 +281,17 @@ export default async (fastify) => {
         return reply.code(409).send({ error: 'Транзакция уже привязана к платежу' })
       }
 
-      const updatedPayment = await fastify.prisma.payment.update({
-        where: { id: payment.id },
-        data: { status: PaymentStatus.Canceled },
-        include: {
-          order: true,
-        },
-      })
+      const [updatedPayment] = await fastify.prisma.$transaction([
+        fastify.prisma.payment.update({
+          where: { id: payment.id },
+          data: { status: PaymentStatus.Canceled },
+          include: { order: true },
+        }),
+        fastify.prisma.order.update({
+          where: { id: payment.orderId },
+          data: { status: OrderStatus.Canceled },
+        }),
+      ])
 
       return reply.send({
         success: true,

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createNoCsrfApp as createApp } from '../helpers'
-import { PaymentStatus, UserRole } from '../../src/generated/prisma/client'
+import { OrderStatus, PaymentStatus, UserRole } from '../../src/generated/prisma/client'
 import { PAYMENT_WINDOW_MS } from '@/lib/payment.js'
 
 const getTransactionReceipt = vi.fn()
@@ -957,7 +957,7 @@ describe('payments routes', () => {
     expect(app.prisma.payment.update).not.toHaveBeenCalled()
   })
 
-  it('POST /api/payments/:id/cancel marks pending payment as Canceled', async () => {
+  it('POST /api/payments/:id/cancel marks pending payment as Canceled and order as Canceled', async () => {
     const now = new Date('2026-07-30T10:00:00.000Z')
     const canceledPayment = {
       id: 11,
@@ -989,7 +989,9 @@ describe('payments routes', () => {
       txHash: null,
       order: { id: 7, quantity: 1 },
     })
-    vi.spyOn(app.prisma.payment, 'update').mockResolvedValue(canceledPayment)
+    vi.spyOn(app.prisma.payment, 'update').mockResolvedValue({})
+    vi.spyOn(app.prisma.order, 'update').mockResolvedValue({})
+    vi.spyOn(app.prisma, '$transaction').mockResolvedValue([canceledPayment])
 
     const response = await app.inject({
       method: 'POST',
@@ -1005,5 +1007,11 @@ describe('payments routes', () => {
       data: { status: PaymentStatus.Canceled },
       include: { order: true },
     })
+    expect(app.prisma.order.update).toHaveBeenCalledTimes(1)
+    expect(app.prisma.order.update).toHaveBeenCalledWith({
+      where: { id: 7 },
+      data: { status: OrderStatus.Canceled },
+    })
+    expect(app.prisma.$transaction).toHaveBeenCalledTimes(1)
   })
 })
