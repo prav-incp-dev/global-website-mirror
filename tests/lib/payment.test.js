@@ -1,25 +1,8 @@
 import { test } from 'vitest'
 import { PaymentStatus } from '@/generated/prisma/enums'
-import { HOURS24, canRequestRefund, serializePayment } from '@/lib/payment'
+import { serializePayment } from '@/lib/payment'
 
 describe('payment helpers', () => {
-  test('canRequestRefund returns false when status is not Completed', ({ expect }) => {
-    const payment = { status: PaymentStatus.Pending, createdAt: new Date().toISOString() }
-    expect(canRequestRefund(payment)).toBe(false)
-  })
-
-  test('canRequestRefund returns false when createdAt is outside 24h window', ({ expect }) => {
-    const oldDate = new Date(Date.now() - HOURS24 - 1000).toISOString()
-    const payment = { status: PaymentStatus.Completed, createdAt: oldDate }
-    expect(canRequestRefund(payment)).toBe(false)
-  })
-
-  test('canRequestRefund returns true when status is Completed and within 24h window', ({ expect }) => {
-    const recentDate = new Date(Date.now() - 1000).toISOString()
-    const payment = { status: PaymentStatus.Completed, createdAt: recentDate }
-    expect(canRequestRefund(payment)).toBe(true)
-  })
-
   test('serializePayment correctly serializes a payment with order', ({ expect }) => {
     const recentDate = new Date().toISOString()
     const payment = {
@@ -62,7 +45,6 @@ describe('payment helpers', () => {
       updatedAt: payment.updatedAt,
       refundRequestedAt: null,
       refundedAt: null,
-      canRequestRefund: true,
     })
   })
 
@@ -90,7 +72,6 @@ describe('payment helpers', () => {
     const result = serializePayment(payment)
 
     expect(result.quantity).toBeNull()
-    expect(result.canRequestRefund).toBe(false)
     expect(result.uid).toBe('ON-5678-02')
   })
 })

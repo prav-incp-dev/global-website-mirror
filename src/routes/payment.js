@@ -1,5 +1,5 @@
 import { OrderStatus, PaymentStatus, UserRole } from '../generated/prisma/client'
-import { canRequestRefund, serializePayment, verifyPaymentOnChain } from '../lib/payment'
+import { serializePayment, verifyPaymentOnChain } from '../lib/payment'
 import { PRICE_MAP } from '../lib/pricing'
 import { usdtAddress, usdtDecimals, chainId } from '../lib/chain.js'
 
@@ -224,8 +224,8 @@ export default async (fastify) => {
         return reply.code(404).send({ error: 'Платеж не найден' })
       }
 
-      if (!canRequestRefund(payment)) {
-        return reply.code(409).send({ error: 'Запрос на отмену можно оставить только в течение 24 часов' })
+      if (payment.status !== PaymentStatus.Completed || payment.uid !== null) {
+        return reply.code(409).send({ error: 'Платеж уже обработан и не может быть отменен' })
       }
 
       const updatedPayment = await fastify.prisma.payment.update({

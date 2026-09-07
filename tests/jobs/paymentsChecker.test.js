@@ -5,7 +5,7 @@ import { checkPayments } from '../../src/jobs/paymentsChecker.js'
 import { HOURS24, verifyPaymentOnChain } from '../../src/lib/payment.js'
 import { OrderStatus, PaymentStatus, UserRole } from '../../src/generated/prisma/client'
 
-// Mock only the on-chain verification; keep serializePayment/canRequestRefund intact.
+// Mock only the on-chain verification; keep the other payment helpers intact.
 vi.mock('../../src/lib/payment.js', async (importOriginal) => {
   const actual = await importOriginal()
   return { ...actual, verifyPaymentOnChain: vi.fn() }

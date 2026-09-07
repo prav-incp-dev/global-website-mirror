@@ -67,7 +67,7 @@ const PaymentsList = () => {
       ) : (
         <div className={styles.historyList}>
           {payments.map((payment) => {
-            const canCancel = payment.status === PaymentStatus.Completed && payment.canRequestRefund
+            const canCancel = payment.status === PaymentStatus.Completed && !payment.uid
             const isExpanded = expandedPaymentIds.includes(payment.id)
 
             return (

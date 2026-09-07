@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createNoCsrfApp as createApp } from '../helpers'
 import { OrderStatus, PaymentStatus, UserRole } from '../../src/generated/prisma/client'
-import { HOURS24 } from '@/lib/payment.js'
 
 const getTransactionReceipt = vi.fn()
 const mockGetTransactionReceipt = async () => getTransactionReceipt
@@ -712,8 +711,7 @@ describe('payments routes', () => {
     expect(response.json()).toEqual({ error: 'Доступ запрещен' })
   })
 
-  it('POST /api/payments/:id/request-refund returns 409 for too old payment', async () => {
-    const oldDate = new Date(Date.now() - HOURS24 - 1000)
+  it('POST /api/payments/:id/request-refund returns 409 when uid is already assigned', async () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
     vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
@@ -721,7 +719,8 @@ describe('payments routes', () => {
       orderId: 7,
       userId: candidateUser.id,
       status: PaymentStatus.Completed,
-      createdAt: oldDate,
+      uid: 'ON-1234-01',
+      createdAt: new Date(),
       order: { id: 7, quantity: 1 },
     })
     vi.spyOn(app.prisma.payment, 'update')
@@ -732,7 +731,7 @@ describe('payments routes', () => {
     })
 
     expect(response.statusCode).toBe(409)
-    expect(response.json()).toEqual({ error: 'Запрос на отмену можно оставить только в течение 24 часов' })
+    expect(response.json()).toEqual({ error: 'Платеж уже обработан и не может быть отменен' })
     expect(app.prisma.payment.update).not.toHaveBeenCalled()
   })
 
@@ -746,6 +745,7 @@ describe('payments routes', () => {
       id: 11,
       orderId: 7,
       userId: candidateUser.id,
+      uid: null,
       amount: 1200,
       status: PaymentStatus.Completed,
       txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
@@ -789,7 +789,6 @@ describe('payments routes', () => {
     expect(response.statusCode).toBe(200)
     expect(response.json().success).toBe(true)
     expect(response.json().payment.status).toBe(PaymentStatus.ToRefund)
-    expect(response.json().payment.canRequestRefund).toBe(false)
     expect(app.prisma.payment.update).toHaveBeenCalledTimes(1)
   })
 
