@@ -52,14 +52,17 @@ async function finalizePayment(prisma, payments = [], log = console) {
   for (const payment of payments) {
     const memberId = payment.user.memberId
     const suffix = memberId.slice(-4)
-    const rank = await prisma.payment.count({
+    const lastPayment = await prisma.payment.findFirst({
       where: {
         userId: payment.userId,
-        status: PaymentStatus.Completed,
-        id: { lt: payment.id },
+        uid: { not: null },
       },
+      orderBy: { uid: 'desc' },
+      select: { uid: true },
     })
-    const uid = `ON-${suffix}-${String(rank + 1).padStart(2, '0')}`
+
+    const lastNumber = lastPayment ? Number(lastPayment.uid.split('-').pop()) : 0
+    const uid = `ON-${suffix}-${String(lastNumber + 1).padStart(2, '0')}`
 
     try {
       const updates = [
@@ -126,6 +129,7 @@ export async function checkPayments(prisma, log = console) {
       uid: null,
       createdAt: { lt: twentyFourHoursAgo },
     },
+    orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     include: {
       user: true,
     },

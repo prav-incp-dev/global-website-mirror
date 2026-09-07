@@ -230,6 +230,56 @@ describe('checkPayments', () => {
     expect(updatedUser.role).toBe(UserRole.Consultant)
     expect(updatedUser.level).toBe(5)
   })
+
+  it('continues uid numbering from the user highest assigned uid', async ({ expect }) => {
+    const app = await createApp()
+    const user = await createUser(app, { memberId: 'DOM-00000000-9999' })
+    await createPayment(app, user, {
+      status: PaymentStatus.Completed,
+      uid: 'ON-9999-01',
+      createdAt: new Date(Date.now() - 5 * HOURS24),
+    })
+    await createPayment(app, user, {
+      status: PaymentStatus.Completed,
+      uid: 'ON-9999-11',
+      createdAt: new Date(Date.now() - 4 * HOURS24),
+    })
+    const newPayment = await createPayment(app, user, {
+      status: PaymentStatus.Completed,
+      createdAt: new Date(Date.now() - 2 * HOURS24),
+    })
+
+    await checkPayments(app.prisma, silentLogger)
+
+    const updated = await app.prisma.payment.findUnique({ where: { id: newPayment.id } })
+    expect(updated.uid).toBe('ON-9999-12')
+  })
+
+  it('assigns sequential uid numbers to multiple payments finalized in the same run', async ({ expect }) => {
+    const app = await createApp()
+    const user = await createUser(app, { memberId: 'DOM-00000000-7777' })
+    await createPayment(app, user, {
+      status: PaymentStatus.Completed,
+      uid: 'ON-7777-03',
+      createdAt: new Date(Date.now() - 5 * HOURS24),
+    })
+    const first = await createPayment(app, user, {
+      status: PaymentStatus.Completed,
+      createdAt: new Date(Date.now() - 3 * HOURS24),
+    })
+    const second = await createPayment(app, user, {
+      status: PaymentStatus.Completed,
+      createdAt: new Date(Date.now() - 2 * HOURS24),
+    })
+
+    await checkPayments(app.prisma, silentLogger)
+
+    const firstUpdated = await app.prisma.payment.findUnique({ where: { id: first.id } })
+    const secondUpdated = await app.prisma.payment.findUnique({ where: { id: second.id } })
+    expect(firstUpdated.uid).toBe('ON-7777-04')
+    expect(secondUpdated.uid).toBe('ON-7777-05')
+  })
+
   it('logs summary counts at the end', async ({ expect }) => {
     const app = await createApp()
     const user = await createUser(app, { memberId: 'DOM-00000000-5678' })
