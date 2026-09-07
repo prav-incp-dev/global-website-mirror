@@ -42,6 +42,19 @@
 .historyHeader {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.historyHeader:hover {
+  opacity: 0.85;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
@@ -51,16 +64,22 @@
   font-size: 0.9375rem;
 }
 
-.historyDate {
-  color: #9ea6b4;
-  font-size: 0.75rem;
+.chevron {
+  display: inline-flex;
+  align-items: center;
+  color: #8ea6c3;
+  transition: transform 0.2s ease;
 }
 
-.historyMetaRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
+.chevronIcon {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+  color: #d4af37;
 }
 
 .statusBadge {
@@ -107,10 +126,23 @@
   color: #8ea6c3;
   font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
+  word-break: break-all;
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(91, 155, 213, 0.15);
+}
+
+.dateValue {
+  color: #e6ebf2;
+  font-size: 0.75rem;
 }
 
 .cancelButton {
-  align-self: flex-end;
   border: 1px solid rgba(255, 139, 139, 0.4);
   border-radius: 8px;
   background: transparent;
@@ -120,6 +152,7 @@
   padding: 8px 12px;
   cursor: pointer;
   transition: all 0.2s ease;
+  width: fit-content;
 }
 
 .cancelButton:hover {
@@ -129,6 +162,14 @@
 .cancelButton:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.uidValue {
+  color: #d4af37;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
 }
 
 .errorText {

@@ -57,6 +57,7 @@ const serializePayment = (payment) => {
   return {
     // Passthrough fields
     id: payment.id,
+    uid: payment.uid,
     orderId: payment.orderId,
     status: payment.status,
     txHash: payment.txHash,

@@ -37,6 +37,7 @@ test.describe('candidate payment flow', () => {
 
     // Click Купить — modal appears
     await buyButton.click()
+    await expect(page.getByRole('heading', { name: 'Количество единиц' })).toBeVisible()
 
     // Verify stepper: count=0, amount=100 USD, '-' disabled
     await expect(page.getByText('0', { exact: true })).toBeVisible()

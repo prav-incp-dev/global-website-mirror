@@ -24,6 +24,7 @@ describe('payment helpers', () => {
     const recentDate = new Date().toISOString()
     const payment = {
       id: 1,
+      uid: 'ON-1234-01',
       orderId: 10,
       amount: '100.50',
       status: PaymentStatus.Completed,
@@ -45,6 +46,7 @@ describe('payment helpers', () => {
 
     expect(result).toEqual({
       id: 1,
+      uid: 'ON-1234-01',
       orderId: 10,
       quantity: 3,
       amountUsd: 100.5,
@@ -67,6 +69,7 @@ describe('payment helpers', () => {
   test('serializePayment returns null quantity when order is missing', ({ expect }) => {
     const payment = {
       id: 2,
+      uid: 'ON-5678-02',
       orderId: null,
       amount: '50',
       status: PaymentStatus.Pending,
@@ -88,5 +91,6 @@ describe('payment helpers', () => {
 
     expect(result.quantity).toBeNull()
     expect(result.canRequestRefund).toBe(false)
+    expect(result.uid).toBe('ON-5678-02')
   })
 })
