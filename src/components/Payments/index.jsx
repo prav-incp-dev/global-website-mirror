@@ -3,12 +3,12 @@ import { usdtAddress } from '@/lib/chain.js'
 import styles from './index.module.css'
 import PaymentsList from './PaymentsList'
 import PurchaseModal from './PurchaseModal'
+import { PaymentsProvider } from './PaymentsContext'
 
-const Payments = ({ profile, initialPayments = [], csrfToken }) => {
+const Payments = ({ profile, initialPayments = [], csrfToken, cancellationFee }) => {
   const hasTokenConfig = Boolean(usdtAddress)
 
   const [modalOpen, setModalOpen] = useState(false)
-  const [payments, setPayments] = useState(initialPayments)
   const hasWallet = Boolean(profile?.wallet)
   const hasCompanyWallet = Boolean(profile?.companyWallet)
 
@@ -19,34 +19,19 @@ const Payments = ({ profile, initialPayments = [], csrfToken }) => {
     return ''
   }, [hasCompanyWallet, hasTokenConfig, hasWallet])
 
-  const onPaymentCancelled = (payment) => {
-    setPayments((prev) => prev.map((p) => (p.id === payment.id ? payment : p)))
-  }
-
-  const onPaymentCreated = (payment) => {
-    setPayments((prev) => [payment, ...prev])
-    setModalOpen(false)
-  }
-
   return (
-    <div className={styles.container}>
-      <button className={styles.buyButton} disabled={!!buyDisabledReason} onClick={() => setModalOpen(true)}>
-        Купить
-      </button>
-      {buyDisabledReason && <p className={styles.walletHint}>{buyDisabledReason}</p>}
+    <PaymentsProvider initialPayments={initialPayments} csrfToken={csrfToken} cancellationFee={cancellationFee}>
+      <div className={styles.container}>
+        <button className={styles.buyButton} disabled={!!buyDisabledReason} onClick={() => setModalOpen(true)}>
+          Купить
+        </button>
+        {buyDisabledReason && <p className={styles.walletHint}>{buyDisabledReason}</p>}
 
-      <PaymentsList payments={payments} csrfToken={csrfToken} onCancel={onPaymentCancelled} />
+        <PaymentsList />
 
-      {modalOpen && (
-        <PurchaseModal
-          onClose={() => setModalOpen(false)}
-          onCreate={onPaymentCreated}
-          profile={profile}
-          csrfToken={csrfToken}
-          usdtAddress={usdtAddress}
-        />
-      )}
-    </div>
+        {modalOpen && <PurchaseModal onClose={() => setModalOpen(false)} profile={profile} usdtAddress={usdtAddress} />}
+      </div>
+    </PaymentsProvider>
   )
 }
 

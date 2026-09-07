@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { PaymentStatus } from '@/generated/prisma/enums'
+import { usePaymentsContext } from '../PaymentsContext'
 import styles from './index.module.css'
 
 const STATUS_LABELS = {
@@ -9,6 +10,9 @@ const STATUS_LABELS = {
   Canceled: 'Отменен',
   Failed: 'Ошибка',
 }
+
+const getConfirmationText = (fee) =>
+  `Вы уверены, что хотите отменить платеж? При отмене взимается комиссия ${fee}%`
 
 const formatDate = (value) => {
   if (!value) return '-'
@@ -20,7 +24,8 @@ const shortenHash = (value) => {
   return `${value.slice(0, 8)}...${value.slice(-6)}`
 }
 
-const PaymentsList = ({ payments, csrfToken, onCancel }) => {
+const PaymentsList = () => {
+  const { payments, csrfToken, cancellationFee = 5, updatePayment } = usePaymentsContext()
   const [cancelError, setCancelError] = useState('')
   const [cancelingPaymentId, setCancelingPaymentId] = useState()
 
@@ -41,7 +46,7 @@ const PaymentsList = ({ payments, csrfToken, onCancel }) => {
         throw new Error(result.error || 'Ошибка запроса на отмену')
       }
 
-      onCancel(result.payment)
+      updatePayment(result.payment)
     } catch (err) {
       setCancelError(err.message || 'Ошибка запроса на отмену')
     } finally {
@@ -77,7 +82,11 @@ const PaymentsList = ({ payments, csrfToken, onCancel }) => {
                 {canCancel && (
                   <button
                     className={styles.cancelButton}
-                    onClick={() => handleCancel(payment.id)}
+                    onClick={async () => {
+                      if (window.confirm(getConfirmationText(cancellationFee))) {
+                        await handleCancel(payment.id)
+                      }
+                    }}
                     disabled={cancelingPaymentId === payment.id}
                   >
                     {cancelingPaymentId === payment.id ? 'Отправка...' : 'Отменить'}

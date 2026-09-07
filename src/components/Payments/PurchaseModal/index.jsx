@@ -5,6 +5,7 @@ import Modal from '../../Modal'
 import Stepper from '../../Stepper'
 import styles from './index.module.css'
 import { PRICE_MAP } from '@/lib/pricing'
+import { usePaymentsContext } from '../PaymentsContext'
 
 const MIN_QTY = 0
 const MAX_QTY = 5
@@ -22,7 +23,8 @@ const ERC20_ABI = [
   },
 ]
 
-const PurchaseModal = ({ onClose, onCreate, profile, csrfToken }) => {
+const PurchaseModal = ({ onClose, profile }) => {
+  const { csrfToken, addPayment } = usePaymentsContext()
   const [quantity, setQuantity] = useState(0)
   const [isPaying, setIsPaying] = useState(false)
   const [payError, setPayError] = useState('')
@@ -144,7 +146,8 @@ const PurchaseModal = ({ onClose, onCreate, profile, csrfToken }) => {
 
       // Step 6: Verify payment on server
       const verifyResult = await verifyPayment(paymentId)
-      onCreate(verifyResult)
+      addPayment(verifyResult)
+      onClose()
     } catch (err) {
       setPayError(err.shortMessage || err.message || 'Ошибка оплаты')
       if (paymentId && !txHash) await cancelPayment(paymentId)

@@ -26,6 +26,7 @@ export const getData = async ({ server, req, reply }) => {
   const descendants = await server.user.getDescendants(user)
   const { score, groupScore } = await server.user.getScores(user)
   const staleDays = parseInt(process.env.STALE_INTERACTION_DAYS, 10) || 30
+  const cancellationFee = parseInt(process.env.CANCELLATION_FEE, 10) || 5
   const currentUserId = user.id
 
   return {
@@ -49,6 +50,7 @@ export const getData = async ({ server, req, reply }) => {
     payments,
     descendants,
     staleDays,
+    cancellationFee,
     csrfToken,
   }
 }
@@ -68,7 +70,7 @@ const TABS = (role) => {
 
 const Index = () => {
   const { data } = useRouteContext()
-  const { profile = {}, currentUserId, payments = [], descendants = [], staleDays = 30, csrfToken = '' } = data
+  const { profile = {}, currentUserId, payments = [], descendants = [], staleDays = 30, cancellationFee = 5, csrfToken = '' } = data
   const [activeTab, setActiveTab] = useState('profile')
   const [invitationOpen, setInvitationOpen] = useState(false)
   const [profileData, setProfileData] = useState(profile)
@@ -126,7 +128,7 @@ const Index = () => {
             <UserProfile profile={profileData} csrfToken={csrfToken} onUpdate={handleUpdateProfile} />
           )}
           {activeTab === 'payments' && (
-            <Payments profile={profileData} initialPayments={payments} csrfToken={csrfToken} />
+            <Payments profile={profileData} initialPayments={payments} csrfToken={csrfToken} cancellationFee={cancellationFee} />
           )}
           {activeTab === 'stats' && <StatsDashboard profile={profileData} />}
           {activeTab === 'structure' && <Structure csrfToken={csrfToken} />}
