@@ -91,6 +91,37 @@ export const createTestInteraction = async (data) => {
 }
 
 /**
+ * Creates a test payment with order and returns it.
+ */
+export const createTestOrder = async (company, user, amount, paymentStatus) => {
+  return await prisma.order.create({
+    data: {
+      userId: user.id,
+      quantity: 1,
+      totalAmount: amount,
+      status: 'Paid',
+      payment: {
+        create: {
+          userId: user.id,
+          companyId: company.id,
+          amount: amount,
+          tokenSymbol: 'USDT',
+          tokenContract: '0x337610d27c682E347C9cD60BD4b3b107C9d34dDd',
+          tokenDecimals: 18,
+          chainId: 97,
+          txHash: `0x${random40()}`,
+          fromWallet: user.wallet,
+          toWallet: company.wallet,
+          status: paymentStatus,
+          uid: null,
+        },
+      },
+    },
+    include: { payment: true },
+  })
+}
+
+/**
  * Returns the Prisma client instance used by the reset helper.
  */
 export const getPrisma = () => prisma

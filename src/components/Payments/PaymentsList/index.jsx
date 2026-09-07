@@ -13,8 +13,7 @@ const STATUS_LABELS = {
   Failed: 'Ошибка',
 }
 
-const getConfirmationText = (fee) =>
-  `Вы уверены, что хотите отменить платеж? При отмене взимается комиссия ${fee}%`
+const getConfirmationText = (fee) => `Вы уверены, что хотите отменить платеж? При отмене взимается комиссия ${fee}%`
 
 const formatDate = (value) => {
   if (!value) return '-'
@@ -54,7 +53,7 @@ const PaymentsList = () => {
 
   const toggleExpanded = (paymentId) => {
     setExpandedPaymentIds((current) =>
-      current.includes(paymentId) ? current.filter((id) => id !== paymentId) : current.concat(paymentId)
+      current.includes(paymentId) ? current.filter((id) => id !== paymentId) : current.concat(paymentId),
     )
   }
 

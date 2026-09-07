@@ -70,7 +70,15 @@ const TABS = (role) => {
 
 const Index = () => {
   const { data } = useRouteContext()
-  const { profile = {}, currentUserId, payments = [], descendants = [], staleDays = 30, cancellationFee = 5, csrfToken = '' } = data
+  const {
+    profile = {},
+    currentUserId,
+    payments = [],
+    descendants = [],
+    staleDays = 30,
+    cancellationFee = 5,
+    csrfToken = '',
+  } = data
   const [activeTab, setActiveTab] = useState('profile')
   const [invitationOpen, setInvitationOpen] = useState(false)
   const [profileData, setProfileData] = useState(profile)
@@ -128,7 +136,12 @@ const Index = () => {
             <UserProfile profile={profileData} csrfToken={csrfToken} onUpdate={handleUpdateProfile} />
           )}
           {activeTab === 'payments' && (
-            <Payments profile={profileData} initialPayments={payments} csrfToken={csrfToken} cancellationFee={cancellationFee} />
+            <Payments
+              profile={profileData}
+              initialPayments={payments}
+              csrfToken={csrfToken}
+              cancellationFee={cancellationFee}
+            />
           )}
           {activeTab === 'stats' && <StatsDashboard profile={profileData} />}
           {activeTab === 'structure' && <Structure csrfToken={csrfToken} />}
