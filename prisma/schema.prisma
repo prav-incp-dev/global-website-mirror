@@ -22,7 +22,8 @@ enum OrderStatus {
 enum PaymentStatus {
   Pending
   Completed
-  ToCancel
+  ToRefund
+  Refunded
   Canceled
   Failed
 }
@@ -132,6 +133,7 @@ model Order {
 
 model Payment {
   id                Int           @id @default(autoincrement())
+  uid               String?       @unique
   orderId           Int           @unique
   order             Order         @relation(fields: [orderId], references: [id])
   userId            Int
@@ -147,8 +149,8 @@ model Payment {
   fromWallet        String?
   toWallet          String
   status            PaymentStatus @default(Pending)
-  cancelRequestedAt DateTime?
-  canceledAt        DateTime?
+  refundRequestedAt DateTime?
+  refundedAt        DateTime?
   wages             Wage[]
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt

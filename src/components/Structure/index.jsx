@@ -2,6 +2,7 @@ import React, { useMemo } from 'react'
 import TreeNode from './TreeNode'
 import { useDescendantsContext } from './DescendantsContext'
 import styles from './index.module.css'
+import { HOURS24 } from '@/lib/payment'
 
 // 1. Helper to build a tree from a flat array in O(N)
 const buildTree = (users) => {
@@ -26,7 +27,7 @@ const buildTree = (users) => {
 
 // 2. Post-order traversal to mark isStale and hasStaleDescendant on each node
 const markStaleNodes = (nodes, staleDays) => {
-  const deadline = Date.now() - staleDays * 24 * 60 * 60 * 1000
+  const deadline = Date.now() - staleDays * HOURS24
 
   for (const node of nodes) {
     if (node.children?.length) markStaleNodes(node.children, staleDays)

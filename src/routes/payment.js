@@ -1,5 +1,5 @@
-import { PaymentStatus, UserRole } from '../generated/prisma/client'
-import { canCancelPayment, serializePayment, verifyPaymentOnChain } from '../lib/payment'
+import { OrderStatus, PaymentStatus, UserRole } from '../generated/prisma/client'
+import { serializePayment, verifyPaymentOnChain } from '../lib/payment'
 import { PRICE_MAP } from '../lib/pricing'
 import { usdtAddress, usdtDecimals, chainId } from '../lib/chain.js'
 
@@ -33,7 +33,7 @@ export default async (fastify) => {
             userId: user.id,
             quantity,
             totalAmount: amountUsd,
-            status: 'Pending',
+            status: OrderStatus.Pending,
             payment: {
               create: {
                 userId: user.id,
@@ -170,7 +170,7 @@ export default async (fastify) => {
           }),
           fastify.prisma.order.update({
             where: { id: payment.orderId },
-            data: { status: 'Paid' },
+            data: { status: OrderStatus.Paid },
           }),
         ])
 
@@ -197,26 +197,51 @@ export default async (fastify) => {
     },
   })
 
-  fastify.get('/api/payments', {
+  fastify.post('/api/payments/:id/request-refund', {
+    schema: {
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'integer', minimum: 1 },
+        },
+      },
+    },
     handler: async (req, reply) => {
       const user = await fastify.auth.getUser(req)
       if (!user || user.role === UserRole.Admin) {
         return reply.code(403).send({ error: 'Доступ запрещен' })
       }
 
-      const payments = await fastify.prisma.payment.findMany({
-        where: { userId: user.id },
+      const payment = await fastify.prisma.payment.findUnique({
+        where: { id: req.params.id },
         include: {
           order: true,
         },
-        orderBy: {
-          createdAt: 'desc',
+      })
+
+      if (!payment || payment.userId !== user.id) {
+        return reply.code(404).send({ error: 'Платеж не найден' })
+      }
+
+      if (payment.status !== PaymentStatus.Completed || payment.uid !== null) {
+        return reply.code(409).send({ error: 'Платеж уже обработан и не может быть отменен' })
+      }
+
+      const updatedPayment = await fastify.prisma.payment.update({
+        where: { id: payment.id },
+        data: {
+          status: PaymentStatus.ToRefund,
+          refundRequestedAt: new Date(),
+        },
+        include: {
+          order: true,
         },
       })
 
       return reply.send({
         success: true,
-        payments: payments.map(serializePayment),
+        payment: serializePayment(updatedPayment),
       })
     },
   })
@@ -248,20 +273,25 @@ export default async (fastify) => {
         return reply.code(404).send({ error: 'Платеж не найден' })
       }
 
-      if (!canCancelPayment(payment)) {
-        return reply.code(409).send({ error: 'Запрос на отмену можно оставить только в течение 24 часов' })
+      if (payment.status !== PaymentStatus.Pending) {
+        return reply.code(409).send({ error: 'Платеж уже не в ожидании' })
       }
 
-      const updatedPayment = await fastify.prisma.payment.update({
-        where: { id: payment.id },
-        data: {
-          status: PaymentStatus.ToCancel,
-          cancelRequestedAt: new Date(),
-        },
-        include: {
-          order: true,
-        },
-      })
+      if (payment.txHash !== null) {
+        return reply.code(409).send({ error: 'Транзакция уже привязана к платежу' })
+      }
+
+      const [updatedPayment] = await fastify.prisma.$transaction([
+        fastify.prisma.payment.update({
+          where: { id: payment.id },
+          data: { status: PaymentStatus.Canceled },
+          include: { order: true },
+        }),
+        fastify.prisma.order.update({
+          where: { id: payment.orderId },
+          data: { status: OrderStatus.Canceled },
+        }),
+      ])
 
       return reply.send({
         success: true,

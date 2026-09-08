@@ -9,7 +9,18 @@ test.describe('update client achievements flow', () => {
   test.beforeEach(async () => {
     const company = await createTestCompany('Update Client Company')
     admin = await createTestUser({ firstName: 'Alice', lastName: 'Admin', role: 'Admin', companyId: company.id })
-    targetConsultant = await createTestUser({ firstName: 'Abby', lastName: 'Target', role: 'Consultant', level: 1, levelConfirmed: true, companyId: company.id }, 10, 13)
+    targetConsultant = await createTestUser(
+      {
+        firstName: 'Abby',
+        lastName: 'Target',
+        role: 'Consultant',
+        level: 1,
+        levelConfirmed: true,
+        companyId: company.id,
+      },
+      10,
+      13,
+    )
     await createTestUser({ firstName: 'George', lastName: 'Black', role: 'Candidate', companyId: company.id })
   })
 

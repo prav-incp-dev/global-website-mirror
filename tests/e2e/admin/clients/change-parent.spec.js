@@ -15,7 +15,13 @@ test.describe('admin clients page', () => {
     await createTestUser({ firstName: 'Tim', lastName: 'Bro', companyId: company.id })
 
     // Tom Begging — Candidate, orphant
-    await createTestUser({ firstName: 'Tom', lastName: 'Begging', role: 'Candidate', companyId: company.id, orphant: true })
+    await createTestUser({
+      firstName: 'Tom',
+      lastName: 'Begging',
+      role: 'Candidate',
+      companyId: company.id,
+      orphant: true,
+    })
   })
 
   test('change parent flow: clear/set parent', async ({ loginAs, page }) => {

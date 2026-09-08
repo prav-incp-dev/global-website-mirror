@@ -12,18 +12,36 @@ test.describe('admin clients page', () => {
     admin = await createTestUser({ firstName: 'Alice', lastName: 'Admin', role: 'Admin', companyId: company.id })
 
     // Create 1 candidate 'Nemo' without parent (orphan)
-    await createTestUser({ firstName: 'Nemo', lastName: 'Fish', role: 'Candidate', companyId: company.id, orphant: true })
+    await createTestUser({
+      firstName: 'Nemo',
+      lastName: 'Fish',
+      role: 'Candidate',
+      companyId: company.id,
+      orphant: true,
+    })
 
     // Create 10 candidates with firstName 'John', no parent (orphans)
     const johns = []
     for (let i = 0; i < 10; i++) {
-      const john = await createTestUser({ firstName: 'John', lastName: `Doe${i}`, role: 'Candidate', companyId: company.id, orphant: true })
+      const john = await createTestUser({
+        firstName: 'John',
+        lastName: `Doe${i}`,
+        role: 'Candidate',
+        companyId: company.id,
+        orphant: true,
+      })
       johns.push(john)
     }
 
     // Create 10 candidates with firstName 'Tom', with parent set to first John
     for (let i = 0; i < 10; i++) {
-      await createTestUser({ firstName: 'Tom', lastName: `Smith${i}`, role: 'Candidate', companyId: company.id, parentId: johns[0].id })
+      await createTestUser({
+        firstName: 'Tom',
+        lastName: `Smith${i}`,
+        role: 'Candidate',
+        companyId: company.id,
+        parentId: johns[0].id,
+      })
     }
   })
 

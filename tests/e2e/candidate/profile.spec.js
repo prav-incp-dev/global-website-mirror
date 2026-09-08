@@ -8,7 +8,13 @@ test.describe('consultant manages own profile', () => {
   test.beforeEach(async () => {
     const company = await createTestCompany('Candidate Profile Company')
     parent = await createTestUser({ firstName: 'Consultant', lastName: 'Inviter', companyId: company.id })
-    candidate = await createTestUser({ firstName: 'Candidate', lastName: 'User', role: 'Candidate', companyId: company.id, parentId: parent.id })
+    candidate = await createTestUser({
+      firstName: 'Candidate',
+      lastName: 'User',
+      role: 'Candidate',
+      companyId: company.id,
+      parentId: parent.id,
+    })
   })
 
   test('views profile with inviter, edits data, and verifies email persists', async ({ loginAs, page }) => {

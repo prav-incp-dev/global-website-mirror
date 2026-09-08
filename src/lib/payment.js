@@ -1,8 +1,7 @@
-import { PaymentStatus } from '../generated/prisma/enums'
 import { getAddress, parseUnits, parseEventLogs } from 'viem'
 import { getPublicClient } from './chain.js'
 
-const PAYMENT_WINDOW_MS = 24 * 60 * 60 * 1000
+const HOURS24 = 24 * 60 * 60 * 1000
 
 const transferEventAbi = {
   type: 'event',
@@ -12,11 +11,6 @@ const transferEventAbi = {
     { indexed: true, name: 'to', type: 'address' },
     { indexed: false, name: 'value', type: 'uint256' },
   ],
-}
-
-const canCancelPayment = (payment) => {
-  if (payment.status !== PaymentStatus.Completed) return false
-  return Date.now() - new Date(payment.createdAt).getTime() <= PAYMENT_WINDOW_MS
 }
 
 const verifyPaymentOnChain = async (payment) => {
@@ -57,6 +51,7 @@ const serializePayment = (payment) => {
   return {
     // Passthrough fields
     id: payment.id,
+    uid: payment.uid,
     orderId: payment.orderId,
     status: payment.status,
     txHash: payment.txHash,
@@ -68,13 +63,13 @@ const serializePayment = (payment) => {
     tokenDecimals: payment.tokenDecimals,
     createdAt: payment.createdAt,
     updatedAt: payment.updatedAt,
-    cancelRequestedAt: payment.cancelRequestedAt,
-    canceledAt: payment.canceledAt,
+    refundRequestedAt: payment.refundRequestedAt,
+    refundedAt: payment.refundedAt,
+
     // Decorated fields
     quantity: payment.order?.quantity ?? null,
     amountUsd: Number(payment.amount),
-    canCancel: canCancelPayment(payment),
   }
 }
 
-export { PAYMENT_WINDOW_MS, canCancelPayment, serializePayment, verifyPaymentOnChain }
+export { HOURS24, serializePayment, verifyPaymentOnChain }

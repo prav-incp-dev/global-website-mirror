@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createNoCsrfApp as createApp } from '../helpers'
-import { PaymentStatus, UserRole } from '../../src/generated/prisma/client'
-import { PAYMENT_WINDOW_MS } from '@/lib/payment.js'
+import { OrderStatus, PaymentStatus, UserRole } from '../../src/generated/prisma/client'
 
 const getTransactionReceipt = vi.fn()
 const mockGetTransactionReceipt = async () => getTransactionReceipt
@@ -35,145 +34,6 @@ const candidateUser = {
 }
 
 describe('payments routes', () => {
-  // --- GET /api/payments ---
-
-  it('GET /api/payments returns 403 when user is not authenticated', async () => {
-    const app = await createApp()
-    vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
-
-    const response = await app.inject({
-      method: 'GET',
-      url: '/api/payments',
-    })
-
-    expect(response.statusCode).toBe(403)
-    expect(response.json()).toEqual({ error: 'Доступ запрещен' })
-  })
-
-  it('GET /api/payments returns 403 when user is Admin', async () => {
-    const app = await createApp()
-    vi.spyOn(app.auth, 'getUser').mockResolvedValue({ id: 1, role: UserRole.Admin })
-
-    const response = await app.inject({
-      method: 'GET',
-      url: '/api/payments',
-    })
-
-    expect(response.statusCode).toBe(403)
-    expect(response.json()).toEqual({ error: 'Доступ запрещен' })
-  })
-
-  it('GET /api/payments returns empty list when user has no payments', async () => {
-    const app = await createApp()
-    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
-    vi.spyOn(app.prisma.payment, 'findMany').mockResolvedValue([])
-
-    const response = await app.inject({
-      method: 'GET',
-      url: '/api/payments',
-    })
-
-    expect(response.statusCode).toBe(200)
-    expect(response.json()).toEqual({ success: true, payments: [] })
-  })
-
-  it('GET /api/payments returns serialized payments', async () => {
-    const now = new Date('2026-07-30T10:00:00.000Z')
-    vi.spyOn(Date, 'now').mockReturnValue(now.getTime() + 1000)
-    const mockPayment = {
-      id: 11,
-      orderId: 7,
-      userId: candidateUser.id,
-      amount: 1200,
-      status: PaymentStatus.Completed,
-      txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-      fromWallet: '0x2222222222222222222222222222222222222222',
-      toWallet: candidateUser.company.wallet,
-      chainId: 97,
-      tokenSymbol: 'USDT',
-      tokenContract: '0x3333333333333333333333333333333333333333',
-      tokenDecimals: 18,
-      cancelRequestedAt: null,
-      canceledAt: null,
-      createdAt: now,
-      updatedAt: now,
-      order: { id: 7, quantity: 1 },
-    }
-
-    const app = await createApp()
-    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
-    vi.spyOn(app.prisma.payment, 'findMany').mockResolvedValue([mockPayment])
-
-    const response = await app.inject({
-      method: 'GET',
-      url: '/api/payments',
-    })
-
-    expect(response.statusCode).toBe(200)
-    const body = response.json()
-    expect(body.success).toBe(true)
-    expect(body.payments).toHaveLength(1)
-    expect(body.payments[0]).toEqual({
-      id: 11,
-      orderId: 7,
-      quantity: 1,
-      amountUsd: 1200,
-      status: PaymentStatus.Completed,
-      txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-      fromWallet: '0x2222222222222222222222222222222222222222',
-      toWallet: candidateUser.company.wallet,
-      chainId: 97,
-      tokenSymbol: 'USDT',
-      tokenContract: '0x3333333333333333333333333333333333333333',
-      tokenDecimals: 18,
-      createdAt: now.toISOString(),
-      updatedAt: now.toISOString(),
-      cancelRequestedAt: null,
-      canceledAt: null,
-      canCancel: true,
-    })
-  })
-
-  it('GET /api/payments does not return other users payments', async () => {
-    const now = new Date('2026-07-30T10:00:00.000Z')
-    const otherPayment = {
-      id: 99,
-      orderId: 77,
-      userId: 999,
-      amount: 1200,
-      status: PaymentStatus.Completed,
-      txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-      fromWallet: '0x2222222222222222222222222222222222222222',
-      toWallet: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-      chainId: 97,
-      tokenSymbol: 'USDT',
-      tokenContract: '0x3333333333333333333333333333333333333333',
-      tokenDecimals: 18,
-      cancelRequestedAt: null,
-      canceledAt: null,
-      createdAt: now,
-      updatedAt: now,
-      order: { id: 77, quantity: 1 },
-    }
-
-    const app = await createApp()
-    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
-    vi.spyOn(app.prisma.payment, 'findMany').mockResolvedValue([otherPayment])
-
-    const response = await app.inject({
-      method: 'GET',
-      url: '/api/payments',
-    })
-
-    expect(response.statusCode).toBe(200)
-    expect(response.json().payments).toHaveLength(1)
-    expect(app.prisma.payment.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { userId: candidateUser.id },
-      }),
-    )
-  })
-
   // --- POST /api/payments/init ---
 
   it('POST /api/payments/init returns 403 when user is not authenticated', async () => {
@@ -417,8 +277,8 @@ describe('payments routes', () => {
       tokenSymbol: 'USDT',
       tokenContract: '0x3333333333333333333333333333333333333333',
       tokenDecimals: 18,
-      cancelRequestedAt: null,
-      canceledAt: null,
+      refundRequestedAt: null,
+      refundedAt: null,
       createdAt: now,
       updatedAt: now,
       order: { id: 7, quantity: 1 },
@@ -656,8 +516,8 @@ describe('payments routes', () => {
       status: PaymentStatus.Completed,
       chainId: 97,
       tokenSymbol: 'USDT',
-      cancelRequestedAt: null,
-      canceledAt: null,
+      refundRequestedAt: null,
+      refundedAt: null,
       createdAt: now,
       updatedAt: now,
     }
@@ -686,8 +546,8 @@ describe('payments routes', () => {
       status: PaymentStatus.Completed,
       chainId: 97,
       tokenSymbol: 'USDT',
-      cancelRequestedAt: null,
-      canceledAt: null,
+      refundRequestedAt: null,
+      refundedAt: null,
       createdAt: now,
       updatedAt: now,
     }
@@ -836,6 +696,153 @@ describe('payments routes', () => {
     expect(response.json()).toEqual({ error: 'Ошибка верификации платежа' })
   })
 
+  // --- POST /api/payments/:id/request-refund ---
+
+  it('POST /api/payments/:id/request-refund returns 403 when user is not authenticated', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/payments/11/request-refund',
+    })
+
+    expect(response.statusCode).toBe(403)
+    expect(response.json()).toEqual({ error: 'Доступ запрещен' })
+  })
+
+  it('POST /api/payments/:id/request-refund returns 409 when uid is already assigned', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      status: PaymentStatus.Completed,
+      uid: 'ON-1234-01',
+      createdAt: new Date(),
+      order: { id: 7, quantity: 1 },
+    })
+    vi.spyOn(app.prisma.payment, 'update')
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/payments/11/request-refund',
+    })
+
+    expect(response.statusCode).toBe(409)
+    expect(response.json()).toEqual({ error: 'Платеж уже обработан и не может быть отменен' })
+    expect(app.prisma.payment.update).not.toHaveBeenCalled()
+  })
+
+  it('POST /api/payments/:id/request-refund marks payment as ToRefund', async () => {
+    const createdAt = new Date(Date.now() - 2 * 60 * 60 * 1000)
+    const updatedAt = new Date('2026-07-30T12:00:00.000Z')
+
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      uid: null,
+      amount: 1200,
+      status: PaymentStatus.Completed,
+      txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      fromWallet: '0x2222222222222222222222222222222222222222',
+      toWallet: candidateUser.company.wallet,
+      chainId: 97,
+      tokenSymbol: 'USDT',
+      tokenContract: '0x3333333333333333333333333333333333333333',
+      tokenDecimals: 18,
+      refundRequestedAt: null,
+      refundedAt: null,
+      createdAt,
+      updatedAt: createdAt,
+      order: { id: 7, quantity: 1 },
+    })
+    vi.spyOn(app.prisma.payment, 'update').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      amount: 1200,
+      status: PaymentStatus.ToRefund,
+      txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      fromWallet: '0x2222222222222222222222222222222222222222',
+      toWallet: candidateUser.company.wallet,
+      chainId: 97,
+      tokenSymbol: 'USDT',
+      tokenContract: '0x3333333333333333333333333333333333333333',
+      tokenDecimals: 18,
+      refundRequestedAt: updatedAt,
+      refundedAt: null,
+      createdAt,
+      updatedAt,
+      order: { id: 7, quantity: 1 },
+    })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/payments/11/request-refund',
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json().success).toBe(true)
+    expect(response.json().payment.status).toBe(PaymentStatus.ToRefund)
+    expect(app.prisma.payment.update).toHaveBeenCalledTimes(1)
+  })
+
+  it('POST /api/payments/:id/request-refund returns 403 when user is Admin', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue({ id: 1, role: UserRole.Admin })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/payments/11/request-refund',
+    })
+
+    expect(response.statusCode).toBe(403)
+    expect(response.json()).toEqual({ error: 'Доступ запрещен' })
+  })
+
+  it('POST /api/payments/:id/request-refund returns 404 when payment not found', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue(null)
+    vi.spyOn(app.prisma.payment, 'update')
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/payments/99999/request-refund',
+    })
+
+    expect(response.statusCode).toBe(404)
+    expect(response.json()).toEqual({ error: 'Платеж не найден' })
+    expect(app.prisma.payment.update).not.toHaveBeenCalled()
+  })
+
+  it('POST /api/payments/:id/request-refund returns 404 when payment belongs to another user', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: 999,
+      status: PaymentStatus.Completed,
+      createdAt: new Date(),
+      order: { id: 7, quantity: 1 },
+    })
+    vi.spyOn(app.prisma.payment, 'update')
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/payments/11/request-refund',
+    })
+
+    expect(response.statusCode).toBe(404)
+    expect(response.json()).toEqual({ error: 'Платеж не найден' })
+    expect(app.prisma.payment.update).not.toHaveBeenCalled()
+  })
   // --- POST /api/payments/:id/cancel ---
 
   it('POST /api/payments/:id/cancel returns 403 when user is not authenticated', async () => {
@@ -849,87 +856,6 @@ describe('payments routes', () => {
 
     expect(response.statusCode).toBe(403)
     expect(response.json()).toEqual({ error: 'Доступ запрещен' })
-  })
-
-  it('POST /api/payments/:id/cancel returns 409 for too old payment', async () => {
-    const oldDate = new Date(Date.now() - PAYMENT_WINDOW_MS - 1000)
-    const app = await createApp()
-    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
-    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
-      id: 11,
-      orderId: 7,
-      userId: candidateUser.id,
-      status: PaymentStatus.Completed,
-      createdAt: oldDate,
-      order: { id: 7, quantity: 1 },
-    })
-    vi.spyOn(app.prisma.payment, 'update')
-
-    const response = await app.inject({
-      method: 'POST',
-      url: '/api/payments/11/cancel',
-    })
-
-    expect(response.statusCode).toBe(409)
-    expect(response.json()).toEqual({ error: 'Запрос на отмену можно оставить только в течение 24 часов' })
-    expect(app.prisma.payment.update).not.toHaveBeenCalled()
-  })
-
-  it('POST /api/payments/:id/cancel marks payment as ToCancel', async () => {
-    const createdAt = new Date(Date.now() - 2 * 60 * 60 * 1000)
-    const updatedAt = new Date('2026-07-30T12:00:00.000Z')
-
-    const app = await createApp()
-    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
-    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
-      id: 11,
-      orderId: 7,
-      userId: candidateUser.id,
-      amount: 1200,
-      status: PaymentStatus.Completed,
-      txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-      fromWallet: '0x2222222222222222222222222222222222222222',
-      toWallet: candidateUser.company.wallet,
-      chainId: 97,
-      tokenSymbol: 'USDT',
-      tokenContract: '0x3333333333333333333333333333333333333333',
-      tokenDecimals: 18,
-      cancelRequestedAt: null,
-      canceledAt: null,
-      createdAt,
-      updatedAt: createdAt,
-      order: { id: 7, quantity: 1 },
-    })
-    vi.spyOn(app.prisma.payment, 'update').mockResolvedValue({
-      id: 11,
-      orderId: 7,
-      userId: candidateUser.id,
-      amount: 1200,
-      status: PaymentStatus.ToCancel,
-      txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-      fromWallet: '0x2222222222222222222222222222222222222222',
-      toWallet: candidateUser.company.wallet,
-      chainId: 97,
-      tokenSymbol: 'USDT',
-      tokenContract: '0x3333333333333333333333333333333333333333',
-      tokenDecimals: 18,
-      cancelRequestedAt: updatedAt,
-      canceledAt: null,
-      createdAt,
-      updatedAt,
-      order: { id: 7, quantity: 1 },
-    })
-
-    const response = await app.inject({
-      method: 'POST',
-      url: '/api/payments/11/cancel',
-    })
-
-    expect(response.statusCode).toBe(200)
-    expect(response.json().success).toBe(true)
-    expect(response.json().payment.status).toBe(PaymentStatus.ToCancel)
-    expect(response.json().payment.canCancel).toBe(false)
-    expect(app.prisma.payment.update).toHaveBeenCalledTimes(1)
   })
 
   it('POST /api/payments/:id/cancel returns 403 when user is Admin', async () => {
@@ -968,8 +894,8 @@ describe('payments routes', () => {
       id: 11,
       orderId: 7,
       userId: 999,
-      status: PaymentStatus.Completed,
-      createdAt: new Date(),
+      status: PaymentStatus.Pending,
+      txHash: null,
       order: { id: 7, quantity: 1 },
     })
     vi.spyOn(app.prisma.payment, 'update')
@@ -982,5 +908,109 @@ describe('payments routes', () => {
     expect(response.statusCode).toBe(404)
     expect(response.json()).toEqual({ error: 'Платеж не найден' })
     expect(app.prisma.payment.update).not.toHaveBeenCalled()
+  })
+
+  it('POST /api/payments/:id/cancel returns 409 when payment is not Pending', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      status: PaymentStatus.Completed,
+      txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      order: { id: 7, quantity: 1 },
+    })
+    vi.spyOn(app.prisma.payment, 'update')
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/payments/11/cancel',
+    })
+
+    expect(response.statusCode).toBe(409)
+    expect(response.json()).toEqual({ error: 'Платеж уже не в ожидании' })
+    expect(app.prisma.payment.update).not.toHaveBeenCalled()
+  })
+
+  it('POST /api/payments/:id/cancel returns 409 when txHash already set', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      status: PaymentStatus.Pending,
+      txHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      order: { id: 7, quantity: 1 },
+    })
+    vi.spyOn(app.prisma.payment, 'update')
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/payments/11/cancel',
+    })
+
+    expect(response.statusCode).toBe(409)
+    expect(response.json()).toEqual({ error: 'Транзакция уже привязана к платежу' })
+    expect(app.prisma.payment.update).not.toHaveBeenCalled()
+  })
+
+  it('POST /api/payments/:id/cancel marks pending payment as Canceled and order as Canceled', async () => {
+    const now = new Date('2026-07-30T10:00:00.000Z')
+    const canceledPayment = {
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      amount: 1200,
+      status: PaymentStatus.Canceled,
+      txHash: null,
+      fromWallet: null,
+      toWallet: candidateUser.company.wallet,
+      chainId: 97,
+      tokenSymbol: 'USDT',
+      tokenContract: '0x3333333333333333333333333333333333333333',
+      tokenDecimals: 18,
+      refundRequestedAt: null,
+      refundedAt: null,
+      createdAt: now,
+      updatedAt: now,
+      order: { id: 7, quantity: 1 },
+    }
+
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
+      id: 11,
+      orderId: 7,
+      userId: candidateUser.id,
+      status: PaymentStatus.Pending,
+      txHash: null,
+      order: { id: 7, quantity: 1 },
+    })
+    vi.spyOn(app.prisma.payment, 'update').mockResolvedValue({})
+    vi.spyOn(app.prisma.order, 'update').mockResolvedValue({})
+    vi.spyOn(app.prisma, '$transaction').mockResolvedValue([canceledPayment])
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/payments/11/cancel',
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json().success).toBe(true)
+    expect(response.json().payment.status).toBe(PaymentStatus.Canceled)
+    expect(app.prisma.payment.update).toHaveBeenCalledTimes(1)
+    expect(app.prisma.payment.update).toHaveBeenCalledWith({
+      where: { id: 11 },
+      data: { status: PaymentStatus.Canceled },
+      include: { order: true },
+    })
+    expect(app.prisma.order.update).toHaveBeenCalledTimes(1)
+    expect(app.prisma.order.update).toHaveBeenCalledWith({
+      where: { id: 7 },
+      data: { status: OrderStatus.Canceled },
+    })
+    expect(app.prisma.$transaction).toHaveBeenCalledTimes(1)
   })
 })

@@ -4,6 +4,7 @@ import fastifyCron from 'fastify-cron'
 import { buildBackendApp } from './backend.js'
 import { checkUpcomingInteractions } from './src/jobs/interactionReminder.js'
 import { orphantUsers } from './src/jobs/inactivityChecker.js'
+import { checkPayments } from './src/jobs/paymentsChecker.js'
 
 const server = await buildBackendApp({ logger: true })
 
@@ -34,6 +35,14 @@ await server.register(fastifyCron, {
       timeZone: 'Europe/Moscow',
       onTick: async (server) => {
         await orphantUsers(server.prisma, server.log)
+      },
+    },
+    {
+      name: 'payments-checker',
+      cronTime: '*/15 * * * *',
+      timeZone: 'Europe/Moscow',
+      onTick: async (server) => {
+        await checkPayments(server.prisma, server.log)
       },
     },
   ],

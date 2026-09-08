@@ -5,7 +5,7 @@ CREATE TYPE "UserRole" AS ENUM ('Admin', 'Candidate', 'Consultant');
 CREATE TYPE "OrderStatus" AS ENUM ('Pending', 'Paid', 'Canceled');
 
 -- CreateEnum
-CREATE TYPE "PaymentStatus" AS ENUM ('Pending', 'Completed', 'ToCancel', 'Canceled', 'Failed');
+CREATE TYPE "PaymentStatus" AS ENUM ('Pending', 'Completed', 'ToRefund', 'Refunded', 'Canceled', 'Failed');
 
 -- CreateEnum
 CREATE TYPE "InteractionStatus" AS ENUM ('Open', 'Closed');
@@ -101,6 +101,7 @@ CREATE TABLE "Order" (
 -- CreateTable
 CREATE TABLE "Payment" (
     "id" SERIAL NOT NULL,
+    "uid" TEXT,
     "orderId" INTEGER NOT NULL,
     "userId" INTEGER NOT NULL,
     "companyId" INTEGER NOT NULL,
@@ -113,8 +114,8 @@ CREATE TABLE "Payment" (
     "fromWallet" TEXT,
     "toWallet" TEXT NOT NULL,
     "status" "PaymentStatus" NOT NULL DEFAULT 'Pending',
-    "cancelRequestedAt" TIMESTAMP(3),
-    "canceledAt" TIMESTAMP(3),
+    "refundRequestedAt" TIMESTAMP(3),
+    "refundedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -159,6 +160,9 @@ CREATE INDEX "Wage_paymentId_idx" ON "Wage"("paymentId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Payment_orderId_key" ON "Payment"("orderId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Payment_uid_key" ON "Payment"("uid");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Payment_txHash_key" ON "Payment"("txHash");

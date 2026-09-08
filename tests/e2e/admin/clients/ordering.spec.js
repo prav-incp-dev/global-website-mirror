@@ -9,16 +9,28 @@ test.describe('ordering clients', () => {
     admin = await createTestUser({ firstName: 'Alice', lastName: 'Admin', role: 'Admin', companyId: company.id })
 
     // Alice — Candidate, level 3, score 100
-    await createTestUser({ firstName: 'Alice', lastName: 'Anderson', role: 'Candidate', level: 3, companyId: company.id }, 100)
+    await createTestUser(
+      { firstName: 'Alice', lastName: 'Anderson', role: 'Candidate', level: 3, companyId: company.id },
+      100,
+    )
 
     // Bob — Consultant, level 1, score 300
-    await createTestUser({ firstName: 'Bob', lastName: 'Brown', role: 'Consultant', level: 1, companyId: company.id }, 300)
+    await createTestUser(
+      { firstName: 'Bob', lastName: 'Brown', role: 'Consultant', level: 1, companyId: company.id },
+      300,
+    )
 
     // Charlie — Candidate, level 2, score 200
-    await createTestUser({ firstName: 'Charlie', lastName: 'Clark', role: 'Candidate', level: 2, companyId: company.id }, 200)
+    await createTestUser(
+      { firstName: 'Charlie', lastName: 'Clark', role: 'Candidate', level: 2, companyId: company.id },
+      200,
+    )
 
     // David — Consultant, level 4, score 50 (created last = highest id)
-    await createTestUser({ firstName: 'David', lastName: 'Davis', role: 'Consultant', level: 4, companyId: company.id }, 50)
+    await createTestUser(
+      { firstName: 'David', lastName: 'Davis', role: 'Consultant', level: 4, companyId: company.id },
+      50,
+    )
   })
 
   test('ordering clients by different criteria', async ({ loginAs, page }) => {
