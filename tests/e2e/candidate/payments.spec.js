@@ -170,10 +170,10 @@ test.describe('candidate payment flow', () => {
     await expect(page.getByText(payment.txHash)).toBeVisible()
     await expect(page.getByRole('button', { name: 'Отменить' })).toBeVisible()
 
-    // Click cancel — accept confirm dialog — status changes to 'Ожидает отмены'
+    // Click cancel — accept confirm dialog — status changes to 'Отмена'
     page.once('dialog', (dialog) => dialog.accept())
     await page.getByRole('button', { name: 'Отменить' }).click()
-    await expect(page.getByText('Ожидает отмены')).toBeVisible()
+    await expect(page.getByText('Отмена')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Отменить' })).not.toBeVisible()
 
     // Reload — status persists
@@ -181,6 +181,6 @@ test.describe('candidate payment flow', () => {
     await page.waitForLoadState('networkidle')
     await page.getByRole('button', { name: 'Покупки' }).click()
     await expect(page.getByText('1200 USD')).toBeVisible()
-    await expect(page.getByText('Ожидает отмены')).toBeVisible()
+    await expect(page.getByText('Отмена')).toBeVisible()
   })
 })
