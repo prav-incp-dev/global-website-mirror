@@ -1,6 +1,8 @@
 import fp from 'fastify-plugin'
+import { PaymentStatus } from '../generated/prisma/client'
+import { userName } from '../../src/lib/user'
 
-export const CLIENTS_PAGE_LIMIT = 20
+export const PAGE_LIMIT = 20
 
 export default fp(async (fastify) => {
   fastify.decorate('admin', {
@@ -24,6 +26,25 @@ export default fp(async (fastify) => {
                   { firstName: { contains: query, mode: 'insensitive' } },
                   { lastName: { contains: query, mode: 'insensitive' } },
                   { email: { contains: query, mode: 'insensitive' } },
+                ],
+              }
+            : {}),
+        },
+      })
+    },
+
+    getToRefundCount: async (user, query = '') => {
+      return fastify.prisma.payment.count({
+        where: {
+          companyId: user.company.id,
+          status: PaymentStatus.ToRefund,
+          ...(query
+            ? {
+                OR: [
+                  { txHash: { contains: query, mode: 'insensitive' } },
+                  { uid: { contains: query, mode: 'insensitive' } },
+                  { user: { firstName: { contains: query, mode: 'insensitive' } } },
+                  { user: { lastName: { contains: query, mode: 'insensitive' } } },
                 ],
               }
             : {}),
@@ -67,7 +88,7 @@ export default fp(async (fastify) => {
       return { success: true }
     },
 
-    getClients: async (user, page = 1, limit = CLIENTS_PAGE_LIMIT, query = '', orphansOnly = false, sortBy = 'id') => {
+    getClients: async (user, page = 1, limit = PAGE_LIMIT, query = '', orphansOnly = false, sortBy = 'id') => {
       const skip = (page - 1) * limit
 
       const orderByMap = {
@@ -139,6 +160,76 @@ export default fp(async (fastify) => {
 
       return {
         users,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      }
+    },
+
+    getPayments: async (user, page = 1, limit = PAGE_LIMIT, query = '', toRefundOnly = false, sortBy = 'id') => {
+      const skip = (page - 1) * limit
+
+      const orderByMap = {
+        amount: [{ amount: 'asc' }, { id: 'desc' }],
+        status: [{ status: 'asc' }, { id: 'desc' }],
+        id: [{ id: 'desc' }],
+      }
+      const orderBy = orderByMap[sortBy] ?? orderByMap.id
+
+      const where = {
+        companyId: user.company.id,
+        status: toRefundOnly ? PaymentStatus.ToRefund : { not: PaymentStatus.Canceled },
+        ...(query
+          ? {
+              OR: [
+                { txHash: { contains: query, mode: 'insensitive' } },
+                { uid: { contains: query, mode: 'insensitive' } },
+                { user: { firstName: { contains: query, mode: 'insensitive' } } },
+                { user: { lastName: { contains: query, mode: 'insensitive' } } },
+              ],
+            }
+          : {}),
+      }
+
+      const [rows, total] = await Promise.all([
+        fastify.prisma.payment.findMany({
+          where,
+          select: {
+            id: true,
+            amount: true,
+            status: true,
+            txHash: true,
+            uid: true,
+            createdAt: true,
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+          orderBy,
+          skip,
+          take: limit,
+        }),
+        fastify.prisma.payment.count({ where }),
+      ])
+
+      const payments = rows.map((row) => ({
+        payment: {
+          id: row.id,
+          amount: Number(row.amount),
+          status: row.status,
+          txHash: row.txHash,
+          uid: row.uid,
+          createdAt: row.createdAt,
+          userName: userName(row.user),
+        },
+      }))
+
+      return {
+        payments,
         total,
         page,
         limit,

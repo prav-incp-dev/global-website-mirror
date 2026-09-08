@@ -2,6 +2,16 @@ import { getAddress, parseUnits, parseEventLogs } from 'viem'
 import { getPublicClient } from './chain.js'
 
 const HOURS24 = 24 * 60 * 60 * 1000
+const MINUTES15 = 15 * 60 * 1000
+
+const PAYMENT_STATUSES = {
+  Pending: 'В обработке',
+  Completed: 'Оплачен',
+  ToRefund: 'Отмена',
+  Refunded: 'Отменен',
+  Canceled: 'Отозван',
+  Failed: 'Ошибка',
+}
 
 const transferEventAbi = {
   type: 'event',
@@ -72,4 +82,4 @@ const serializePayment = (payment) => {
   }
 }
 
-export { HOURS24, serializePayment, verifyPaymentOnChain }
+export { HOURS24, MINUTES15, PAYMENT_STATUSES, serializePayment, verifyPaymentOnChain }

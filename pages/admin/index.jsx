@@ -4,6 +4,7 @@ import { UserRole } from '@/generated/prisma/enums'
 import AdminProfile from '@/components/AdminProfile'
 import CompanyProfile from '@/components/CompanyProfile'
 import ClientsTable from '@/components/ClientsTable'
+import PaymentsTable from '@/components/PaymentsTable'
 import InvitationModal from '@/components/InvitationModal'
 import styles from './index.module.css'
 
@@ -14,11 +15,12 @@ export const getData = async ({ server, req, reply }) => {
 
   const csrfToken = reply.generateCsrf()
   const company = await server.admin.getCompany(user)
-  const [clientsData, orphansCount] = await Promise.all([
+  const [clientsData, orphansCount, paymentsData, toRefundCount] = await Promise.all([
     server.admin.getClients(user),
     server.admin.getOrphansCount(user),
+    server.admin.getPayments(user),
+    server.admin.getToRefundCount(user),
   ])
-
   return {
     profile: {
       firstName: user.firstName,
@@ -28,6 +30,8 @@ export const getData = async ({ server, req, reply }) => {
     company: company,
     clients: clientsData,
     orphansCount,
+    payments: paymentsData,
+    toRefundCount,
     csrfToken,
   }
 }
@@ -36,11 +40,21 @@ const TABS = [
   { key: 'admin', label: 'Профиль администратора' },
   { key: 'company', label: 'Профиль компании' },
   { key: 'clients', label: 'Клиенты' },
+  { key: 'payments', label: 'Платежи' },
 ]
 
 const Admin = () => {
   const { data } = useRouteContext()
-  const { profile = {}, company = null, clients = {}, orphansCount = 0, csrfToken = '' } = data
+  const {
+    profile = {},
+    company = null,
+    clients = {},
+    orphansCount = 0,
+    payments = {},
+    toRefundCount = 0,
+    csrfToken = '',
+  } = data
+  console.log(payments, toRefundCount)
   const [activeTab, setActiveTab] = useState('admin')
   const [invitationOpen, setInvitationOpen] = useState(false)
   const [profileData, setProfileData] = useState(profile)
@@ -113,6 +127,19 @@ const Admin = () => {
               totalPages: clients.totalPages,
             }}
             initialOrphansCount={orphansCount}
+            csrfToken={csrfToken}
+          />
+        )}
+        {activeTab === 'payments' && payments && (
+          <PaymentsTable
+            initialPayments={payments.payments}
+            initialPagination={{
+              total: payments.total,
+              page: payments.page,
+              limit: payments.limit,
+              totalPages: payments.totalPages,
+            }}
+            initialToRefundCount={toRefundCount}
             csrfToken={csrfToken}
           />
         )}

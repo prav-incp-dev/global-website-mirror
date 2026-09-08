@@ -10,7 +10,7 @@ export const usePaymentsContext = () => {
   return ctx
 }
 
-export const PaymentsProvider = ({ initialPayments = [], csrfToken, cancellationFee, children }) => {
+export const PaymentsProvider = ({ initialPayments = [], csrfToken, refundFee, children }) => {
   const [payments, setPayments] = useState(initialPayments)
 
   const addPayment = useCallback((payment) => {
@@ -22,7 +22,7 @@ export const PaymentsProvider = ({ initialPayments = [], csrfToken, cancellation
   }, [])
 
   return (
-    <PaymentsContext.Provider value={{ payments, setPayments, addPayment, updatePayment, csrfToken, cancellationFee }}>
+    <PaymentsContext.Provider value={{ payments, setPayments, addPayment, updatePayment, csrfToken, refundFee }}>
       {children}
     </PaymentsContext.Provider>
   )

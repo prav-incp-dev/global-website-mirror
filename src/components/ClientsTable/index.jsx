@@ -7,6 +7,14 @@ import { ClientsProvider, useClientsContext } from './ClientsContext'
 import { userName } from '@/lib/user'
 import Sorter from '../Sorter'
 
+const SORT_OPTIONS = [
+  { value: 'id', label: 'По умолчанию' },
+  { value: 'name', label: 'В алфавитном порядке' },
+  { value: 'level', label: 'С высоким уровнем' },
+  { value: 'role', label: 'По статусу' },
+  { value: 'score', label: 'Лидеры продаж' },
+]
+
 const ClientsTableInner = () => {
   const {
     users,
@@ -97,7 +105,7 @@ const ClientsTableInner = () => {
         >
           Открепленные ({orphansCount})
         </button>
-        <Sorter sortBy={sortBy} onSortChange={handleSortChange} />
+        <Sorter sortBy={sortBy} onSortChange={handleSortChange} options={SORT_OPTIONS} />
         <input
           type="text"
           className={styles.searchInput}
