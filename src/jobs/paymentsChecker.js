@@ -1,5 +1,5 @@
 import { OrderStatus, PaymentStatus, UserRole } from '../generated/prisma/client'
-import { HOURS24, verifyPaymentOnChain } from '../lib/payment.js'
+import { HOURS24, MINUTES15, verifyPaymentOnChain } from '../lib/payment.js'
 
 async function cancelPayments(prisma, payments = []) {
   if (payments.length === 0) return
@@ -102,10 +102,13 @@ export async function checkPayments(prisma, log = console) {
 
   await cancelPayments(prisma, paymentsToCancel)
 
+  const fifteenMinutesAgo = new Date(Date.now() - MINUTES15)
+
   const paymentsToVerify = await prisma.payment.findMany({
     where: {
       status: PaymentStatus.Pending,
       txHash: { not: null },
+      createdAt: { lt: fifteenMinutesAgo },
     },
     select: {
       id: true,

@@ -2,7 +2,7 @@ import { describe, it, vi, beforeEach } from 'vitest'
 import crypto from 'node:crypto'
 import { createApp } from '../helpers'
 import { checkPayments } from '../../src/jobs/paymentsChecker.js'
-import { HOURS24, verifyPaymentOnChain } from '../../src/lib/payment.js'
+import { HOURS24, MINUTES15, verifyPaymentOnChain } from '../../src/lib/payment.js'
 import { OrderStatus, PaymentStatus, UserRole } from '../../src/generated/prisma/client'
 
 // Mock only the on-chain verification; keep the other payment helpers intact.
@@ -114,6 +114,7 @@ describe('checkPayments', () => {
     const withTxHash = await createPayment(app, user, {
       status: PaymentStatus.Pending,
       fromWallet: '0x2222222222222222222222222222222222222222',
+      createdAt: new Date(Date.now() - 2 * MINUTES15),
     })
     vi.mocked(verifyPaymentOnChain).mockRejectedValueOnce(new Error('Transaction not confirmed on chain'))
 
@@ -132,6 +133,7 @@ describe('checkPayments', () => {
     const payment = await createPayment(app, user, {
       status: PaymentStatus.Pending,
       fromWallet: '0x2222222222222222222222222222222222222222',
+      createdAt: new Date(Date.now() - 2 * MINUTES15),
     })
     vi.mocked(verifyPaymentOnChain).mockResolvedValueOnce({})
 
@@ -163,6 +165,7 @@ describe('checkPayments', () => {
     const payment = await createPayment(app, user, {
       status: PaymentStatus.Pending,
       fromWallet: '0x2222222222222222222222222222222222222222',
+      createdAt: new Date(Date.now() - 2 * MINUTES15),
     })
     vi.mocked(verifyPaymentOnChain).mockRejectedValueOnce(new Error('Transaction not confirmed on chain'))
 
@@ -173,6 +176,23 @@ describe('checkPayments', () => {
 
     expect(updatedPayment.status).toBe(PaymentStatus.Failed)
     expect(updatedOrder.status).toBe(OrderStatus.Pending) // order untouched on failure
+  })
+
+  it('does not verify pending payment with txHash created less than 15 minutes ago', async ({ expect }) => {
+    const app = await createApp()
+    const user = await createUser(app)
+    const freshPayment = await createPayment(app, user, {
+      status: PaymentStatus.Pending,
+      fromWallet: '0x2222222222222222222222222222222222222222',
+      // createdAt defaults to now — less than 15 minutes old, skipped by verify query
+    })
+
+    await checkPayments(app.prisma, silentLogger)
+
+    expect(verifyPaymentOnChain).not.toHaveBeenCalled()
+
+    const updated = await app.prisma.payment.findUnique({ where: { id: freshPayment.id } })
+    expect(updated.status).toBe(PaymentStatus.Pending)
   })
 
   it('assigns uid to paid payment older than 24h with no uid and promotes candidate to consultant', async ({
@@ -285,7 +305,10 @@ describe('checkPayments', () => {
     const user = await createUser(app, { memberId: 'DOM-00000000-5678' })
 
     await createPayment(app, user, { status: PaymentStatus.Pending, txHash: null })
-    await createPayment(app, user, { status: PaymentStatus.Pending })
+    await createPayment(app, user, {
+      status: PaymentStatus.Pending,
+      createdAt: new Date(Date.now() - 2 * MINUTES15),
+    })
     await createPayment(app, user, {
       status: PaymentStatus.Completed,
       createdAt: new Date(Date.now() - 2 * HOURS24),
