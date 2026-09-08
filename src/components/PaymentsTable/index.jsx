@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react'
+import classNames from 'classnames'
 import styles from './index.module.css'
 import InfoIcon from '@/assets/icons/InfoIcon.svg?react'
 import PaymentModal from './PaymentModal'
@@ -99,7 +100,7 @@ const PaymentsTableInner = () => {
     <div className={styles.container}>
       <div className={styles.toolbar}>
         <button
-          className={`${styles.refundToggle} ${toRefundOnly ? styles.refundToggleActive : ''}`}
+          className={classNames(styles.refundToggle, { [styles.refundToggleActive]: toRefundOnly })}
           onClick={handleToRefundToggle}
           disabled={!toRefundCount && !toRefundOnly}
         >
@@ -116,7 +117,7 @@ const PaymentsTableInner = () => {
       </div>
 
       <div className={styles.tableWrapper}>
-        <table className={`${styles.table} ${loading ? styles.tableLoading : ''}`}>
+        <table className={classNames(styles.table, { [styles.tableLoading]: loading })}>
           <thead>
             <tr>
               <th className={styles.th}>Сумма</th>

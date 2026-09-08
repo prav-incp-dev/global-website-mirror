@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import classNames from 'classnames'
 import { UserRole } from '@/generated/prisma/enums'
 import { userName } from '@/lib/user'
 import styles from './index.module.css'
@@ -67,7 +68,7 @@ const ViewProfile = ({ profile, onEdit }) => {
       </div>
       <div className={styles.row}>
         <span className={styles.label}>Номер кошелька в сети BNB:</span>
-        <span className={`${styles.value} ${styles.wallet}`} title={profile.wallet || '—'}>
+        <span className={classNames(styles.value, styles.wallet)} title={profile.wallet || '—'}>
           {walletPreview()}
         </span>
       </div>

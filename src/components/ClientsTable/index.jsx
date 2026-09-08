@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react'
+import classNames from 'classnames'
 import { UserRole } from '@/generated/prisma/enums'
 import styles from './index.module.css'
 import InfoIcon from '@/assets/icons/InfoIcon.svg?react'
@@ -99,7 +100,7 @@ const ClientsTableInner = () => {
     <div className={styles.container}>
       <div className={styles.toolbar}>
         <button
-          className={`${styles.orphansToggle} ${orphansOnly ? styles.orphansToggleActive : ''}`}
+          className={classNames(styles.orphansToggle, { [styles.orphansToggleActive]: orphansOnly })}
           onClick={handleOrphansToggle}
           disabled={!orphansCount && !orphansOnly}
         >
@@ -116,7 +117,7 @@ const ClientsTableInner = () => {
       </div>
 
       <div className={styles.tableWrapper}>
-        <table className={`${styles.table} ${loading ? styles.tableLoading : ''}`}>
+        <table className={classNames(styles.table, { [styles.tableLoading]: loading })}>
           <thead>
             <tr>
               <th className={styles.th}>Имя</th>

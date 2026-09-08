@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import classNames from 'classnames'
 import { useRouteContext } from '@fastify/react/client'
 import { UserRole } from '@/generated/prisma/enums'
 import AdminProfile from '@/components/AdminProfile'
@@ -102,7 +103,7 @@ const Admin = () => {
         {TABS.map((tab) => (
           <button
             key={tab.key}
-            className={`${styles.tab} ${activeTab === tab.key ? styles.tabActive : ''}`}
+            className={classNames(styles.tab, { [styles.tabActive]: activeTab === tab.key })}
             onClick={() => setActiveTab(tab.key)}
           >
             {tab.label}

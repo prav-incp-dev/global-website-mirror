@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
+import classNames from 'classnames'
 import SortIcon from '@/assets/icons/SortIcon.svg?react'
 import styles from './index.module.css'
 
@@ -26,7 +27,7 @@ const Sorter = ({ sortBy, onSortChange, options }) => {
   return (
     <div className={styles.sortWrapper} ref={sortRef}>
       <button
-        className={`${styles.sortButton} ${sortBy !== 'id' ? styles.sortButtonActive : ''}`}
+        className={classNames(styles.sortButton, { [styles.sortButtonActive]: sortBy !== 'id' })}
         onClick={() => setOpen((prev) => !prev)}
         title="Сортировка"
       >
@@ -37,7 +38,7 @@ const Sorter = ({ sortBy, onSortChange, options }) => {
           {options.map((option) => (
             <li
               key={option.value}
-              className={`${styles.sortOption} ${sortBy === option.value ? styles.sortOptionActive : ''}`}
+              className={classNames(styles.sortOption, { [styles.sortOptionActive]: sortBy === option.value })}
               onClick={() => handleSelect(option.value)}
             >
               {option.label}

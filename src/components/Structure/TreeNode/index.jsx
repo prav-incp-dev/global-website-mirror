@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import classNames from 'classnames'
 import { UserRole } from '@/generated/prisma/enums'
 import InfoIcon from '@/assets/icons/InfoIcon.svg?react'
 import CheckIcon from '@/assets/icons/CheckIcon.svg?react'
@@ -26,9 +27,9 @@ const TreeNode = ({ node, csrfToken, currentUserId }) => {
     <div className={styles.container}>
       <div
         onClick={() => hasChildren && setIsOpen(!isOpen)}
-        className={`${hasChildren ? styles.row : styles.rowLeaf} ${isStaleBranch ? styles.stale : ''}`}
+        className={classNames(hasChildren ? styles.row : styles.rowLeaf, { [styles.stale]: isStaleBranch })}
       >
-        {hasChildren && <span className={`${styles.arrow} ${isOpen ? styles.arrowOpen : ''}`}>▶</span>}
+        {hasChildren && <span className={classNames(styles.arrow, { [styles.arrowOpen]: isOpen })}>▶</span>}
 
         <div className={styles.userTable}>
           <div className={styles.cell}>{userName(node)}</div>
