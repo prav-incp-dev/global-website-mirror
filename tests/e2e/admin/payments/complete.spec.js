@@ -59,7 +59,19 @@ test.describe('admin payments complete', () => {
     const completeButton = page.getByRole('button', { name: 'Зачесть платеж' })
     await expect(completeButton).toBeVisible()
 
-    // Click «Зачесть платеж» — status changes to «Оплачен» and the button disappears
+    // Clicking «Зачесть платеж» shows a confirm dialog — dismissing it changes nothing
+    page.once('dialog', (dialog) => dialog.dismiss())
+    await completeButton.click()
+    await expect(infoTable.getByText('Ошибка')).toBeVisible()
+    await expect(completeButton).toBeVisible()
+
+    // Accept the confirm dialog — status changes to «Оплачен» and the button disappears
+    page.once('dialog', (dialog) => {
+      expect(dialog.message()).toBe(
+        'Вы подтверждаете, что платеж действительно поступил на распределительный счет компании?',
+      )
+      dialog.accept()
+    })
     await completeButton.click()
     await expect(infoTable.getByText('Оплачен')).toBeVisible()
     await expect(infoTable.getByText('Ошибка')).not.toBeVisible()

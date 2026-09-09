@@ -120,7 +120,7 @@ const PaymentsTableInner = () => {
           <thead>
             <tr>
               <th className={styles.th}>Сумма</th>
-              <th className={styles.th}>UID</th>
+              <th className={styles.th}>Номер</th>
               <th className={styles.th}>Статус</th>
               <th className={styles.th}></th>
             </tr>

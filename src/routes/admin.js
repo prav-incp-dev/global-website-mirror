@@ -204,6 +204,56 @@ export default async (fastify) => {
     },
   })
 
+  fastify.post('/api/admin/payments/:id/refund', {
+    schema: {
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'integer', minimum: 1 },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      try {
+        const payment = await fastify.prisma.payment.findUnique({
+          where: { id: req.params.id },
+          include: { order: true },
+        })
+
+        if (!payment) {
+          return reply.code(404).send({ error: 'Платеж не найден' })
+        }
+
+        if (payment.companyId !== user.company.id) {
+          return reply.code(403).send({ error: 'Доступ запрещен' })
+        }
+
+        if (payment.status !== PaymentStatus.ToRefund) {
+          return reply.code(409).send({ error: 'Зачесть возврат можно только для платежа со статусом «Отмена»' })
+        }
+
+        const updatedPayment = await fastify.prisma.payment.update({
+          where: { id: payment.id },
+          data: {
+            status: PaymentStatus.Refunded,
+            refundedAt: new Date(),
+          },
+          include: { order: true },
+        })
+
+        return reply.send({ success: true, payment: serializePayment(updatedPayment) })
+      } catch {
+        return reply.code(500).send({ error: 'Ошибка зачтения возврата платежа' })
+      }
+    },
+  })
+
   fastify.patch('/api/admin/payments/:id', {
     schema: {
       params: {
