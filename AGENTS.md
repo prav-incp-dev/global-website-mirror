@@ -19,7 +19,7 @@ You are an expert full-stack developer specializing in Fastify and React integra
   // mutually-exclusive static classes
   className={classNames(hasChildren ? styles.row : styles.rowLeaf, { [styles.stale]: isStaleBranch })}
   ```
-  Avoid `` className={`${styles.foo} ${cond ? styles.bar : ''}`} ``.
+  Avoid ``className={`${styles.foo} ${cond ? styles.bar : ''}`}``.
 
 # Design
 

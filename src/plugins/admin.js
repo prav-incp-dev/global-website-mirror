@@ -217,15 +217,13 @@ export default fp(async (fastify) => {
       ])
 
       const payments = rows.map((row) => ({
-        payment: {
-          id: row.id,
-          amount: Number(row.amount),
-          status: row.status,
-          txHash: row.txHash,
-          uid: row.uid,
-          createdAt: row.createdAt,
-          userName: userName(row.user),
-        },
+        id: row.id,
+        amount: Number(row.amount),
+        status: row.status,
+        txHash: row.txHash,
+        uid: row.uid,
+        createdAt: row.createdAt,
+        userName: userName(row.user),
       }))
 
       return {

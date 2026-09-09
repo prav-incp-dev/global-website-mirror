@@ -93,7 +93,7 @@ export const createTestInteraction = async (data) => {
 /**
  * Creates a test payment with order and returns it.
  */
-export const createTestOrder = async (company, user, amount, paymentStatus) => {
+export const createTestOrder = async (company, user, amount, paymentStatus, uid = null) => {
   return await prisma.order.create({
     data: {
       userId: user.id,
@@ -113,7 +113,7 @@ export const createTestOrder = async (company, user, amount, paymentStatus) => {
           fromWallet: user.wallet,
           toWallet: company.wallet,
           status: paymentStatus,
-          uid: null,
+          uid: uid,
         },
       },
     },

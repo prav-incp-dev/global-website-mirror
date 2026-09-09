@@ -26,6 +26,11 @@ export const PaymentsProvider = ({
   const [sortBy, setSortBy] = useState('id')
   const [loading, setLoading] = useState(false)
 
+  const updateSelectedPayment = useCallback((data) => {
+    setSelectedPayment((prev) => (prev ? { ...prev, ...data } : prev))
+    setPayments((prev) => prev.map((u) => (u.id === data.id ? { ...u, ...data } : u)))
+  }, [])
+
   const fetchPayments = useCallback(
     async (page = pagination.page, searchQuery = query, filterToRefundOnly = toRefundOnly, sortField = sortBy) => {
       setLoading(true)
@@ -74,6 +79,7 @@ export const PaymentsProvider = ({
         csrfToken,
         selectedPayment,
         setSelectedPayment,
+        updateSelectedPayment,
         fetchPayments,
         query,
         setQuery,

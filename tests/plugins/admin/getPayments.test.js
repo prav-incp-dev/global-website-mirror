@@ -126,19 +126,19 @@ describe('getPayments', () => {
 
     const resultTxHash = await app.admin.getPayments(adminUser, 1, 20, 'abc123def')
     expect(resultTxHash.payments).toHaveLength(1)
-    expect(resultTxHash.payments[0].payment.txHash).toBe('abc123def')
+    expect(resultTxHash.payments[0].txHash).toBe('abc123def')
 
     const resultUid = await app.admin.getPayments(adminUser, 1, 20, 'payment2')
     expect(resultUid.payments).toHaveLength(1)
-    expect(resultUid.payments[0].payment.uid).toBe('payment2')
+    expect(resultUid.payments[0].uid).toBe('payment2')
 
     const resultFirstName = await app.admin.getPayments(adminUser, 1, 20, 'John')
     expect(resultFirstName.payments).toHaveLength(2)
-    expect(resultFirstName.payments[0].payment.userName).toBe('John Doe')
+    expect(resultFirstName.payments[0].userName).toBe('John Doe')
 
     const resultLastName = await app.admin.getPayments(adminUser, 1, 20, 'Smith')
     expect(resultLastName.payments).toHaveLength(1)
-    expect(resultLastName.payments[0].payment.userName).toBe('Jane Smith')
+    expect(resultLastName.payments[0].userName).toBe('Jane Smith')
   })
 
   it('filters payments by toRefundOnly status', async () => {
@@ -154,7 +154,7 @@ describe('getPayments', () => {
     const result = await app.admin.getPayments(adminUser, 1, 20, '', true)
 
     expect(result.payments).toHaveLength(1)
-    expect(result.payments[0].payment.status).toBe(PaymentStatus.ToRefund)
+    expect(result.payments[0].status).toBe(PaymentStatus.ToRefund)
   })
 
   it('excludes canceled payments from results', async () => {
@@ -170,7 +170,7 @@ describe('getPayments', () => {
 
     expect(result.payments).toHaveLength(1)
     expect(result.total).toBe(1)
-    expect(result.payments[0].payment.status).toBe(PaymentStatus.Completed)
+    expect(result.payments[0].status).toBe(PaymentStatus.Completed)
   })
   it('sorts payments by amount ascending by default', async () => {
     const app = await createApp()
@@ -185,9 +185,9 @@ describe('getPayments', () => {
     const result = await app.admin.getPayments(adminUser, 1, 20, '', false, 'amount')
 
     expect(result.payments).toHaveLength(3)
-    expect(result.payments[0].payment.amount).toBe(100)
-    expect(result.payments[1].payment.amount).toBe(200)
-    expect(result.payments[2].payment.amount).toBe(300)
+    expect(result.payments[0].amount).toBe(100)
+    expect(result.payments[1].amount).toBe(200)
+    expect(result.payments[2].amount).toBe(300)
   })
 
   it('sorts payments by status ascending', async () => {
@@ -202,8 +202,8 @@ describe('getPayments', () => {
     const result = await app.admin.getPayments(adminUser, 1, 20, '', false, 'status')
 
     expect(result.payments).toHaveLength(2)
-    expect(result.payments[0].payment.status).toBe(PaymentStatus.Completed)
-    expect(result.payments[1].payment.status).toBe(PaymentStatus.ToRefund)
+    expect(result.payments[0].status).toBe(PaymentStatus.Completed)
+    expect(result.payments[1].status).toBe(PaymentStatus.ToRefund)
   })
 
   it('sorts payments by id descending by default', async () => {
@@ -219,9 +219,9 @@ describe('getPayments', () => {
     const result = await app.admin.getPayments(adminUser, 1, 20, '', false, 'id')
 
     expect(result.payments).toHaveLength(3)
-    expect(result.payments[0].payment.id).toBe(payment3.id)
-    expect(result.payments[1].payment.id).toBe(payment2.id)
-    expect(result.payments[2].payment.id).toBe(payment1.id)
+    expect(result.payments[0].id).toBe(payment3.id)
+    expect(result.payments[1].id).toBe(payment2.id)
+    expect(result.payments[2].id).toBe(payment1.id)
   })
 
   it('maps user name correctly', async () => {
@@ -239,10 +239,10 @@ describe('getPayments', () => {
 
     const result = await app.admin.getPayments(adminUser, 1, 20, '')
 
-    const paymentAlice = result.payments.find((p) => p.payment.amount === 100)
-    expect(paymentAlice.payment.userName).toBe('Alice Wonderland')
+    const paymentAlice = result.payments.find((p) => p.amount === 100)
+    expect(paymentAlice.userName).toBe('Alice Wonderland')
 
-    const paymentCharlie = result.payments.find((p) => p.payment.amount === 200)
-    expect(paymentCharlie.payment.userName).toBe('Charlie')
+    const paymentCharlie = result.payments.find((p) => p.amount === 200)
+    expect(paymentCharlie.userName).toBe('Charlie')
   })
 })

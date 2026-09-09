@@ -22,8 +22,18 @@ test.describe('admin payments filters and details', () => {
   }
 
   test('searches payments and shows payment details in modal', async ({ loginAs, page }) => {
-    const vlad = await createTestUser({ firstName: 'Vlad', lastName: 'Voronin', role: 'Candidate', companyId: company.id })
-    const ivan = await createTestUser({ firstName: 'Ivan', lastName: 'Petrov', role: 'Candidate', companyId: company.id })
+    const vlad = await createTestUser({
+      firstName: 'Vlad',
+      lastName: 'Voronin',
+      role: 'Candidate',
+      companyId: company.id,
+    })
+    const ivan = await createTestUser({
+      firstName: 'Ivan',
+      lastName: 'Petrov',
+      role: 'Candidate',
+      companyId: company.id,
+    })
 
     await createTestOrder(company, vlad, 111, 'Completed')
     await createTestOrder(company, ivan, 222, 'Completed')
@@ -63,7 +73,7 @@ test.describe('admin payments filters and details', () => {
     const infoTable = page.locator('[class*="infoTable"]')
     await expect(infoTable.getByText('Сумма:')).toBeVisible()
     await expect(infoTable.getByText('444', { exact: true })).toBeVisible()
-    await expect(infoTable.getByText('UID:')).toBeVisible()
+    await expect(infoTable.getByText('Номер платежа:')).toBeVisible()
     await expect(infoTable.getByText('Статус:')).toBeVisible()
     await expect(infoTable.getByText('В обработке')).toBeVisible()
     await expect(infoTable.getByText('Дата:')).toBeVisible()

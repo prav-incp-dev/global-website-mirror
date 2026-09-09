@@ -12,7 +12,7 @@ import adminRoutes from './src/routes/admin'
 import userRoutes from './src/routes/user'
 import paymentRoutes from './src/routes/payment'
 import interactionRoutes from './src/routes/interaction'
-import { WALLET_REGEXP, PHONE_REGEXP, MEMBER_REGEXP } from './src/lib/regexps.js'
+import { WALLET_REGEXP, PHONE_REGEXP, MEMBER_REGEXP, UID_REGEXP } from './src/lib/regexps.js'
 
 export const buildBackendApp = async (opts = {}) => {
   const { auth: authOpts, ...fastifyOpts } = opts
@@ -26,6 +26,7 @@ export const buildBackendApp = async (opts = {}) => {
           ajv.addFormat('phone', PHONE_REGEXP)
           ajv.addFormat('wallet', WALLET_REGEXP)
           ajv.addFormat('member', MEMBER_REGEXP)
+          ajv.addFormat('paymentUid', UID_REGEXP)
         },
       ],
     },

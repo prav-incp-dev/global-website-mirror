@@ -72,19 +72,16 @@ const UpdateParentModal = ({ onClose }) => {
         },
         body: JSON.stringify(payload),
       })
-      if (!res.ok) {
-        const err = await res.json()
-        console.error('Ошибка при смене родителя:', err.error)
-        return
-      }
       const result = await res.json()
+      if (!res.ok) throw new Error(result.error)
+
       if (result.success) {
         updateSelectedUser(result.user)
         await fetchClients()
       }
       onClose()
-    } catch {
-      console.error('Ошибка при смене родителя')
+    } catch (err) {
+      console.error(err.message || 'Ошибка смены родителя')
     } finally {
       setSaving(false)
     }

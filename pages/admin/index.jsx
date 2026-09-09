@@ -55,7 +55,6 @@ const Admin = () => {
     toRefundCount = 0,
     csrfToken = '',
   } = data
-  console.log(payments, toRefundCount)
   const [activeTab, setActiveTab] = useState('admin')
   const [invitationOpen, setInvitationOpen] = useState(false)
   const [profileData, setProfileData] = useState(profile)

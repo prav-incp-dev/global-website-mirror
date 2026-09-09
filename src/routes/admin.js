@@ -1,4 +1,5 @@
-import { UserRole } from '../generated/prisma/client'
+import { OrderStatus, PaymentStatus, UserRole } from '../generated/prisma/client'
+import { serializePayment } from '../lib/payment'
 import { PAGE_LIMIT } from '../plugins/admin.js'
 
 export default async (fastify) => {
@@ -147,6 +148,113 @@ export default async (fastify) => {
         fastify.admin.getToRefundCount(user, query),
       ])
       return reply.send({ ...result, toRefundCount })
+    },
+  })
+
+  fastify.post('/api/admin/payments/:id/complete', {
+    schema: {
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'integer', minimum: 1 },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      try {
+        const payment = await fastify.prisma.payment.findUnique({
+          where: { id: req.params.id },
+          include: { order: true },
+        })
+
+        if (!payment) {
+          return reply.code(404).send({ error: 'Платеж не найден' })
+        }
+
+        if (payment.companyId !== user.company.id) {
+          return reply.code(403).send({ error: 'Доступ запрещен' })
+        }
+
+        if (payment.status !== PaymentStatus.Failed) {
+          return reply.code(409).send({ error: 'Зачесть можно только платеж со статусом «Ошибка»' })
+        }
+
+        const [updatedPayment] = await fastify.prisma.$transaction([
+          fastify.prisma.payment.update({
+            where: { id: payment.id },
+            data: { status: PaymentStatus.Completed },
+            include: { order: true },
+          }),
+          fastify.prisma.order.update({
+            where: { id: payment.orderId },
+            data: { status: OrderStatus.Paid },
+          }),
+        ])
+
+        return reply.send({ success: true, payment: serializePayment(updatedPayment) })
+      } catch {
+        return reply.code(500).send({ error: 'Ошибка зачтения платежа' })
+      }
+    },
+  })
+
+  fastify.patch('/api/admin/payments/:id', {
+    schema: {
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'integer', minimum: 1 },
+        },
+      },
+      body: {
+        type: 'object',
+        required: ['uid'],
+        properties: {
+          uid: { type: 'string', minLength: 1, maxLength: 64, format: 'paymentUid' },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      try {
+        const payment = await fastify.prisma.payment.findUnique({
+          where: { id: req.params.id },
+          include: { order: true },
+        })
+
+        if (!payment) {
+          return reply.code(404).send({ error: 'Платеж не найден' })
+        }
+
+        if (payment.companyId !== user.company.id) {
+          return reply.code(403).send({ error: 'Доступ запрещен' })
+        }
+
+        const updatedPayment = await fastify.prisma.payment.update({
+          where: { id: payment.id },
+          data: { uid: req.body.uid.trim() },
+          include: { order: true },
+        })
+
+        return reply.send({ success: true, payment: serializePayment(updatedPayment) })
+      } catch (err) {
+        if (err.code === 'P2002') {
+          return reply.code(409).send({ error: 'Такой номер платежа уже есть в системе' })
+        }
+
+        return reply.code(500).send({ error: 'Ошибка обновления номера платежа' })
+      }
     },
   })
 

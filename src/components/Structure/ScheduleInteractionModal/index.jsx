@@ -47,11 +47,8 @@ const ScheduleInteractionModal = ({ targetId, nextInteractionDate, csrfToken, on
         }),
       })
 
+      if (!res.ok) throw new Error(res.error)
       const result = await res.json()
-
-      if (!res.ok) {
-        throw new Error(result.error || 'Ошибка при сохранении')
-      }
 
       updateDescendantData(targetId, {
         nextInteractionDate: new Date(result.interaction.plannedAt),
