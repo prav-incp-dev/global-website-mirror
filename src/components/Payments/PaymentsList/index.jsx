@@ -4,24 +4,12 @@ import { PaymentStatus } from '@/generated/prisma/enums'
 import { usePaymentsContext } from '../PaymentsContext'
 import ChevronIcon from '@/assets/icons/ChevronIcon.svg?react'
 import styles from './index.module.css'
-
-const STATUS_LABELS = {
-  Pending: 'В ожидании',
-  Completed: 'Оплачен',
-  ToRefund: 'Ожидает отмены',
-  Canceled: 'Отменен',
-  Failed: 'Ошибка',
-}
+import { PAYMENT_STATUSES } from '@/lib/payment'
 
 const getConfirmationText = (fee) => `Вы уверены, что хотите отменить платеж? При отмене взимается комиссия ${fee}%`
 
-const formatDate = (value) => {
-  if (!value) return '-'
-  return new Date(value).toLocaleString('ru-RU')
-}
-
 const PaymentsList = () => {
-  const { payments, csrfToken, cancellationFee = 5, updatePayment } = usePaymentsContext()
+  const { payments, csrfToken, refundFee = 5, updatePayment } = usePaymentsContext()
   const [cancelError, setCancelError] = useState('')
   const [cancelingPaymentId, setCancelingPaymentId] = useState()
   const [expandedPaymentIds, setExpandedPaymentIds] = useState([])
@@ -81,7 +69,7 @@ const PaymentsList = () => {
                   <span className={styles.historyAmount}>{payment.amountUsd} USD</span>
                   <span className={styles.headerRight}>
                     <span className={classNames(styles.statusBadge, styles[`status${payment.status}`])}>
-                      {STATUS_LABELS[payment.status] || payment.status}
+                      {PAYMENT_STATUSES[payment.status] || payment.status}
                     </span>
                     <span className={classNames(styles.chevron, { [styles.chevronOpen]: isExpanded })}>
                       <ChevronIcon className={styles.chevronIcon} />
@@ -91,13 +79,13 @@ const PaymentsList = () => {
 
                 {isExpanded && (
                   <div className={styles.details}>
-                    <span className={styles.dateValue}>{formatDate(payment.createdAt)}</span>
+                    <span className={styles.dateValue}>{new Date(payment.createdAt).toLocaleString('ru-RU')}</span>
                     <span className={styles.hashValue}>{payment.txHash || '-'}</span>
                     {canCancel ? (
                       <button
                         className={styles.cancelButton}
                         onClick={async () => {
-                          if (window.confirm(getConfirmationText(cancellationFee))) {
+                          if (window.confirm(getConfirmationText(refundFee))) {
                             await handleCancel(payment.id)
                           }
                         }}

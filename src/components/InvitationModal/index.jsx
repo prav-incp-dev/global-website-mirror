@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import classNames from 'classnames'
 import Modal from '../Modal'
 import styles from './index.module.css'
 import CopyIcon from '@/assets/icons/CopyIcon.svg?react'
@@ -68,7 +69,7 @@ const InvitationModal = ({ onClose, csrfToken }) => {
           <div className={styles.linkRow}>
             <textarea ref={textareaRef} className={styles.textarea} value={invitationUrl} readOnly rows={6} />
             <button
-              className={`${styles.copyButton} ${copied ? styles.copied : ''}`}
+              className={classNames(styles.copyButton, { [styles.copied]: copied })}
               onClick={handleCopy}
               title={copied ? 'Скопировано' : 'Копировать'}
             >

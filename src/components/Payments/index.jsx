@@ -5,7 +5,7 @@ import PaymentsList from './PaymentsList'
 import PurchaseModal from './PurchaseModal'
 import { PaymentsProvider } from './PaymentsContext'
 
-const Payments = ({ profile, initialPayments = [], csrfToken, cancellationFee }) => {
+const Payments = ({ profile, initialPayments = [], csrfToken, refundFee }) => {
   const hasTokenConfig = Boolean(usdtAddress)
 
   const [modalOpen, setModalOpen] = useState(false)
@@ -20,7 +20,7 @@ const Payments = ({ profile, initialPayments = [], csrfToken, cancellationFee })
   }, [hasCompanyWallet, hasTokenConfig, hasWallet])
 
   return (
-    <PaymentsProvider initialPayments={initialPayments} csrfToken={csrfToken} cancellationFee={cancellationFee}>
+    <PaymentsProvider initialPayments={initialPayments} csrfToken={csrfToken} refundFee={refundFee}>
       <div className={styles.container}>
         <button className={styles.buyButton} disabled={!!buyDisabledReason} onClick={() => setModalOpen(true)}>
           Купить

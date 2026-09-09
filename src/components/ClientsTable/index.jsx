@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react'
+import classNames from 'classnames'
 import { UserRole } from '@/generated/prisma/enums'
 import styles from './index.module.css'
 import InfoIcon from '@/assets/icons/InfoIcon.svg?react'
@@ -6,6 +7,14 @@ import ClientModal from './ClientModal'
 import { ClientsProvider, useClientsContext } from './ClientsContext'
 import { userName } from '@/lib/user'
 import Sorter from '../Sorter'
+
+const SORT_OPTIONS = [
+  { value: 'id', label: 'По умолчанию' },
+  { value: 'name', label: 'В алфавитном порядке' },
+  { value: 'level', label: 'С высоким уровнем' },
+  { value: 'role', label: 'По статусу' },
+  { value: 'score', label: 'Лидеры продаж' },
+]
 
 const ClientsTableInner = () => {
   const {
@@ -91,13 +100,13 @@ const ClientsTableInner = () => {
     <div className={styles.container}>
       <div className={styles.toolbar}>
         <button
-          className={`${styles.orphansToggle} ${orphansOnly ? styles.orphansToggleActive : ''}`}
+          className={classNames(styles.orphansToggle, { [styles.orphansToggleActive]: orphansOnly })}
           onClick={handleOrphansToggle}
           disabled={!orphansCount && !orphansOnly}
         >
           Открепленные ({orphansCount})
         </button>
-        <Sorter sortBy={sortBy} onSortChange={handleSortChange} />
+        <Sorter sortBy={sortBy} onSortChange={handleSortChange} options={SORT_OPTIONS} />
         <input
           type="text"
           className={styles.searchInput}
@@ -108,7 +117,7 @@ const ClientsTableInner = () => {
       </div>
 
       <div className={styles.tableWrapper}>
-        <table className={`${styles.table} ${loading ? styles.tableLoading : ''}`}>
+        <table className={classNames(styles.table, { [styles.tableLoading]: loading })}>
           <thead>
             <tr>
               <th className={styles.th}>Имя</th>

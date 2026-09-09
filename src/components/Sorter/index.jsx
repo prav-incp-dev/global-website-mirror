@@ -1,16 +1,9 @@
 import { useRef, useState, useEffect } from 'react'
+import classNames from 'classnames'
 import SortIcon from '@/assets/icons/SortIcon.svg?react'
 import styles from './index.module.css'
 
-const SORT_OPTIONS = [
-  { value: 'id', label: 'По умолчанию' },
-  { value: 'name', label: 'В алфавитном порядке' },
-  { value: 'level', label: 'С высоким уровнем' },
-  { value: 'role', label: 'По статусу' },
-  { value: 'score', label: 'Лидеры продаж' },
-]
-
-const Sorter = ({ sortBy, onSortChange }) => {
+const Sorter = ({ sortBy, onSortChange, options }) => {
   const [open, setOpen] = useState(false)
   const sortRef = useRef(null)
 
@@ -34,7 +27,7 @@ const Sorter = ({ sortBy, onSortChange }) => {
   return (
     <div className={styles.sortWrapper} ref={sortRef}>
       <button
-        className={`${styles.sortButton} ${sortBy !== 'id' ? styles.sortButtonActive : ''}`}
+        className={classNames(styles.sortButton, { [styles.sortButtonActive]: sortBy !== 'id' })}
         onClick={() => setOpen((prev) => !prev)}
         title="Сортировка"
       >
@@ -42,10 +35,10 @@ const Sorter = ({ sortBy, onSortChange }) => {
       </button>
       {open && (
         <ul className={styles.sortDropdown}>
-          {SORT_OPTIONS.map((option) => (
+          {options.map((option) => (
             <li
               key={option.value}
-              className={`${styles.sortOption} ${sortBy === option.value ? styles.sortOptionActive : ''}`}
+              className={classNames(styles.sortOption, { [styles.sortOptionActive]: sortBy === option.value })}
               onClick={() => handleSelect(option.value)}
             >
               {option.label}

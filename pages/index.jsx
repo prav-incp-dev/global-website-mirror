@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import classNames from 'classnames'
 import { useRouteContext } from '@fastify/react/client'
 import { UserRole } from '@/generated/prisma/enums'
 import UserProfile from '@/components/UserProfile'
@@ -26,7 +27,7 @@ export const getData = async ({ server, req, reply }) => {
   const descendants = await server.user.getDescendants(user)
   const { score, groupScore } = await server.user.getScores(user)
   const staleDays = parseInt(process.env.STALE_INTERACTION_DAYS, 10) || 30
-  const cancellationFee = parseInt(process.env.CANCELLATION_FEE, 10) || 5
+  const refundFee = parseInt(process.env.REFUND_FEE, 10) || 5
   const currentUserId = user.id
 
   return {
@@ -50,7 +51,7 @@ export const getData = async ({ server, req, reply }) => {
     payments,
     descendants,
     staleDays,
-    cancellationFee,
+    refundFee,
     csrfToken,
   }
 }
@@ -76,7 +77,7 @@ const Index = () => {
     payments = [],
     descendants = [],
     staleDays = 30,
-    cancellationFee = 5,
+    refundFee = 5,
     csrfToken = '',
   } = data
   const [activeTab, setActiveTab] = useState('profile')
@@ -123,7 +124,7 @@ const Index = () => {
           {TABS(profileData.role).map((tab) => (
             <button
               key={tab.key}
-              className={`${styles.tab} ${activeTab === tab.key ? styles.tabActive : ''}`}
+              className={classNames(styles.tab, { [styles.tabActive]: activeTab === tab.key })}
               onClick={() => setActiveTab(tab.key)}
             >
               {tab.label}
@@ -140,7 +141,7 @@ const Index = () => {
               profile={profileData}
               initialPayments={payments}
               csrfToken={csrfToken}
-              cancellationFee={cancellationFee}
+              refundFee={refundFee}
             />
           )}
           {activeTab === 'stats' && <StatsDashboard profile={profileData} />}

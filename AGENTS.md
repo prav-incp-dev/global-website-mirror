@@ -11,6 +11,15 @@ You are an expert full-stack developer specializing in Fastify and React integra
 # Coding Standards & Syntax
 
 - **Use Arrow Functions**: Always prefer arrow functions (`const myFunc = () => {}`) over the traditional `function` keyword
+- **Use `classnames` for compound/conditional classes**: Always use the `classnames` library to build `className` strings instead of template-literal concatenation. Use the object form for conditional classes:
+  ```jsx
+  import classNames from 'classnames'
+  // static + conditional
+  className={classNames(styles.tab, { [styles.tabActive]: activeTab === tab.key })}
+  // mutually-exclusive static classes
+  className={classNames(hasChildren ? styles.row : styles.rowLeaf, { [styles.stale]: isStaleBranch })}
+  ```
+  Avoid `` className={`${styles.foo} ${cond ? styles.bar : ''}`} ``.
 
 # Design
 

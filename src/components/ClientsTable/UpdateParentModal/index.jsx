@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import classNames from 'classnames'
 import Modal from '../../Modal'
 import { useClientsContext } from '../ClientsContext'
 import { userName } from '@/lib/user'
@@ -172,7 +173,7 @@ const UpdateParentModal = ({ onClose }) => {
         {results.map((user, index) => (
           <li
             key={user.id}
-            className={`${styles.option} ${index === highlightedIndex ? styles.optionHighlighted : ''}`}
+            className={classNames(styles.option, { [styles.optionHighlighted]: index === highlightedIndex })}
             onMouseDown={() => handleSelect(user)}
             onMouseEnter={() => setHighlightedIndex(index)}
           >

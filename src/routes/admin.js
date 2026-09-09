@@ -1,5 +1,5 @@
 import { UserRole } from '../generated/prisma/client'
-import { CLIENTS_PAGE_LIMIT } from '../plugins/admin.js'
+import { PAGE_LIMIT } from '../plugins/admin.js'
 
 export default async (fastify) => {
   fastify.put('/api/admin/profile', {
@@ -100,7 +100,7 @@ export default async (fastify) => {
         type: 'object',
         properties: {
           page: { type: 'integer', minimum: 1, default: 1 },
-          limit: { type: 'integer', minimum: 1, maximum: 100, default: CLIENTS_PAGE_LIMIT },
+          limit: { type: 'integer', minimum: 1, maximum: 100, default: PAGE_LIMIT },
           query: { type: 'string' },
           orphansOnly: { type: 'boolean', default: false },
           sortBy: { type: 'string', enum: ['id', 'name', 'level', 'role', 'score'], default: 'id' },
@@ -113,12 +113,40 @@ export default async (fastify) => {
         return reply.code(403).send({ error: 'Доступ запрещен' })
       }
 
-      const { page = 1, limit = CLIENTS_PAGE_LIMIT, query = '', orphansOnly = false, sortBy = 'id' } = req.query
+      const { page = 1, limit = PAGE_LIMIT, query = '', orphansOnly = false, sortBy = 'id' } = req.query
       const [result, orphansCount] = await Promise.all([
         fastify.admin.getClients(user, page, limit, query, orphansOnly, sortBy),
         fastify.admin.getOrphansCount(user, query),
       ])
       return reply.send({ ...result, orphansCount })
+    },
+  })
+
+  fastify.get('/api/admin/payments', {
+    schema: {
+      querystring: {
+        type: 'object',
+        properties: {
+          page: { type: 'integer', minimum: 1, default: 1 },
+          limit: { type: 'integer', minimum: 1, maximum: 100, default: PAGE_LIMIT },
+          query: { type: 'string' },
+          toRefundOnly: { type: 'boolean', default: false },
+          sortBy: { type: 'string', enum: ['id', 'amount', 'status'], default: 'id' },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      const { page = 1, limit = PAGE_LIMIT, query = '', toRefundOnly = false, sortBy = 'id' } = req.query
+      const [result, toRefundCount] = await Promise.all([
+        fastify.admin.getPayments(user, page, limit, query, toRefundOnly, sortBy),
+        fastify.admin.getToRefundCount(user, query),
+      ])
+      return reply.send({ ...result, toRefundCount })
     },
   })
 
