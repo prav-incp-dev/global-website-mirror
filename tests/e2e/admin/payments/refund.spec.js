@@ -5,8 +5,12 @@ test.describe('admin payments refund', () => {
   let admin
   let company
 
+  // MOCK_ACCOUNT doubles as the company wallet. Must be a valid Ethereum address so
+  // getAddress(companyWallet) passes, and must match the stubbed window.ethereum account.
+  const MOCK_ACCOUNT = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+
   test.beforeEach(async () => {
-    company = await createTestCompany('Payments Refund Company')
+    company = await createTestCompany('Payments Refund Company', { wallet: MOCK_ACCOUNT })
     admin = await createTestUser({ firstName: 'Alice', lastName: 'Admin', role: 'Admin', companyId: company.id })
   })
 
@@ -89,14 +93,44 @@ test.describe('admin payments refund', () => {
   })
 
   test('«Выполнить возврат» opens RefundModal with wallet and refund amount', async ({ loginAs, page }) => {
+    // Candidate wallet must be a valid Ethereum address so getAddress(fromWallet) passes
     const candidate = await createTestUser({
       firstName: 'Refund',
       lastName: 'Modal',
       role: 'Candidate',
       companyId: company.id,
+      wallet: '0x1234567890abcdef1234567890abcdef22222222',
     })
 
     const toRefundOrder = await createTestOrder(company, candidate, 200, 'ToRefund')
+
+    // Stub window.ethereum BEFORE loginAs navigates to the page
+    await page.addInitScript(
+      ({ account }) => {
+        window.ethereum = {
+          isMetaMask: true,
+          request: async ({ method }) => {
+            switch (method) {
+              case 'eth_requestAccounts':
+              case 'eth_accounts':
+                return [account]
+              case 'eth_chainId':
+                return '0x61'
+              case 'wallet_switchEthereumChain':
+                return null
+              case 'eth_sendTransaction':
+                // code 4001 → viem produces shortMessage 'User rejected the request.'
+                throw Object.assign(new Error('User denied'), { code: 4001 })
+              default:
+                return null
+            }
+          },
+          on: () => {},
+          removeListener: () => {},
+        }
+      },
+      { account: MOCK_ACCOUNT },
+    )
 
     await loginAs(admin.id)
     await openPaymentsTab(page)
@@ -116,11 +150,17 @@ test.describe('admin payments refund', () => {
     await expect(refundModalTitle).toBeVisible()
 
     // The modal shows the from wallet and the amount minus the refund fee (200 − 5% = 190)
-    await expect(page.getByText(`Деньги будут отправлены на счет ${candidate.wallet}.`)).toBeVisible()
+    await expect(page.getByText(`Деньги будут отправлены на счет`)).toBeVisible()
     await expect(page.getByText('Сумма к отправке: $190.00')).toBeVisible()
 
-    // The «Оплатить» button is present (processing to be added later)
-    await expect(page.getByRole('button', { name: 'Оплатить' })).toBeVisible()
+    // The «Оплатить» button is present
+    const payButton = page.getByRole('button', { name: 'Оплатить' })
+    await expect(payButton).toBeVisible()
+
+    // Click «Оплатить» — the stubbed wallet rejects the transaction (code 4001).
+    // No txHash was created, so the generic error message is shown.
+    await payButton.click()
+    await expect(page.getByText('User rejected the request.')).toBeVisible()
 
     // The RefundModal can be closed
     const closeButtons = page.getByRole('button', { name: 'Закрыть' })

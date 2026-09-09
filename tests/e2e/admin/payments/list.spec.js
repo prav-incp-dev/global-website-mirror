@@ -77,7 +77,7 @@ test.describe('admin payments filters and details', () => {
     await expect(infoTable.getByText('Статус:')).toBeVisible()
     await expect(infoTable.getByText('В обработке')).toBeVisible()
     await expect(infoTable.getByText('Дата:')).toBeVisible()
-    await expect(infoTable.getByText('txHash:')).toBeVisible()
+    await expect(infoTable.getByText('Хэш:')).toBeVisible()
     await expect(infoTable.getByText(order444.payment.txHash)).toBeVisible()
     await expect(infoTable.getByText('Пользователь:')).toBeVisible()
     await expect(infoTable.getByText('Ivan Petrov')).toBeVisible()

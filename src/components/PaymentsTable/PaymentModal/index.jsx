@@ -89,7 +89,7 @@ const PaymentModal = ({ onClose }) => {
           <span className={styles.value}>{new Date(selectedPayment.createdAt).toLocaleString('ru-RU')}</span>
         </div>
         <div className={styles.infoRow}>
-          <span className={styles.label}>txHash:</span>
+          <span className={styles.label}>Хэш:</span>
           <span className={styles.value}>{selectedPayment.txHash || '—'}</span>
         </div>
         <div className={styles.infoRow}>
