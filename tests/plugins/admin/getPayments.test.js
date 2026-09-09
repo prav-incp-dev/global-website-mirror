@@ -245,4 +245,19 @@ describe('getPayments', () => {
     const paymentCharlie = result.payments.find((p) => p.amount === 200)
     expect(paymentCharlie.userName).toBe('Charlie')
   })
+
+  it('maps fromWallet correctly', async () => {
+    const app = await createApp()
+    const company = await createTestCompany(app)
+    const adminUser = { company: { id: company.id } }
+    const user = await createTestUser(app, company.id)
+
+    const fromWallet = '0x1234567890abcdef1234567890abcdef12345678'
+
+    await createTestPayment(app, user.id, company.id, { amount: 100, fromWallet })
+
+    const result = await app.admin.getPayments(adminUser, 1, 20, '')
+
+    expect(result.payments[0].fromWallet).toBe(fromWallet)
+  })
 })

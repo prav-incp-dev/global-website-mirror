@@ -50,7 +50,7 @@
   align-items: stretch;
 }
 
-.completeButton {
+.actionButton {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -66,38 +66,12 @@
   transition: all 0.3s ease;
 }
 
-.completeButton:hover {
+.actionButton:hover {
   background: #d4af37;
   color: #1a1a1a;
 }
 
-.completeButtonDisabled,
-.completeButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.changeUidButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 12px 16px;
-  background: transparent;
-  border: 1px solid rgba(212, 175, 55, 0.4);
-  border-radius: 10px;
-  color: #d4af37;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.changeUidButton:hover {
-  background: rgba(212, 175, 55, 0.12);
-}
-
-.changeUidButton:disabled {
+.actionButton:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

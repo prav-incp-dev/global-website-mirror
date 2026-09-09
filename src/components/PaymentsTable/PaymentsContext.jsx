@@ -14,7 +14,9 @@ export const PaymentsProvider = ({
   initialPayments,
   initialPagination,
   initialToRefundCount = 0,
+  refundFee = 5,
   csrfToken,
+  companyWallet,
   children,
 }) => {
   const [payments, setPayments] = useState(initialPayments)
@@ -76,7 +78,9 @@ export const PaymentsProvider = ({
         setToRefundCount,
         loading,
         setLoading,
+        refundFee,
         csrfToken,
+        companyWallet,
         selectedPayment,
         setSelectedPayment,
         updateSelectedPayment,

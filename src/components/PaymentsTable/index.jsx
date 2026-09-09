@@ -161,13 +161,22 @@ const PaymentsTableInner = () => {
   )
 }
 
-const PaymentsTable = ({ initialPayments, initialPagination, initialToRefundCount = 0, csrfToken }) => {
+const PaymentsTable = ({
+  initialPayments,
+  initialPagination,
+  initialToRefundCount = 0,
+  refundFee,
+  csrfToken,
+  companyWallet,
+}) => {
   return (
     <PaymentsProvider
       initialPayments={initialPayments}
       initialPagination={initialPagination}
       initialToRefundCount={initialToRefundCount}
+      refundFee={refundFee}
       csrfToken={csrfToken}
+      companyWallet={companyWallet}
     >
       <PaymentsTableInner />
     </PaymentsProvider>

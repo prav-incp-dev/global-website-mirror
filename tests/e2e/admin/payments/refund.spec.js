@@ -87,4 +87,48 @@ test.describe('admin payments refund', () => {
     expect(updated.status).toBe('Refunded')
     expect(updated.refundedAt).not.toBeNull()
   })
+
+  test('«Выполнить возврат» opens RefundModal with wallet and refund amount', async ({ loginAs, page }) => {
+    const candidate = await createTestUser({
+      firstName: 'Refund',
+      lastName: 'Modal',
+      role: 'Candidate',
+      companyId: company.id,
+    })
+
+    const toRefundOrder = await createTestOrder(company, candidate, 200, 'ToRefund')
+
+    await loginAs(admin.id)
+    await openPaymentsTab(page)
+
+    const rows = page.locator('table tbody tr')
+    const toRefundRow = rows.filter({ hasText: '200' })
+    await toRefundRow.locator('[class*="infoIcon"]').click()
+
+    // The modal shows the «Выполнить возврат» button for ToRefund payments
+    const executeRefundButton = page.getByRole('button', { name: 'Выполнить возврат' })
+    await expect(executeRefundButton).toBeVisible()
+
+    // Clicking it opens the RefundModal
+    await executeRefundButton.click()
+
+    const refundModalTitle = page.getByRole('heading', { name: 'Выполнить возврат' })
+    await expect(refundModalTitle).toBeVisible()
+
+    // The modal shows the from wallet and the amount minus the refund fee (200 − 5% = 190)
+    await expect(page.getByText(`Деньги будут отправлены на счет ${candidate.wallet}.`)).toBeVisible()
+    await expect(page.getByText('Сумма к отправке: $190.00')).toBeVisible()
+
+    // The «Оплатить» button is present (processing to be added later)
+    await expect(page.getByRole('button', { name: 'Оплатить' })).toBeVisible()
+
+    // The RefundModal can be closed
+    const closeButtons = page.getByRole('button', { name: 'Закрыть' })
+    await closeButtons.last().click()
+    await expect(refundModalTitle).not.toBeVisible()
+
+    // The payment is unchanged
+    const unchanged = await getPrisma().payment.findUnique({ where: { id: toRefundOrder.payment.id } })
+    expect(unchanged.status).toBe('ToRefund')
+  })
 })

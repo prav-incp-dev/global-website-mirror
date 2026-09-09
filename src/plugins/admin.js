@@ -201,6 +201,7 @@ export default fp(async (fastify) => {
             status: true,
             txHash: true,
             uid: true,
+            fromWallet: true,
             createdAt: true,
             user: {
               select: {
@@ -222,6 +223,7 @@ export default fp(async (fastify) => {
         status: row.status,
         txHash: row.txHash,
         uid: row.uid,
+        fromWallet: row.fromWallet,
         createdAt: row.createdAt,
         userName: userName(row.user),
       }))

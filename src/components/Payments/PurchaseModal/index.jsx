@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { getAddress, parseUnits } from 'viem'
-import { getPublicClient, getWalletClient, ensureChain, usdtAddress, usdtDecimals } from '@/lib/chain.js'
+import { getPublicClient, getWalletClient, ensureChain, usdtAddress, usdtDecimals, ERC20_ABI } from '@/lib/chain.js'
 import Modal from '../../Modal'
 import Stepper from '../../Stepper'
 import styles from './index.module.css'
@@ -9,19 +9,6 @@ import { usePaymentsContext } from '../PaymentsContext'
 
 const MIN_QTY = 0
 const MAX_QTY = 5
-
-const ERC20_ABI = [
-  {
-    type: 'function',
-    name: 'transfer',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'to', type: 'address' },
-      { name: 'value', type: 'uint256' },
-    ],
-    outputs: [{ name: '', type: 'bool' }],
-  },
-]
 
 const PurchaseModal = ({ onClose, profile }) => {
   const { csrfToken, addPayment } = usePaymentsContext()

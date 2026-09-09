@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import classNames from 'classnames'
 import { PaymentStatus } from '@/generated/prisma/enums'
 import { usePaymentsContext } from '../PaymentsContext'
 import Modal from '../../Modal'
 import styles from './index.module.css'
 import { PAYMENT_STATUSES } from '@/lib/payment'
 import ChangeUIDModal from '../ChangeUIDModal'
+import RefundModal from '../RefundModal'
 
 const COMPLETE_CONFIRMATION_TEXT =
   'Вы подтверждаете, что платеж действительно поступил на распределительный счет компании?'
@@ -17,6 +17,7 @@ const PaymentModal = ({ onClose }) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showChangeUID, setShowChangeUID] = useState(false)
+  const [showRefund, setShowRefund] = useState(false)
 
   if (!selectedPayment) return null
 
@@ -69,6 +70,7 @@ const PaymentModal = ({ onClose }) => {
   return (
     <Modal title="Информация о платеже" onClose={onClose}>
       {showChangeUID && <ChangeUIDModal onClose={() => setShowChangeUID(false)} />}
+      {showRefund && <RefundModal onClose={() => setShowRefund(false)} />}
       <div className={styles.infoTable}>
         <div className={styles.infoRow}>
           <span className={styles.label}>Сумма:</span>
@@ -91,6 +93,10 @@ const PaymentModal = ({ onClose }) => {
           <span className={styles.value}>{selectedPayment.txHash || '—'}</span>
         </div>
         <div className={styles.infoRow}>
+          <span className={styles.label}>С адреса:</span>
+          <span className={styles.value}>{selectedPayment.fromWallet || '—'}</span>
+        </div>
+        <div className={styles.infoRow}>
           <span className={styles.label}>Пользователь:</span>
           <span className={styles.value}>{selectedPayment.userName || '—'}</span>
         </div>
@@ -100,7 +106,7 @@ const PaymentModal = ({ onClose }) => {
         <div className={styles.actions}>
           {isFailed && (
             <button
-              className={classNames(styles.completeButton, { [styles.completeButtonDisabled]: loading })}
+              className={styles.actionButton}
               onClick={async () => {
                 if (window.confirm(COMPLETE_CONFIRMATION_TEXT)) await handleComplete()
               }}
@@ -110,8 +116,13 @@ const PaymentModal = ({ onClose }) => {
             </button>
           )}
           {isToRefund && (
+            <button className={styles.actionButton} onClick={() => setShowRefund(true)}>
+              Выполнить возврат
+            </button>
+          )}
+          {isToRefund && (
             <button
-              className={classNames(styles.completeButton, { [styles.completeButtonDisabled]: loading })}
+              className={styles.actionButton}
               onClick={async () => {
                 if (window.confirm(REFUND_CONFIRMATION_TEXT)) await handleRefund()
               }}
@@ -121,7 +132,7 @@ const PaymentModal = ({ onClose }) => {
             </button>
           )}
           {selectedPayment.uid && (
-            <button className={styles.changeUidButton} onClick={() => setShowChangeUID(true)}>
+            <button className={styles.actionButton} onClick={() => setShowChangeUID(true)}>
               Изменить номер платежа
             </button>
           )}
