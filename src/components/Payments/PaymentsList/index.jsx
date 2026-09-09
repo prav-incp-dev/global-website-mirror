@@ -85,9 +85,7 @@ const PaymentsList = () => {
                       <button
                         className={styles.cancelButton}
                         onClick={async () => {
-                          if (window.confirm(getConfirmationText(refundFee))) {
-                            await handleCancel(payment.id)
-                          }
+                          if (window.confirm(getConfirmationText(refundFee))) await handleCancel(payment.id)
                         }}
                         disabled={cancelingPaymentId === payment.id}
                       >

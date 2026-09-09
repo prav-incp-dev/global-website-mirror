@@ -39,17 +39,13 @@ const UpdateLevelModal = ({ onClose }) => {
         body: JSON.stringify(payload),
       })
 
-      if (!res.ok) {
-        const err = await res.json()
-        setError(err.error || 'Ошибка сохранения')
-        return
-      }
-
       const result = await res.json()
+      if (!res.ok) throw new Error(result.error)
+
       if (result.success) updateSelectedUser(result.user)
       onClose()
-    } catch {
-      setError('Ошибка сохранения')
+    } catch (err) {
+      setError(err.message || 'Ошибка сохранения')
     } finally {
       setSaving(false)
     }

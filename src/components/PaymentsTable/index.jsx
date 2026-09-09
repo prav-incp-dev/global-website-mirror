@@ -79,8 +79,7 @@ const PaymentsTableInner = () => {
   }
 
   const paymentsList = () => {
-    return payments.map((item) => {
-      const payment = item.payment || item
+    return payments.map((payment) => {
       return (
         <tr key={payment.id} className={styles.row}>
           <td className={styles.td}>{payment.amount}</td>
@@ -89,7 +88,7 @@ const PaymentsTableInner = () => {
             <span className={styles.status}>{PAYMENT_STATUSES[payment.status] || payment.status}</span>
           </td>
           <td className={styles.td} title="Информация о платеже">
-            <InfoIcon className={styles.infoIcon} onClick={() => setSelectedPayment(item)} />
+            <InfoIcon className={styles.infoIcon} onClick={() => setSelectedPayment(payment)} />
           </td>
         </tr>
       )
@@ -121,7 +120,7 @@ const PaymentsTableInner = () => {
           <thead>
             <tr>
               <th className={styles.th}>Сумма</th>
-              <th className={styles.th}>UID</th>
+              <th className={styles.th}>Номер</th>
               <th className={styles.th}>Статус</th>
               <th className={styles.th}></th>
             </tr>
@@ -162,13 +161,22 @@ const PaymentsTableInner = () => {
   )
 }
 
-const PaymentsTable = ({ initialPayments, initialPagination, initialToRefundCount = 0, csrfToken }) => {
+const PaymentsTable = ({
+  initialPayments,
+  initialPagination,
+  initialToRefundCount = 0,
+  refundFee,
+  csrfToken,
+  companyWallet,
+}) => {
   return (
     <PaymentsProvider
       initialPayments={initialPayments}
       initialPagination={initialPagination}
       initialToRefundCount={initialToRefundCount}
+      refundFee={refundFee}
       csrfToken={csrfToken}
+      companyWallet={companyWallet}
     >
       <PaymentsTableInner />
     </PaymentsProvider>

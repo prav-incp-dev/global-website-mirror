@@ -15,6 +15,7 @@ export const getData = async ({ server, req, reply }) => {
   if (user.role !== UserRole.Admin) return reply.redirect('/')
 
   const csrfToken = reply.generateCsrf()
+  const refundFee = parseInt(process.env.REFUND_FEE, 10) || 5
   const company = await server.admin.getCompany(user)
   const [clientsData, orphansCount, paymentsData, toRefundCount] = await Promise.all([
     server.admin.getClients(user),
@@ -33,6 +34,7 @@ export const getData = async ({ server, req, reply }) => {
     orphansCount,
     payments: paymentsData,
     toRefundCount,
+    refundFee,
     csrfToken,
   }
 }
@@ -53,9 +55,9 @@ const Admin = () => {
     orphansCount = 0,
     payments = {},
     toRefundCount = 0,
+    refundFee = 5,
     csrfToken = '',
   } = data
-  console.log(payments, toRefundCount)
   const [activeTab, setActiveTab] = useState('admin')
   const [invitationOpen, setInvitationOpen] = useState(false)
   const [profileData, setProfileData] = useState(profile)
@@ -141,7 +143,9 @@ const Admin = () => {
               totalPages: payments.totalPages,
             }}
             initialToRefundCount={toRefundCount}
+            refundFee={refundFee}
             csrfToken={csrfToken}
+            companyWallet={company?.wallet}
           />
         )}
       </div>

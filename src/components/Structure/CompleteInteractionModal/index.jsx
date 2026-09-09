@@ -53,10 +53,7 @@ const CompleteInteractionModal = ({ targetId, lastInteractionDate, csrfToken, on
       })
 
       const result = await res.json()
-
-      if (!res.ok) {
-        throw new Error(result.error || 'Ошибка при сохранении')
-      }
+      if (!res.ok) throw new Error(result.error)
 
       updateDescendantData(targetId, {
         lastInteractionDate: new Date(result.interaction.completedAt),
@@ -65,7 +62,7 @@ const CompleteInteractionModal = ({ targetId, lastInteractionDate, csrfToken, on
 
       onClose()
     } catch (err) {
-      setError(err.message)
+      setError(err.message || 'Ошибка сохранения')
     }
   }
 

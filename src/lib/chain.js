@@ -15,6 +15,19 @@ const rpcUrl = getEnvVar('VITE_BSC_TESTNET_RPC_URL') || bscTestnet.rpcUrls.defau
 
 export const usdtDecimals = 18
 
+export const ERC20_ABI = [
+  {
+    type: 'function',
+    name: 'transfer',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'to', type: 'address' },
+      { name: 'value', type: 'uint256' },
+    ],
+    outputs: [{ name: '', type: 'bool' }],
+  },
+]
+
 let client = null
 
 export const ensureChain = async (provider) => {
