@@ -4,20 +4,19 @@ import { getPublicClient, getWalletClient, ensureChain, usdtAddress, usdtDecimal
 import Modal from '../../Modal'
 import Stepper from '../../Stepper'
 import styles from './index.module.css'
-import { PRICE_MAP } from '@/lib/pricing'
 import { usePaymentsContext } from '../PaymentsContext'
 
-const MIN_QTY = 0
-const MAX_QTY = 5
-
-const PurchaseModal = ({ onClose, profile }) => {
-  const { csrfToken, addPayment } = usePaymentsContext()
+const PurchaseModal = ({ onClose }) => {
+  const { csrfToken, addPayment, profile = {}, prices = {} } = usePaymentsContext()
   const [quantity, setQuantity] = useState(0)
   const [isPaying, setIsPaying] = useState(false)
   const [payError, setPayError] = useState('')
   const [loaderText, setLoaderText] = useState('')
 
-  const price = PRICE_MAP[quantity]
+  const priceKeys = Object.keys(prices).map(Number)
+  const minQuantity = priceKeys.length > 0 ? Math.min(...priceKeys) : 0
+  const maxQuantity = Math.max(0, ...priceKeys)
+  const price = prices[quantity] ?? 0
 
   const initPayment = async () => {
     const response = await fetch('/api/payments/init', {
@@ -147,7 +146,7 @@ const PurchaseModal = ({ onClose, profile }) => {
   return (
     <Modal title="Количество единиц" onClose={onClose} isStatic className={styles.purchaseModal}>
       <div className={styles.purchaseModalBody}>
-        <Stepper min={MIN_QTY} max={MAX_QTY} value={quantity} onChange={setQuantity} />
+        <Stepper min={minQuantity} max={maxQuantity} value={quantity} onChange={setQuantity} />
 
         <div className={styles.priceRow}>
           <span className={styles.priceLabel}>Сумма</span>

@@ -1,6 +1,5 @@
 import { OrderStatus, PaymentStatus, UserRole } from '../generated/prisma/client'
 import { serializePayment, verifyPaymentOnChain } from '../lib/payment'
-import { PRICE_MAP } from '../lib/pricing'
 import { usdtAddress, usdtDecimals, chainId } from '../lib/chain.js'
 
 export default async (fastify) => {
@@ -10,7 +9,7 @@ export default async (fastify) => {
         type: 'object',
         required: ['quantity'],
         properties: {
-          quantity: { type: 'integer', minimum: 0, maximum: 5 },
+          quantity: { type: 'integer', minimum: 0 },
         },
       },
     },
@@ -25,7 +24,17 @@ export default async (fastify) => {
       }
 
       const { quantity } = req.body
-      const amountUsd = PRICE_MAP[quantity]
+
+      const setting = await fastify.prisma.setting.findUnique({
+        where: { companyId: user.company.id },
+      })
+
+      const prices = setting?.prices ?? {}
+      const amountUsd = prices[quantity]
+
+      if (typeof amountUsd !== 'number' || amountUsd < 0) {
+        return reply.code(400).send({ error: 'Для выбранного количества не настроена цена' })
+      }
 
       try {
         const createdOrder = await fastify.prisma.order.create({

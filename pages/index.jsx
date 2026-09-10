@@ -28,6 +28,7 @@ export const getData = async ({ server, req, reply }) => {
   const { score, groupScore } = await server.user.getScores(user)
   const setting = await server.admin.getSetting(user)
   const { staleDays, refundFee } = setting.general
+  const prices = setting.prices
   const currentUserId = user.id
 
   return {
@@ -52,6 +53,7 @@ export const getData = async ({ server, req, reply }) => {
     descendants,
     staleDays,
     refundFee,
+    prices,
     csrfToken,
   }
 }
@@ -78,6 +80,7 @@ const Index = () => {
     descendants = [],
     staleDays = 30,
     refundFee = 5,
+    prices = {},
     csrfToken = '',
   } = data
   const [activeTab, setActiveTab] = useState('profile')
@@ -137,7 +140,7 @@ const Index = () => {
             <UserProfile profile={profileData} csrfToken={csrfToken} onUpdate={handleUpdateProfile} />
           )}
           {activeTab === 'payments' && (
-            <Payments profile={profileData} initialPayments={payments} csrfToken={csrfToken} refundFee={refundFee} />
+            <Payments profile={profileData} initialPayments={payments} csrfToken={csrfToken} refundFee={refundFee} prices={prices} />
           )}
           {activeTab === 'stats' && <StatsDashboard profile={profileData} />}
           {activeTab === 'structure' && <Structure csrfToken={csrfToken} />}

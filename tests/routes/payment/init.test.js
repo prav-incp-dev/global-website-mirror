@@ -13,6 +13,18 @@ vi.mock('../../../src/lib/chain.js', () => ({
   erc20Abi: [],
 }))
 
+const SETTING_FIXTURE = {
+  id: 1,
+  companyId: 1,
+  general: {},
+  levels: {},
+  prices: { 0: 100, 1: 1200, 2: 2400, 3: 3600, 4: 4800, 5: 6000 },
+}
+
+const mockSettingFindUnique = (app, setting = SETTING_FIXTURE) => {
+  vi.spyOn(app.prisma.setting, 'findUnique').mockResolvedValue(setting)
+}
+
 describe('POST /api/payments/init', () => {
   it('returns 403 when user is not authenticated', async () => {
     const app = await createApp()
@@ -65,6 +77,40 @@ describe('POST /api/payments/init', () => {
     expect(response.json()).toEqual({ error: 'У компании не указан кошелек для приема платежей' })
   })
 
+  it('returns 400 when no setting with prices exists for the company', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    vi.spyOn(app.prisma.setting, 'findUnique').mockResolvedValue(null)
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/payments/init',
+      payload: {
+        quantity: 1,
+      },
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(response.json()).toEqual({ error: 'Для выбранного количества не настроена цена' })
+  })
+
+  it('returns 400 when price is not configured for the requested quantity', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    mockSettingFindUnique(app, { ...SETTING_FIXTURE, prices: { 0: 100, 1: 1200 } })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/payments/init',
+      payload: {
+        quantity: 3,
+      },
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(response.json()).toEqual({ error: 'Для выбранного количества не настроена цена' })
+  })
+
   it('creates pending order and payment', async () => {
     const createdOrder = {
       id: 7,
@@ -75,6 +121,7 @@ describe('POST /api/payments/init', () => {
 
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    mockSettingFindUnique(app)
     vi.spyOn(app.prisma.order, 'create').mockResolvedValue(createdOrder)
 
     const response = await app.inject({
@@ -91,12 +138,16 @@ describe('POST /api/payments/init', () => {
       orderId: 7,
       amountUsd: 1200,
     })
+    expect(app.prisma.setting.findUnique).toHaveBeenCalledWith({
+      where: { companyId: 1 },
+    })
     expect(app.prisma.order.create).toHaveBeenCalledTimes(1)
   })
 
   it('returns 500 on unexpected error', async () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+    mockSettingFindUnique(app)
     vi.spyOn(app.prisma.order, 'create').mockRejectedValue(new Error('db unavailable'))
 
     const response = await app.inject({
