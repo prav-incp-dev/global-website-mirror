@@ -1,5 +1,5 @@
 import { test, expect } from '../fixtures.js'
-import { createTestCompany, createTestSetting, createTestUser, getPrisma } from '../db.js'
+import { createTestCompany, createTestUser, getPrisma } from '../db.js'
 
 test.describe('admin manages company settings', () => {
   let company
@@ -7,7 +7,6 @@ test.describe('admin manages company settings', () => {
 
   test.beforeEach(async () => {
     company = await createTestCompany('Settings Test Company')
-    await createTestSetting(company.id)
     admin = await createTestUser({ firstName: 'Alice', lastName: 'Admin', role: 'Admin', companyId: company.id })
   })
 
@@ -50,7 +49,7 @@ test.describe('admin manages company settings', () => {
     await saveSettings(page)
 
     // Prices tab — change 0-units and 1-unit costs
-    await page.getByRole('button', { name: 'Настройки цен' }).click()
+    await page.getByRole('button', { name: 'Настройки стоимостей' }).click()
     await page.getByRole('spinbutton').nth(0).fill('150')
     await page.getByRole('spinbutton').nth(1).fill('1300')
     await saveSettings(page)

@@ -26,8 +26,8 @@ export const getData = async ({ server, req, reply }) => {
   const payments = await server.payment.getPayments(user)
   const descendants = await server.user.getDescendants(user)
   const { score, groupScore } = await server.user.getScores(user)
-  const staleDays = parseInt(process.env.STALE_INTERACTION_DAYS, 10) || 30
-  const refundFee = parseInt(process.env.REFUND_FEE, 10) || 5
+  const setting = await server.admin.getSetting(user)
+  const { staleDays, refundFee } = setting.general
   const currentUserId = user.id
 
   return {

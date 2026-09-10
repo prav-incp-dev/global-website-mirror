@@ -11,7 +11,7 @@ import styles from './index.module.css'
 const SCREENS = [
   { key: 'general', label: 'Общие настройки' },
   { key: 'levels', label: 'Настройки уровней' },
-  { key: 'prices', label: 'Настройки цен' },
+  { key: 'prices', label: 'Настройки стоимостей' },
 ]
 
 export const getData = async ({ server, req, reply }) => {
@@ -52,9 +52,9 @@ const AdminSettings = () => {
   }
 
   const [generalForm, setGeneralForm] = useState({
-    staleDays: setting?.general?.staleDays ?? 30,
-    orphantDays: setting?.general?.orphantDays ?? 40,
-    refundFee: setting?.general?.refundFee ?? 5,
+    staleDays: setting?.general?.staleDays ?? 0,
+    orphantDays: setting?.general?.orphantDays ?? 0,
+    refundFee: setting?.general?.refundFee ?? 0,
   })
 
   const [levelsForm, setLevelsForm] = useState(

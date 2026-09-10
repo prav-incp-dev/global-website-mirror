@@ -287,6 +287,132 @@ describe('user plugin', () => {
     })
   })
 
+  describe('getAncestors', () => {
+    const baseUser = {
+      password: 'hash',
+      companyId: 1,
+      role: 'Consultant',
+    }
+
+    it('returns empty array for a Candidate', async ({ expect }) => {
+      const app = await createApp()
+
+      const candidate = await app.prisma.user.create({
+        data: {
+          ...baseUser,
+          role: 'Candidate',
+          email: `getAncestors-candidate-${Date.now()}@test.com`,
+          phone: `+10000015${String(Date.now()).slice(-4)}`,
+        },
+      })
+
+      const ancestors = await app.user.getAncestors(candidate)
+      expect(ancestors).toHaveLength(0)
+    })
+
+    it('returns empty array when user has no parent', async ({ expect }) => {
+      const app = await createApp()
+
+      const user = await app.prisma.user.create({
+        data: {
+          ...baseUser,
+          email: `getAncestors-no-parent-${Date.now()}@test.com`,
+          phone: `+10000016${String(Date.now()).slice(-4)}`,
+        },
+      })
+
+      const ancestors = await app.user.getAncestors(user)
+      expect(ancestors).toHaveLength(0)
+    })
+
+    it('returns direct parent only', async ({ expect }) => {
+      const app = await createApp()
+
+      const parent = await app.prisma.user.create({
+        data: {
+          ...baseUser,
+          email: `getAncestors-direct-parent-${Date.now()}@test.com`,
+          phone: `+10000017${String(Date.now()).slice(-4)}`,
+        },
+      })
+
+      const child = await app.prisma.user.create({
+        data: {
+          ...baseUser,
+          email: `getAncestors-direct-child-${Date.now()}@test.com`,
+          phone: `+10000018${String(Date.now()).slice(-4)}`,
+          parentId: parent.id,
+        },
+      })
+
+      const ancestors = await app.user.getAncestors(child)
+      expect(ancestors).toHaveLength(1)
+      expect(ancestors[0].id).toBe(parent.id)
+    })
+
+    it('returns all ancestors recursively', async ({ expect }) => {
+      const app = await createApp()
+
+      const grandparent = await app.prisma.user.create({
+        data: {
+          ...baseUser,
+          email: `getAncestors-recursive-grandparent-${Date.now()}@test.com`,
+          phone: `+10000019${String(Date.now()).slice(-4)}`,
+        },
+      })
+
+      const parent = await app.prisma.user.create({
+        data: {
+          ...baseUser,
+          email: `getAncestors-recursive-parent-${Date.now()}@test.com`,
+          phone: `+10000020${String(Date.now()).slice(-4)}`,
+          parentId: grandparent.id,
+        },
+      })
+
+      const child = await app.prisma.user.create({
+        data: {
+          ...baseUser,
+          email: `getAncestors-recursive-child-${Date.now()}@test.com`,
+          phone: `+10000021${String(Date.now()).slice(-4)}`,
+          parentId: parent.id,
+        },
+      })
+
+      const ancestors = await app.user.getAncestors(child)
+      expect(ancestors).toHaveLength(2)
+      const ancestorIds = ancestors.map((a) => a.id)
+      expect(ancestorIds).toContain(parent.id)
+      expect(ancestorIds).toContain(grandparent.id)
+    })
+
+    it('does not include the user itself', async ({ expect }) => {
+      const app = await createApp()
+
+      const parent = await app.prisma.user.create({
+        data: {
+          ...baseUser,
+          email: `getAncestors-exclude-self-parent-${Date.now()}@test.com`,
+          phone: `+10000022${String(Date.now()).slice(-4)}`,
+        },
+      })
+
+      const child = await app.prisma.user.create({
+        data: {
+          ...baseUser,
+          email: `getAncestors-exclude-self-child-${Date.now()}@test.com`,
+          phone: `+10000023${String(Date.now()).slice(-4)}`,
+          parentId: parent.id,
+        },
+      })
+
+      const ancestors = await app.user.getAncestors(child)
+      const ancestorIds = ancestors.map((a) => a.id)
+      expect(ancestorIds).not.toContain(child.id)
+      expect(ancestors).toHaveLength(1)
+    })
+  })
+
   describe('getScores', () => {
     const createCompany = async (app) => {
       return app.prisma.company.create({

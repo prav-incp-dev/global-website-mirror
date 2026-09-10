@@ -41,19 +41,19 @@ const randow8Numbers = () => {
   return crypto.randomInt(10000000, 99999999).toString()
 }
 /**
- * Creates a test company and returns it.
+ * Creates a test company with default seeded settings and returns it.
+ * Company-level overrides (e.g. wallet, name) go to the Company row;
+ * pass a `settings` key to override the default Setting row.
  */
 export const createTestCompany = async (name, overrides = {}) => {
-  return prisma.company.create({ data: { name, wallet: `0x${random40()}`, ...overrides } })
-}
+  const { settings = {}, ...companyData } = overrides
+  const company = await prisma.company.create({
+    data: { name, wallet: `0x${random40()}`, ...companyData },
+  })
 
-/**
- * Creates a test setting for a company and returns it.
- */
-export const createTestSetting = async (companyId, overrides = {}) => {
-  return prisma.setting.create({
+  await prisma.setting.create({
     data: {
-      companyId,
+      companyId: company.id,
       general: { staleDays: 30, orphantDays: 40, refundFee: 5 },
       levels: {
         1: { percent: 20.0, plan: 3, confirm: 0 },
@@ -75,9 +75,11 @@ export const createTestSetting = async (companyId, overrides = {}) => {
         4: 4800,
         5: 6000,
       },
-      ...overrides,
+      ...settings,
     },
   })
+
+  return company
 }
 
 /**

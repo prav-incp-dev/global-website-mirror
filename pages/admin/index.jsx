@@ -17,8 +17,9 @@ export const getData = async ({ server, req, reply }) => {
   if (user.role !== UserRole.Admin) return reply.redirect('/')
 
   const csrfToken = reply.generateCsrf()
-  const refundFee = parseInt(process.env.REFUND_FEE, 10) || 5
   const company = await server.admin.getCompany(user)
+  const setting = await server.admin.getSetting(user)
+  const { refundFee } = setting.general
   const [clientsData, orphansCount, paymentsData, toRefundCount] = await Promise.all([
     server.admin.getClients(user),
     server.admin.getOrphansCount(user),

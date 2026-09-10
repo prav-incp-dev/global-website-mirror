@@ -185,7 +185,7 @@ npm run test:e2e
 | `id`        | Int (авто)           | Уникальный идентификатор           |
 | `general`   | JSON                 | Общие настройки (JSON-объект)      |
 | `levels`    | JSON                 | Настройки уровней (JSON-объект)    |
-| `prices`    | JSON                 | Настройки цен (JSON-объект)        |
+| `prices`    | JSON                 | Настройки стоимостей (JSON-объект)        |
 | `companyId` | Int (FK → `Company`) | Привязка к компании                |
 | `createdAt` | DateTime             | Дата создания                      |
 | `updatedAt` | DateTime             | Дата обновления                    |
