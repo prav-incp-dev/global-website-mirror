@@ -55,16 +55,16 @@ CREATE TABLE "User" (
 );
 
 -- CreateTable
-CREATE TABLE "ServiceWallet" (
+CREATE TABLE "Setting" (
     "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
-    "address" TEXT,
-    "percent" DECIMAL(4,1) NOT NULL,
+    "general" JSONB NOT NULL,
+    "levels" JSONB NOT NULL,
+    "prices" JSONB NOT NULL,
     "companyId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "ServiceWallet_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Setting_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -72,7 +72,6 @@ CREATE TABLE "Wage" (
     "id" SERIAL NOT NULL,
     "companyId" INTEGER NOT NULL,
     "userId" INTEGER,
-    "serviceWalletId" INTEGER,
     "paymentId" INTEGER,
     "fromWallet" TEXT,
     "toWallet" TEXT,
@@ -122,6 +121,22 @@ CREATE TABLE "Payment" (
     CONSTRAINT "Payment_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Interaction" (
+    "id" SERIAL NOT NULL,
+    "status" "InteractionStatus" NOT NULL DEFAULT 'Open',
+    "plannedAt" TIMESTAMP(3) NOT NULL,
+    "completedAt" TIMESTAMP(3),
+    "description" TEXT NOT NULL,
+    "reminderSent" BOOLEAN NOT NULL DEFAULT false,
+    "initiatorId" INTEGER,
+    "targetId" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Interaction_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Company_name_key" ON "Company"("name");
 
@@ -141,19 +156,13 @@ CREATE UNIQUE INDEX "User_phone_key" ON "User"("phone");
 CREATE UNIQUE INDEX "User_memberId_key" ON "User"("memberId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ServiceWallet_name_key" ON "ServiceWallet"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "ServiceWallet_address_key" ON "ServiceWallet"("address");
+CREATE UNIQUE INDEX "Setting_companyId_key" ON "Setting"("companyId");
 
 -- CreateIndex
 CREATE INDEX "Wage_companyId_idx" ON "Wage"("companyId");
 
 -- CreateIndex
 CREATE INDEX "Wage_userId_idx" ON "Wage"("userId");
-
--- CreateIndex
-CREATE INDEX "Wage_serviceWalletId_idx" ON "Wage"("serviceWalletId");
 
 -- CreateIndex
 CREATE INDEX "Wage_paymentId_idx" ON "Wage"("paymentId");
@@ -182,6 +191,15 @@ CREATE INDEX "Payment_status_idx" ON "Payment"("status");
 -- CreateIndex
 CREATE INDEX "Payment_createdAt_idx" ON "Payment"("createdAt");
 
+-- CreateIndex
+CREATE INDEX "Interaction_initiatorId_idx" ON "Interaction"("initiatorId");
+
+-- CreateIndex
+CREATE INDEX "Interaction_targetId_idx" ON "Interaction"("targetId");
+
+-- CreateIndex
+CREATE INDEX "Interaction_completedAt_idx" ON "Interaction"("completedAt");
+
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -189,16 +207,13 @@ ALTER TABLE "User" ADD CONSTRAINT "User_companyId_fkey" FOREIGN KEY ("companyId"
 ALTER TABLE "User" ADD CONSTRAINT "User_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ServiceWallet" ADD CONSTRAINT "ServiceWallet_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Setting" ADD CONSTRAINT "Setting_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Wage" ADD CONSTRAINT "Wage_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Wage" ADD CONSTRAINT "Wage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Wage" ADD CONSTRAINT "Wage_serviceWalletId_fkey" FOREIGN KEY ("serviceWalletId") REFERENCES "ServiceWallet"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Wage" ADD CONSTRAINT "Wage_paymentId_fkey" FOREIGN KEY ("paymentId") REFERENCES "Payment"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -214,31 +229,6 @@ ALTER TABLE "Payment" ADD CONSTRAINT "Payment_userId_fkey" FOREIGN KEY ("userId"
 
 -- AddForeignKey
 ALTER TABLE "Payment" ADD CONSTRAINT "Payment_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- CreateTable
-CREATE TABLE "Interaction" (
-    "id" SERIAL NOT NULL,
-    "status" "InteractionStatus" NOT NULL DEFAULT 'Open',
-    "plannedAt" TIMESTAMP(3) NOT NULL,
-    "completedAt" TIMESTAMP(3),
-    "description" TEXT NOT NULL,
-    "reminderSent" BOOLEAN NOT NULL DEFAULT false,
-    "initiatorId" INTEGER,
-    "targetId" INTEGER NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Interaction_pkey" PRIMARY KEY ("id")
-);
-
--- CreateIndex
-CREATE INDEX "Interaction_initiatorId_idx" ON "Interaction"("initiatorId");
-
--- CreateIndex
-CREATE INDEX "Interaction_targetId_idx" ON "Interaction"("targetId");
-
--- CreateIndex
-CREATE INDEX "Interaction_completedAt_idx" ON "Interaction"("completedAt");
 
 -- AddForeignKey
 ALTER TABLE "Interaction" ADD CONSTRAINT "Interaction_initiatorId_fkey" FOREIGN KEY ("initiatorId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;

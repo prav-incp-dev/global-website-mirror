@@ -34,15 +34,15 @@ enum InteractionStatus {
 }
 
 model Company {
-  id             Int             @id @default(autoincrement())
-  name           String          @unique
-  wallet         String?
-  users          User[]
-  serviceWallets ServiceWallet[]
-  wages          Wage[]
-  payments       Payment[]
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  wallet    String?
+  users     User[]
+  settings  Setting[]
+  wages     Wage[]
+  payments  Payment[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model UsedInvite {
@@ -80,16 +80,17 @@ model User {
   updatedAt             DateTime      @updatedAt
 }
 
-model ServiceWallet {
+model Setting {
   id        Int      @id @default(autoincrement())
-  name      String   @unique
-  address   String?  @unique
-  percent   Decimal  @db.Decimal(4, 1)
+  general   Json
+  levels    Json
+  prices    Json
   companyId Int
   company   Company  @relation(fields: [companyId], references: [id])
-  wages     Wage[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([companyId])
 }
 
 model Wage {
@@ -98,8 +99,6 @@ model Wage {
   company         Company        @relation(fields: [companyId], references: [id])
   userId          Int?
   user            User?          @relation(fields: [userId], references: [id])
-  serviceWalletId Int?
-  serviceWallet   ServiceWallet? @relation(fields: [serviceWalletId], references: [id])
   paymentId       Int?
   payment         Payment?       @relation(fields: [paymentId], references: [id])
   fromWallet      String?
@@ -112,7 +111,6 @@ model Wage {
 
   @@index([companyId])
   @@index([userId])
-  @@index([serviceWalletId])
   @@index([paymentId])
 }
 

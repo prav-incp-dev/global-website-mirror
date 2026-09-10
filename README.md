@@ -178,14 +178,14 @@ npm run test:e2e
 | `createdAt`        | DateTime                                 | Дата создания                                |
 | `updatedAt`        | DateTime                                 | Дата обновления                              |
 
-### ServiceWallet
+### Setting
 
 | Поле        | Тип                  | Описание                           |
 | ----------- | -------------------- | ---------------------------------- |
 | `id`        | Int (авто)           | Уникальный идентификатор           |
-| `name`      | String (уникальный)  | Название сервисного кошелька       |
-| `address`   | String? (уникальный) | Адрес кошелька                     |
-| `percent`   | Decimal(4,1)         | Процент начислений (например 40.0) |
+| `general`   | JSON                 | Общие настройки (JSON-объект)      |
+| `levels`    | JSON                 | Настройки уровней (JSON-объект)    |
+| `prices`    | JSON                 | Настройки цен (JSON-объект)        |
 | `companyId` | Int (FK → `Company`) | Привязка к компании                |
 | `createdAt` | DateTime             | Дата создания                      |
 | `updatedAt` | DateTime             | Дата обновления                    |
@@ -197,7 +197,6 @@ npm run test:e2e
 | `id`              | Int (авто)                   | Уникальный идентификатор         |
 | `companyId`       | Int (FK → `Company`)         | Привязка к компании              |
 | `userId`          | Int? (FK → `User`)           | Пользователь, которому начислено |
-| `serviceWalletId` | Int? (FK → `ServiceWallet`)  | Сервисный кошелек                |
 | `paymentId`       | Int? (FK → `Payment`)        | Оплата, по которой начислено     |
 | `fromWallet`      | String?                      | Кошелёк отправителя              |
 | `toWallet`        | String?                      | Кошелёк получателя               |
