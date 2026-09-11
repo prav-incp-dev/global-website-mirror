@@ -30,7 +30,7 @@ export const resetDatabase = async () => {
   // TRUNCATE with RESTART IDENTITY CASCADE handles FK constraints
   // regardless of table order and resets any sequences.
   // Keep this table list in sync with Prisma models used by E2E scenarios.
-  await prisma.$executeRaw`TRUNCATE TABLE "Interaction", "Wage", "Payment", "Order", "User", "Setting", "Company", "UsedInvite" RESTART IDENTITY CASCADE`
+  await prisma.$executeRaw`TRUNCATE TABLE "Interaction", "Wage", "Payment", "Order", "User", "Setting", "Company", "UsedInvite", "LevelHistory" RESTART IDENTITY CASCADE`
 }
 
 const random40 = () => {

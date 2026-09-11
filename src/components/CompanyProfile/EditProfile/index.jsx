@@ -16,6 +16,8 @@ const EditProfile = ({ company, csrfToken, onUpdate, onCancel }) => {
     defaultValues: {
       name: company?.name || '',
       wallet: company?.wallet || '',
+      serviceWallet: company?.serviceWallet || '',
+      cumulativeWallet: company?.cumulativeWallet || '',
     },
   })
 
@@ -70,7 +72,7 @@ const EditProfile = ({ company, csrfToken, onUpdate, onCancel }) => {
           {errors.name && <span className={styles.fieldError}>{errors.name.message}</span>}
         </div>
 
-        <div className={styles.formFieldLast}>
+        <div className={styles.formField}>
           <label htmlFor="wallet" className={styles.label}>
             Распределительный счет компании
           </label>
@@ -87,6 +89,44 @@ const EditProfile = ({ company, csrfToken, onUpdate, onCancel }) => {
             })}
           />
           {errors.wallet && <span className={styles.fieldError}>{errors.wallet.message}</span>}
+        </div>
+
+        <div className={styles.formField}>
+          <label htmlFor="serviceWallet" className={styles.label}>
+            Счет на обслуживание системы
+          </label>
+          <input
+            id="serviceWallet"
+            type="text"
+            placeholder="0x..."
+            className={styles.input}
+            {...register('serviceWallet', {
+              pattern: {
+                value: WALLET_REGEXP,
+                message: 'Неверный формат кошелька',
+              },
+            })}
+          />
+          {errors.serviceWallet && <span className={styles.fieldError}>{errors.serviceWallet.message}</span>}
+        </div>
+
+        <div className={styles.formFieldLast}>
+          <label htmlFor="cumulativeWallet" className={styles.label}>
+            Накопительный счет
+          </label>
+          <input
+            id="cumulativeWallet"
+            type="text"
+            placeholder="0x..."
+            className={styles.input}
+            {...register('cumulativeWallet', {
+              pattern: {
+                value: WALLET_REGEXP,
+                message: 'Неверный формат кошелька',
+              },
+            })}
+          />
+          {errors.cumulativeWallet && <span className={styles.fieldError}>{errors.cumulativeWallet.message}</span>}
         </div>
 
         <div className={styles.buttonRow}>

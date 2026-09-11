@@ -20,7 +20,13 @@ const Payments = ({ profile, initialPayments = [], csrfToken, refundFee, prices 
   }, [hasCompanyWallet, hasTokenConfig, hasWallet])
 
   return (
-    <PaymentsProvider initialPayments={initialPayments} csrfToken={csrfToken} refundFee={refundFee} profile={profile} prices={prices}>
+    <PaymentsProvider
+      initialPayments={initialPayments}
+      csrfToken={csrfToken}
+      refundFee={refundFee}
+      profile={profile}
+      prices={prices}
+    >
       <div className={styles.container}>
         <button className={styles.buyButton} disabled={!!buyDisabledReason} onClick={() => setModalOpen(true)}>
           Купить

@@ -58,6 +58,18 @@ export default async (fastify) => {
               { type: 'string', maxLength: 0 },
             ],
           },
+          serviceWallet: {
+            anyOf: [
+              { type: 'string', format: 'wallet' },
+              { type: 'string', maxLength: 0 },
+            ],
+          },
+          cumulativeWallet: {
+            anyOf: [
+              { type: 'string', format: 'wallet' },
+              { type: 'string', maxLength: 0 },
+            ],
+          },
         },
       },
     },
@@ -67,7 +79,7 @@ export default async (fastify) => {
         return reply.code(403).send({ error: 'Доступ запрещен' })
       }
 
-      const { name, wallet } = req.body
+      const { name, wallet, serviceWallet, cumulativeWallet } = req.body
 
       try {
         const company = await fastify.prisma.company.update({
@@ -75,6 +87,8 @@ export default async (fastify) => {
           data: {
             name,
             wallet: wallet || null,
+            serviceWallet: serviceWallet || null,
+            cumulativeWallet: cumulativeWallet || null,
           },
         })
 
@@ -84,11 +98,25 @@ export default async (fastify) => {
             id: company.id,
             name: company.name,
             wallet: company.wallet,
+            serviceWallet: company.serviceWallet,
+            cumulativeWallet: company.cumulativeWallet,
           },
         })
       } catch (err) {
         if (err.code === 'P2002') {
-          return reply.code(409).send({ error: 'Компания с таким названием уже существует' })
+          const uniqFields = {
+            name: 'Такое имя компании',
+            wallet: 'Такой распределительный счет',
+            serviceWallet: 'Такой счет на обслуживание',
+            cumulativeWallet: 'Такой накопительный счет',
+          }
+
+          const errorMessage = String(err.message || '')
+          const fieldMatch = errorMessage.match(/\(`([^`]+)`\)/)
+          const rawField = fieldMatch ? fieldMatch[1] : null
+          const fieldLabel = (rawField && uniqFields[rawField]) || rawField || 'Поле'
+
+          return reply.code(409).send({ error: `${fieldLabel} уже есть в системе` })
         }
         return reply.code(500).send({ error: 'Ошибка обновления компании' })
       }

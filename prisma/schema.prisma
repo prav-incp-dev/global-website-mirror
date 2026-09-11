@@ -34,15 +34,17 @@ enum InteractionStatus {
 }
 
 model Company {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique
-  wallet    String?
-  users     User[]
-  settings  Setting[]
-  wages     Wage[]
-  payments  Payment[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id               Int       @id @default(autoincrement())
+  name             String    @unique
+  wallet           String?   @unique
+  serviceWallet    String?   @unique
+  cumulativeWallet  String?  @unique
+  users            User[]
+  settings         Setting[]
+  wages            Wage[]
+  payments         Payment[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }
 
 model UsedInvite {
@@ -74,6 +76,7 @@ model User {
   orders                Order[]
   payments              Payment[]
   wages                 Wage[]
+  levelHistories        LevelHistory[]
   initiatedInteractions Interaction[] @relation("InitiatorInteractions")
   targetedInteractions  Interaction[] @relation("TargetInteractions")
   createdAt             DateTime      @default(now())
@@ -103,6 +106,7 @@ model Wage {
   payment         Payment?       @relation(fields: [paymentId], references: [id])
   fromWallet      String?
   toWallet        String?
+  description     String?
   score           Int            @default(0)
   groupScore      Int            @default(0)
   amount          Decimal        @default(0.00) @db.Decimal(12, 2)
@@ -156,6 +160,17 @@ model Payment {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+}
+
+model LevelHistory {
+  id        Int      @id @default(autoincrement())
+  oldLevel  Int
+  newLevel  Int
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Interaction {

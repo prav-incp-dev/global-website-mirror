@@ -22,10 +22,7 @@ test.describe('admin manages company settings', () => {
     // save, so a visibility check alone could match a stale flash from the
     // previous save before the current request finishes.
     const responsePromise = page.waitForResponse(
-      (res) =>
-        res.url().includes('/api/admin/settings') &&
-        res.request().method() === 'PUT' &&
-        res.status() === 200,
+      (res) => res.url().includes('/api/admin/settings') && res.request().method() === 'PUT' && res.status() === 200,
     )
     await page.getByRole('button', { name: 'Сохранить' }).click()
     await responsePromise

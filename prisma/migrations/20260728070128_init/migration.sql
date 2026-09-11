@@ -15,6 +15,8 @@ CREATE TABLE "Company" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "wallet" TEXT,
+    "serviceWallet" TEXT,
+    "cumulativeWallet" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -75,6 +77,7 @@ CREATE TABLE "Wage" (
     "paymentId" INTEGER,
     "fromWallet" TEXT,
     "toWallet" TEXT,
+    "description" TEXT,
     "score" INTEGER NOT NULL DEFAULT 0,
     "groupScore" INTEGER NOT NULL DEFAULT 0,
     "amount" DECIMAL(12,2) NOT NULL DEFAULT 0.00,
@@ -85,6 +88,17 @@ CREATE TABLE "Wage" (
 );
 
 -- CreateTable
+-- CreateTable
+CREATE TABLE "LevelHistory" (
+    "id" SERIAL NOT NULL,
+    "oldLevel" INTEGER NOT NULL,
+    "newLevel" INTEGER NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "LevelHistory_pkey" PRIMARY KEY ("id")
+);
+
 CREATE TABLE "Order" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
@@ -141,6 +155,15 @@ CREATE TABLE "Interaction" (
 CREATE UNIQUE INDEX "Company_name_key" ON "Company"("name");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Company_wallet_key" ON "Company"("wallet");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Company_serviceWallet_key" ON "Company"("serviceWallet");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Company_cumulativeWallet_key" ON "Company"("cumulativeWallet");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "UsedInvite_code_key" ON "UsedInvite"("code");
 
 -- CreateIndex
@@ -177,6 +200,8 @@ CREATE UNIQUE INDEX "Payment_uid_key" ON "Payment"("uid");
 CREATE UNIQUE INDEX "Payment_txHash_key" ON "Payment"("txHash");
 
 -- CreateIndex
+CREATE INDEX "LevelHistory_userId_idx" ON "LevelHistory"("userId");
+
 CREATE INDEX "Order_userId_idx" ON "Order"("userId");
 
 -- CreateIndex
@@ -217,6 +242,9 @@ ALTER TABLE "Wage" ADD CONSTRAINT "Wage_userId_fkey" FOREIGN KEY ("userId") REFE
 
 -- AddForeignKey
 ALTER TABLE "Wage" ADD CONSTRAINT "Wage_paymentId_fkey" FOREIGN KEY ("paymentId") REFERENCES "Payment"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "LevelHistory" ADD CONSTRAINT "LevelHistory_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Order" ADD CONSTRAINT "Order_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
