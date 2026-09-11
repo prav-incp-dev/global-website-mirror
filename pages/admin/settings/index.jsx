@@ -61,14 +61,12 @@ const AdminSettings = () => {
     () =>
       setting?.levels ??
       Object.fromEntries(
-        Array.from({ length: 10 }, (_, i) => [i + 1, { percent: 0, plan: 0, confirm: 0 }]),
+        Array.from({ length: 10 }, (_, i) => [i + 1, { percent: 0, personal: 0, general: 0, confirm: 0 }]),
       ),
   )
 
   const [pricesForm, setPricesForm] = useState(
-    () =>
-      setting?.prices ??
-      Object.fromEntries(Array.from({ length: 6 }, (_, i) => [i, 0])),
+    () => setting?.prices ?? Object.fromEntries(Array.from({ length: 6 }, (_, i) => [i, 0])),
   )
 
   const handleSubmit = async (e) => {
@@ -76,10 +74,7 @@ const AdminSettings = () => {
     setSaving(true)
     setError(null)
 
-    const data =
-      activeScreen === 'general' ? generalForm
-      : activeScreen === 'levels' ? levelsForm
-      : pricesForm
+    const data = activeScreen === 'general' ? generalForm : activeScreen === 'levels' ? levelsForm : pricesForm
 
     try {
       const res = await fetch('/api/admin/settings', {
@@ -154,17 +149,11 @@ const AdminSettings = () => {
           )}
 
           {activeScreen === 'levels' && (
-            <LevelSettings
-              form={levelsForm}
-              onChange={({ level, name, value }) => updateLevel(level, name, value)}
-            />
+            <LevelSettings form={levelsForm} onChange={({ level, name, value }) => updateLevel(level, name, value)} />
           )}
 
           {activeScreen === 'prices' && (
-            <PriceSettings
-              form={pricesForm}
-              onChange={(tier, value) => updatePrice(tier, value)}
-            />
+            <PriceSettings form={pricesForm} onChange={(tier, value) => updatePrice(tier, value)} />
           )}
           <button type="submit" className={styles.saveButton} disabled={saving}>
             {saving ? 'Сохранение...' : 'Сохранить'}
