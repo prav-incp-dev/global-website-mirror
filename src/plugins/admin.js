@@ -14,6 +14,14 @@ export default fp(async (fastify) => {
       })
     },
 
+    getSetting: async (user) => {
+      if (!user?.company?.id) return null
+
+      return fastify.prisma.setting.findUnique({
+        where: { companyId: user.company.id },
+      })
+    },
+
     getOrphansCount: async (user, query = '') => {
       return fastify.prisma.user.count({
         where: {

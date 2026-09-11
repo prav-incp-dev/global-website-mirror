@@ -483,6 +483,44 @@ export default async (fastify) => {
     },
   })
 
+  fastify.put('/api/admin/settings', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['type', 'data'],
+        properties: {
+          type: { type: 'string', enum: ['general', 'levels', 'prices'] },
+          data: { type: 'object' },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      const { type, data } = req.body
+
+      try {
+        const setting = await fastify.prisma.setting.upsert({
+          where: { companyId: user.company.id },
+          update: { [type]: data },
+          create: {
+            companyId: user.company.id,
+            general: type === 'general' ? data : {},
+            levels: type === 'levels' ? data : {},
+            prices: type === 'prices' ? data : {},
+          },
+        })
+
+        return reply.send({ success: true, setting })
+      } catch {
+        return reply.code(500).send({ error: 'Ошибка сохранения настроек' })
+      }
+    },
+  })
+
   fastify.put('/api/admin/user/wages', {
     schema: {
       body: {

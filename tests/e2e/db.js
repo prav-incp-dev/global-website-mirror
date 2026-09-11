@@ -30,7 +30,7 @@ export const resetDatabase = async () => {
   // TRUNCATE with RESTART IDENTITY CASCADE handles FK constraints
   // regardless of table order and resets any sequences.
   // Keep this table list in sync with Prisma models used by E2E scenarios.
-  await prisma.$executeRaw`TRUNCATE TABLE "Interaction", "Wage", "Payment", "Order", "User", "Company", "ServiceWallet", "UsedInvite" RESTART IDENTITY CASCADE`
+  await prisma.$executeRaw`TRUNCATE TABLE "Interaction", "Wage", "Payment", "Order", "User", "Setting", "Company", "UsedInvite" RESTART IDENTITY CASCADE`
 }
 
 const random40 = () => {
@@ -41,10 +41,45 @@ const randow8Numbers = () => {
   return crypto.randomInt(10000000, 99999999).toString()
 }
 /**
- * Creates a test company and returns it.
+ * Creates a test company with default seeded settings and returns it.
+ * Company-level overrides (e.g. wallet, name) go to the Company row;
+ * pass a `settings` key to override the default Setting row.
  */
 export const createTestCompany = async (name, overrides = {}) => {
-  return prisma.company.create({ data: { name, wallet: `0x${random40()}`, ...overrides } })
+  const { settings = {}, ...companyData } = overrides
+  const company = await prisma.company.create({
+    data: { name, wallet: `0x${random40()}`, ...companyData },
+  })
+
+  await prisma.setting.create({
+    data: {
+      companyId: company.id,
+      general: { staleDays: 30, orphantDays: 40, refundFee: 5 },
+      levels: {
+        1: { percent: 20.0, plan: 3, confirm: 0 },
+        2: { percent: 30.0, plan: 10, confirm: 2 },
+        3: { percent: 39.0, plan: 20, confirm: 3 },
+        4: { percent: 46.0, plan: 50, confirm: 4 },
+        5: { percent: 52.0, plan: 120, confirm: 5 },
+        6: { percent: 56.0, plan: 300, confirm: 6 },
+        7: { percent: 58.0, plan: 750, confirm: 7 },
+        8: { percent: 59.0, plan: 2000, confirm: 8 },
+        9: { percent: 59.5, plan: 4500, confirm: 9 },
+        10: { percent: 60, plan: 0, confirm: 0 },
+      },
+      prices: {
+        0: 100,
+        1: 1200,
+        2: 2400,
+        3: 3600,
+        4: 4800,
+        5: 6000,
+      },
+      ...settings,
+    },
+  })
+
+  return company
 }
 
 /**

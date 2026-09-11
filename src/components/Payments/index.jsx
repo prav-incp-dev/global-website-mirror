@@ -5,7 +5,7 @@ import PaymentsList from './PaymentsList'
 import PurchaseModal from './PurchaseModal'
 import { PaymentsProvider } from './PaymentsContext'
 
-const Payments = ({ profile, initialPayments = [], csrfToken, refundFee }) => {
+const Payments = ({ profile, initialPayments = [], csrfToken, refundFee, prices = {} }) => {
   const hasTokenConfig = Boolean(usdtAddress)
 
   const [modalOpen, setModalOpen] = useState(false)
@@ -20,7 +20,7 @@ const Payments = ({ profile, initialPayments = [], csrfToken, refundFee }) => {
   }, [hasCompanyWallet, hasTokenConfig, hasWallet])
 
   return (
-    <PaymentsProvider initialPayments={initialPayments} csrfToken={csrfToken} refundFee={refundFee}>
+    <PaymentsProvider initialPayments={initialPayments} csrfToken={csrfToken} refundFee={refundFee} profile={profile} prices={prices}>
       <div className={styles.container}>
         <button className={styles.buyButton} disabled={!!buyDisabledReason} onClick={() => setModalOpen(true)}>
           Купить
@@ -29,7 +29,7 @@ const Payments = ({ profile, initialPayments = [], csrfToken, refundFee }) => {
 
         <PaymentsList />
 
-        {modalOpen && <PurchaseModal onClose={() => setModalOpen(false)} profile={profile} usdtAddress={usdtAddress} />}
+        {modalOpen && <PurchaseModal onClose={() => setModalOpen(false)} />}
       </div>
     </PaymentsProvider>
   )

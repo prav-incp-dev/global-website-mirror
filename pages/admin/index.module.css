@@ -20,6 +20,38 @@
   color: #d4af37;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gearButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 35px;
+  height: 35px;
+  background: transparent;
+  color: #d4af37;
+  border: 1px solid #d4af37;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.gearButton:hover {
+  background: #d4af37;
+  color: #0d0d0d;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+}
+
+.gearButton svg {
+  width: 20px;
+  height: 20px;
+}
+
 .logoutButton {
   padding: 8px 20px;
   background: transparent;

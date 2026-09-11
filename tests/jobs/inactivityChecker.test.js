@@ -1,4 +1,4 @@
-import { describe, it, onTestFinished, vi } from 'vitest'
+import { describe, it, vi } from 'vitest'
 import { createApp } from '../helpers'
 import { orphantUsers } from '../../src/jobs/inactivityChecker.js'
 
@@ -176,43 +176,92 @@ describe('orphantUsers', () => {
     expect(updated.orphant).toBe(false)
   })
 
-  it('uses ORPHANT_DAYS env var', async ({ expect }) => {
-    const originalorphantDays = process.env.ORPHANT_DAYS
-    process.env.ORPHANT_DAYS = '60'
-
+  it('uses per-company orphantDays from company settings', async ({ expect }) => {
     const app = await createApp()
-    onTestFinished(async () => {
-      process.env.ORPHANT_DAYS = originalorphantDays
+
+    const companyRelaxed = await app.prisma.company.create({
+      data: { name: `Inactivity Relaxed ${Date.now()}` },
+    })
+    const companyStrict = await app.prisma.company.create({
+      data: { name: `Inactivity Strict ${Date.now()}` },
     })
 
-    const oldDate = new Date('2026-06-01T10:00:00Z')
-    const parent = await app.prisma.user.create({
+    await app.prisma.setting.create({
       data: {
-        ...baseUser,
-        role: 'Consultant',
-        email: `inactivity-parent4-${Date.now()}@test.com`,
-        phone: `+10001009${String(Date.now()).slice(-4)}`,
+        companyId: companyRelaxed.id,
+        general: { staleDays: 30, orphantDays: 365, refundFee: 5 },
+        levels: {},
+        prices: {},
+      },
+    })
+    await app.prisma.setting.create({
+      data: {
+        companyId: companyStrict.id,
+        general: { staleDays: 30, orphantDays: 7, refundFee: 5 },
+        levels: {},
+        prices: {},
       },
     })
 
-    const user = await createUserWithInteraction(
+    const interactionDate = new Date()
+    interactionDate.setDate(interactionDate.getDate() - 30)
+
+    const relaxedParent = await app.prisma.user.create({
+      data: {
+        ...baseUser,
+        companyId: companyRelaxed.id,
+        role: 'Consultant',
+        email: `inactivity-relaxed-parent-${Date.now()}@test.com`,
+        phone: `+10001011${String(Date.now()).slice(-4)}`,
+      },
+    })
+    const strictParent = await app.prisma.user.create({
+      data: {
+        ...baseUser,
+        companyId: companyStrict.id,
+        role: 'Consultant',
+        email: `inactivity-strict-parent-${Date.now()}@test.com`,
+        phone: `+10001012${String(Date.now()).slice(-4)}`,
+      },
+    })
+
+    const relaxedUser = await createUserWithInteraction(
       app,
       {
         ...baseUser,
+        companyId: companyRelaxed.id,
         role: 'Consultant',
-        email: `inactivity-custom-orphant-${Date.now()}@test.com`,
-        phone: `+10001010${String(Date.now()).slice(-4)}`,
-        parentId: parent.id,
+        email: `inactivity-relaxed-${Date.now()}@test.com`,
+        phone: `+10001013${String(Date.now()).slice(-4)}`,
+        parentId: relaxedParent.id,
       },
-      oldDate,
+      interactionDate,
     )
 
-    // ORPHANT_DAYS=60 — oldDate (June 1) is more than 60 days ago from now (Aug 21)
+    const strictUser = await createUserWithInteraction(
+      app,
+      {
+        ...baseUser,
+        companyId: companyStrict.id,
+        role: 'Consultant',
+        email: `inactivity-strict-${Date.now()}@test.com`,
+        phone: `+10001014${String(Date.now()).slice(-4)}`,
+        parentId: strictParent.id,
+      },
+      interactionDate,
+    )
+
+    // Same interaction age (30 days), but each company has its own orphantDays:
+    // relaxed company (365) keeps the user tied, strict company (7) orphans it
     await orphantUsers(app.prisma, silentLogger)
 
-    const updated = await app.prisma.user.findUnique({ where: { id: user.id } })
-    expect(updated.parentId).toBeNull()
-    expect(updated.orphant).toBe(true)
+    const relaxedUpdated = await app.prisma.user.findUnique({ where: { id: relaxedUser.id } })
+    expect(relaxedUpdated.parentId).toBe(relaxedParent.id)
+    expect(relaxedUpdated.orphant).toBe(false)
+
+    const strictUpdated = await app.prisma.user.findUnique({ where: { id: strictUser.id } })
+    expect(strictUpdated.parentId).toBeNull()
+    expect(strictUpdated.orphant).toBe(true)
   })
 
   it('logs info about processed count', async ({ expect }) => {

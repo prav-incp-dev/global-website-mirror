@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import classNames from 'classnames'
 import { useRouteContext } from '@fastify/react/client'
+import { useNavigate } from 'react-router'
 import { UserRole } from '@/generated/prisma/enums'
 import AdminProfile from '@/components/AdminProfile'
 import CompanyProfile from '@/components/CompanyProfile'
 import ClientsTable from '@/components/ClientsTable'
 import PaymentsTable from '@/components/PaymentsTable'
 import InvitationModal from '@/components/InvitationModal'
+import GearIcon from '@/assets/icons/GearIcon.svg?react'
 import styles from './index.module.css'
 
 export const getData = async ({ server, req, reply }) => {
@@ -15,8 +17,9 @@ export const getData = async ({ server, req, reply }) => {
   if (user.role !== UserRole.Admin) return reply.redirect('/')
 
   const csrfToken = reply.generateCsrf()
-  const refundFee = parseInt(process.env.REFUND_FEE, 10) || 5
   const company = await server.admin.getCompany(user)
+  const setting = await server.admin.getSetting(user)
+  const { refundFee } = setting.general
   const [clientsData, orphansCount, paymentsData, toRefundCount] = await Promise.all([
     server.admin.getClients(user),
     server.admin.getOrphansCount(user),
@@ -62,6 +65,7 @@ const Admin = () => {
   const [invitationOpen, setInvitationOpen] = useState(false)
   const [profileData, setProfileData] = useState(profile)
   const [companyData, setCompanyData] = useState(company)
+  const navigate = useNavigate()
 
   const handleLogout = async (e) => {
     e.preventDefault()
@@ -89,9 +93,14 @@ const Admin = () => {
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.headerTitle}>Панель администратора</h1>
-        <button className={styles.logoutButton} onClick={handleLogout}>
-          Выйти
-        </button>
+        <div className={styles.headerActions}>
+          <button className={styles.gearButton} aria-label="Настройки" title="Настройки" onClick={() => navigate('/admin/settings')}>
+            <GearIcon />
+          </button>
+          <button className={styles.logoutButton} onClick={handleLogout}>
+            Выйти
+          </button>
+        </div>
       </div>
 
       <>
