@@ -191,7 +191,7 @@ describe('PUT /api/admin/user/level', () => {
     expect(response.json()).toEqual({ error: 'Обновлять уровень можно только консультантам' })
   })
 
-  it('successfully updates level and levelConfirmed without touching scores', async () => {
+  it('successfully updates level and levelConfirmed and creates LevelHistory', async () => {
     const app = await createApp()
     const company = await createCompany(app, 'Level Update Company')
 
@@ -220,6 +220,15 @@ describe('PUT /api/admin/user/level', () => {
     const updatedUser = await app.prisma.user.findUnique({ where: { id: targetUser.id } })
     expect(updatedUser.level).toBe(3)
     expect(updatedUser.levelConfirmed).toBe(false)
+
+    // Verify LevelHistory was created
+    const levelHistory = await app.prisma.levelHistory.findFirst({
+      where: { userId: targetUser.id },
+      orderBy: { createdAt: 'desc' },
+    })
+    expect(levelHistory).toBeDefined()
+    expect(levelHistory.oldLevel).toBe(1)
+    expect(levelHistory.newLevel).toBe(3)
   })
 
   it('returns 500 on unexpected database error', async () => {

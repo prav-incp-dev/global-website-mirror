@@ -479,7 +479,7 @@ export default async (fastify) => {
       try {
         const targetUser = await fastify.prisma.user.findUnique({
           where: { id: userId },
-          select: { id: true, companyId: true, role: true },
+          select: { id: true, companyId: true, role: true, level: true },
         })
 
         if (!targetUser) {
@@ -503,6 +503,16 @@ export default async (fastify) => {
             levelConfirmed: true,
           },
         })
+
+        if (targetUser.level !== level) {
+          await fastify.prisma.levelHistory.create({
+            data: {
+              oldLevel: targetUser.level,
+              newLevel: level,
+              userId,
+            },
+          })
+        }
 
         return reply.send({ success: true, user: updatedUser })
       } catch {
