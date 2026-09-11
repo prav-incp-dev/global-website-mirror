@@ -159,6 +159,32 @@ describe('PUT /api/admin/company', () => {
     expect(response.json()).toEqual({ error: 'Такой счет на обслуживание уже есть в системе' })
   })
 
+  it('returns 409 when serviceWallet is already taken with real Prisma quoted message', async () => {
+    const adminUser = {
+      id: 1,
+      email: 'admin@example.com',
+      role: 'Admin',
+      company: { id: 1 },
+    }
+
+    // Prisma 7 quotes camelCase field names in P2002 messages: (`"serviceWallet"`)
+    const mockError = new Error('Unique constraint failed on the fields: (`"serviceWallet"`)')
+    mockError.code = 'P2002'
+
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+    vi.spyOn(app.prisma.company, 'update').mockRejectedValue(mockError)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/company',
+      payload: { name: 'Test Company', serviceWallet: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' },
+    })
+
+    expect(response.statusCode).toBe(409)
+    expect(response.json()).toEqual({ error: 'Такой счет на обслуживание уже есть в системе' })
+  })
+
   it('returns 409 when cumulativeWallet is already taken', async () => {
     const adminUser = {
       id: 1,

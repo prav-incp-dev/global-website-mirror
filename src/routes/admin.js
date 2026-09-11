@@ -1,6 +1,7 @@
 import { OrderStatus, PaymentStatus, UserRole } from '../generated/prisma/client'
 import { serializePayment } from '../lib/payment'
 import { PAGE_LIMIT } from '../plugins/admin.js'
+import { uniqConstraintLabel } from '../lib/prismaHelpers.js'
 
 export default async (fastify) => {
   fastify.put('/api/admin/profile', {
@@ -111,12 +112,7 @@ export default async (fastify) => {
             cumulativeWallet: 'Такой накопительный счет',
           }
 
-          const errorMessage = String(err.message || '')
-          const fieldMatch = errorMessage.match(/\(`([^`]+)`\)/)
-          const rawField = fieldMatch ? fieldMatch[1] : null
-          const fieldLabel = (rawField && uniqFields[rawField]) || rawField || 'Поле'
-
-          return reply.code(409).send({ error: `${fieldLabel} уже есть в системе` })
+          return reply.code(409).send({ error: `${uniqConstraintLabel(err.message, uniqFields)} уже есть в системе` })
         }
         return reply.code(500).send({ error: 'Ошибка обновления компании' })
       }
