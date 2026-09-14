@@ -93,7 +93,7 @@ const EditProfile = ({ company, csrfToken, onUpdate, onCancel }) => {
 
         <div className={styles.formField}>
           <label htmlFor="serviceWallet" className={styles.label}>
-            Счет на обслуживание системы
+            Счет на обслуживание системы (1%)
           </label>
           <input
             id="serviceWallet"

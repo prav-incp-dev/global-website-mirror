@@ -45,7 +45,7 @@ describe('checkPayments', () => {
     })
   }
 
-  const createPayment = async (app, user, { status, txHash, uid = null, createdAt = new Date() } = {}) => {
+  const createPayment = async (app, user, { status, txHash, uid = null, createdAt = new Date(), quantity = 1 } = {}) => {
     // txHash is @unique — generate a unique one unless the caller explicitly
     // passes null (payment without txHash) or a specific value.
     const resolvedTxHash = txHash === undefined ? `0x${crypto.randomBytes(32).toString('hex')}` : txHash
@@ -58,7 +58,7 @@ describe('checkPayments', () => {
     const order = await app.prisma.order.create({
       data: {
         userId: user.id,
-        quantity: 1,
+        quantity,
         totalAmount: 1200,
         status: orderStatus,
         payment: {
@@ -113,6 +113,7 @@ describe('checkPayments', () => {
     const noTxHash = await createPayment(app, user, { status: PaymentStatus.Pending, txHash: null })
     const withTxHash = await createPayment(app, user, {
       status: PaymentStatus.Pending,
+      quantity: 2,
       fromWallet: '0x2222222222222222222222222222222222222222',
       createdAt: new Date(Date.now() - 2 * MINUTES15),
     })
@@ -132,6 +133,7 @@ describe('checkPayments', () => {
     const user = await createUser(app)
     const payment = await createPayment(app, user, {
       status: PaymentStatus.Pending,
+      quantity: 2,
       fromWallet: '0x2222222222222222222222222222222222222222',
       createdAt: new Date(Date.now() - 2 * MINUTES15),
     })
@@ -164,6 +166,7 @@ describe('checkPayments', () => {
     const user = await createUser(app)
     const payment = await createPayment(app, user, {
       status: PaymentStatus.Pending,
+      quantity: 2,
       fromWallet: '0x2222222222222222222222222222222222222222',
       createdAt: new Date(Date.now() - 2 * MINUTES15),
     })
@@ -202,6 +205,7 @@ describe('checkPayments', () => {
     const user = await createUser(app, { memberId: 'DOM-00000000-1234' })
     const oldPayment = await createPayment(app, user, {
       status: PaymentStatus.Completed,
+      quantity: 2,
       createdAt: new Date(Date.now() - 2 * HOURS24),
     })
 
@@ -233,11 +237,32 @@ describe('checkPayments', () => {
     expect(updatedUser.level).toBe(0)
   })
 
+  it('marks payment for quantity 1 as finalized without uid', async ({ expect }) => {
+    const app = await createApp()
+    const user = await createUser(app, { memberId: 'DOM-00000000-9876' })
+    const oldPayment = await createPayment(app, user, {
+      status: PaymentStatus.Completed,
+      quantity: 1,
+      createdAt: new Date(Date.now() - 2 * HOURS24),
+    })
+
+    await checkPayments(app.prisma, silentLogger)
+
+    const updated = await app.prisma.payment.findUnique({ where: { id: oldPayment.id } })
+    const updatedUser = await app.prisma.user.findUnique({ where: { id: user.id } })
+
+    expect(updated.finalized).toBe(true)
+    expect(updated.uid).toBeNull()
+    expect(updatedUser.role).toBe(UserRole.Consultant)
+    expect(updatedUser.level).toBe(1)
+  })
+
   it('assigns uid to consultant payment without changing role or level', async ({ expect }) => {
     const app = await createApp()
     const user = await createUser(app, { memberId: 'DOM-00000000-4321', role: UserRole.Consultant, level: 5 })
     const oldPayment = await createPayment(app, user, {
       status: PaymentStatus.Completed,
+      quantity: 2,
       createdAt: new Date(Date.now() - 2 * HOURS24),
     })
 
@@ -266,6 +291,7 @@ describe('checkPayments', () => {
     })
     const newPayment = await createPayment(app, user, {
       status: PaymentStatus.Completed,
+      quantity: 2,
       createdAt: new Date(Date.now() - 2 * HOURS24),
     })
 
@@ -285,10 +311,12 @@ describe('checkPayments', () => {
     })
     const first = await createPayment(app, user, {
       status: PaymentStatus.Completed,
+      quantity: 2,
       createdAt: new Date(Date.now() - 3 * HOURS24),
     })
     const second = await createPayment(app, user, {
       status: PaymentStatus.Completed,
+      quantity: 2,
       createdAt: new Date(Date.now() - 2 * HOURS24),
     })
 

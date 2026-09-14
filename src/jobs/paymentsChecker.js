@@ -46,29 +46,34 @@ async function verifyPayments(prisma, payments = []) {
   }
 }
 
-async function finalizePayment(prisma, payments = [], log = console) {
+async function getUID(prisma, payment) {
+  const memberId = payment.user.memberId
+  const suffix = memberId.slice(-4)
+  const lastPayment = await prisma.payment.findFirst({
+    where: {
+      userId: payment.userId,
+      uid: { not: null },
+    },
+    orderBy: { uid: 'desc' },
+    select: { uid: true },
+  })
+
+  const lastNumber = lastPayment ? Number(lastPayment.uid.split('-').pop()) : 0
+  return `ON-${suffix}-${String(lastNumber + 1).padStart(2, '0')}`
+}
+
+async function finalizePayments(prisma, payments = [], log = console) {
   if (payments.length === 0) return
 
   for (const payment of payments) {
-    const memberId = payment.user.memberId
-    const suffix = memberId.slice(-4)
-    const lastPayment = await prisma.payment.findFirst({
-      where: {
-        userId: payment.userId,
-        uid: { not: null },
-      },
-      orderBy: { uid: 'desc' },
-      select: { uid: true },
-    })
-
-    const lastNumber = lastPayment ? Number(lastPayment.uid.split('-').pop()) : 0
-    const uid = `ON-${suffix}-${String(lastNumber + 1).padStart(2, '0')}`
+    const quantity = payment.order?.quantity ?? 0
+    const uid = quantity > 1 ? await getUID(prisma, payment) : null
 
     try {
       const updates = [
         prisma.payment.update({
           where: { id: payment.id },
-          data: { uid },
+          data: { uid, finalized: true },
         }),
       ]
 
@@ -135,10 +140,13 @@ export async function checkPayments(prisma, log = console) {
     orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     include: {
       user: true,
+      order: {
+        select: { quantity: true },
+      },
     },
   })
 
-  await finalizePayment(prisma, paymentsToFinalize, log)
+  await finalizePayments(prisma, paymentsToFinalize, log)
 
   log.info(
     `${paymentsToCancel.length} payments canceled, ${paymentsToVerify.length} payments verified, ${paymentsToFinalize.length} payments finalized`,

@@ -20,7 +20,7 @@ const ViewProfile = ({ company, onEdit }) => {
         </span>
       </div>
       <div className={styles.row}>
-        <span className={styles.label}>Счет на обслуживание системы</span>
+        <span className={styles.label}>Счет на обслуживание системы (1%)</span>
         <span className={styles.value} title={company?.serviceWallet || '—'}>
           {walletPreview(company?.serviceWallet)}
         </span>

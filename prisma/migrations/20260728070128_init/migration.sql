@@ -129,6 +129,7 @@ CREATE TABLE "Payment" (
     "status" "PaymentStatus" NOT NULL DEFAULT 'Pending',
     "refundRequestedAt" TIMESTAMP(3),
     "refundedAt" TIMESTAMP(3),
+    "finalized" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 

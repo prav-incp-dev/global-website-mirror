@@ -233,7 +233,7 @@ export default async (fastify) => {
         return reply.code(404).send({ error: 'Платеж не найден' })
       }
 
-      if (payment.status !== PaymentStatus.Completed || payment.uid !== null) {
+      if (payment.status !== PaymentStatus.Completed || payment.finalized) {
         return reply.code(409).send({ error: 'Платеж уже обработан и не может быть отменен' })
       }
 

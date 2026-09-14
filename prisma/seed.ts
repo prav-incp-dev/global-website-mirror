@@ -157,6 +157,7 @@ try {
             fromWallet: '0x2222222222222222222222222222222222222222',
             toWallet: companyWallet,
             status: PaymentStatus.Completed,
+            finalized: true,
           },
         },
       },
