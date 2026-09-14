@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createNoCsrfApp as createApp } from '../../helpers'
-import { PAGE_LIMIT } from '../../../src/plugins/admin.js'
+import { PAGE_LIMIT } from '../../../src/lib/constants.js'
 
 describe('GET /api/admin/clients', () => {
   it('returns 403 when user is not authenticated', async () => {
@@ -69,8 +69,8 @@ describe('GET /api/admin/clients', () => {
 
     expect(response.statusCode).toBe(200)
     expect(response.json()).toEqual({ ...mockResult, orphansCount: 5 })
-    expect(app.admin.getClients).toHaveBeenCalledWith(adminUser, 1, PAGE_LIMIT, '', false, 'id')
-    expect(app.admin.getOrphansCount).toHaveBeenCalledWith(adminUser, '')
+    expect(app.admin.getClients).toHaveBeenCalledWith(adminUser, 1, PAGE_LIMIT, '', false, 'id', 0, 10)
+    expect(app.admin.getOrphansCount).toHaveBeenCalledWith(adminUser, '', 0, 10)
   })
 
   it('passes query parameters to getClients', async () => {
@@ -101,8 +101,8 @@ describe('GET /api/admin/clients', () => {
 
     expect(response.statusCode).toBe(200)
     expect(response.json()).toEqual({ ...mockResult, orphansCount: 3 })
-    expect(app.admin.getClients).toHaveBeenCalledWith(adminUser, 2, 5, 'John', false, 'id')
-    expect(app.admin.getOrphansCount).toHaveBeenCalledWith(adminUser, 'John')
+    expect(app.admin.getClients).toHaveBeenCalledWith(adminUser, 2, 5, 'John', false, 'id', 0, 10)
+    expect(app.admin.getOrphansCount).toHaveBeenCalledWith(adminUser, 'John', 0, 10)
   })
 
   it('uses defaults when no query params provided', async () => {
@@ -133,7 +133,7 @@ describe('GET /api/admin/clients', () => {
 
     expect(response.statusCode).toBe(200)
     expect(response.json()).toEqual({ ...mockResult, orphansCount: 0 })
-    expect(app.admin.getClients).toHaveBeenCalledWith(adminUser, 1, PAGE_LIMIT, '', false, 'id')
-    expect(app.admin.getOrphansCount).toHaveBeenCalledWith(adminUser, '')
+    expect(app.admin.getClients).toHaveBeenCalledWith(adminUser, 1, PAGE_LIMIT, '', false, 'id', 0, 10)
+    expect(app.admin.getOrphansCount).toHaveBeenCalledWith(adminUser, '', 0, 10)
   })
 })

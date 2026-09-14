@@ -1,9 +1,12 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import classNames from 'classnames'
 import { UserRole } from '@/generated/prisma/enums'
+import { MIN_LEVEL, MAX_LEVEL } from '@/lib/constants'
 import styles from './index.module.css'
 import InfoIcon from '@/assets/icons/InfoIcon.svg?react'
+import FilterIcon from '@/assets/icons/FilterIcon.svg?react'
 import ClientModal from './ClientModal'
+import FilterModal from './FilterModal'
 import { ClientsProvider, useClientsContext } from './ClientsContext'
 import { userName } from '@/lib/user'
 import Sorter from '../Sorter'
@@ -31,8 +34,12 @@ const ClientsTableInner = () => {
     setOrphansOnly,
     sortBy,
     setSortBy,
+    fromLevel,
+    toLevel,
   } = useClientsContext()
   const debounceRef = useRef(null)
+  const [levelFilterOpen, setLevelFilterOpen] = useState(false)
+  const activeFilter = fromLevel !== MIN_LEVEL || toLevel !== MAX_LEVEL
 
   const handleSearchChange = (e) => {
     const value = e.target.value
@@ -106,11 +113,18 @@ const ClientsTableInner = () => {
         >
           Открепленные ({orphansCount})
         </button>
+        <button
+          className={classNames(styles.filterButton, { [styles.filterButtonActive]: activeFilter })}
+          onClick={() => setLevelFilterOpen(true)}
+          title="Фильтрация"
+        >
+          <FilterIcon className={styles.filterIcon} />
+        </button>
         <Sorter sortBy={sortBy} onSortChange={handleSortChange} options={SORT_OPTIONS} />
         <input
           type="text"
           className={styles.searchInput}
-          placeholder="Поиск (имя, почта)"
+          placeholder="Поиск"
           value={query}
           onChange={handleSearchChange}
         />
@@ -157,6 +171,7 @@ const ClientsTableInner = () => {
         </div>
       )}
 
+      {levelFilterOpen && <FilterModal onClose={() => setLevelFilterOpen(false)} />}
       {selectedUser && <ClientModal onClose={() => setSelectedUser(null)} />}
     </div>
   )

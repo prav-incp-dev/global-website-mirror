@@ -211,4 +211,109 @@ describe('getOrphansCount', () => {
 
     expect(count).toBe(1)
   })
+
+  it('filters orphans count by fromLevel', async () => {
+    const app = await createApp()
+    const company = await createTestCompany(app)
+    const adminUser = { company: { id: company.id } }
+
+    await createTestUser(app, company.id, {
+      email: 'level-orphan-3@test.com',
+      firstName: 'LowLevel',
+      lastName: 'Orphan',
+      parentId: null,
+      orphant: true,
+      level: 3,
+    })
+    await createTestUser(app, company.id, {
+      email: 'level-orphan-7@test.com',
+      firstName: 'MidLevel',
+      lastName: 'Orphan',
+      parentId: null,
+      orphant: true,
+      level: 7,
+    })
+    await createTestUser(app, company.id, {
+      email: 'level-orphan-9@test.com',
+      firstName: 'HighLevel',
+      lastName: 'Orphan',
+      parentId: null,
+      orphant: true,
+      level: 9,
+    })
+
+    const count = await app.admin.getOrphansCount(adminUser, '', 5, 10)
+
+    expect(count).toBe(2)
+  })
+
+  it('filters orphans count by toLevel', async () => {
+    const app = await createApp()
+    const company = await createTestCompany(app)
+    const adminUser = { company: { id: company.id } }
+
+    await createTestUser(app, company.id, {
+      email: 'tolevel-orphan-2@test.com',
+      firstName: 'ToLevel',
+      lastName: 'Low',
+      parentId: null,
+      orphant: true,
+      level: 2,
+    })
+    await createTestUser(app, company.id, {
+      email: 'tolevel-orphan-4@test.com',
+      firstName: 'ToLevel',
+      lastName: 'Mid',
+      parentId: null,
+      orphant: true,
+      level: 4,
+    })
+    await createTestUser(app, company.id, {
+      email: 'tolevel-orphan-8@test.com',
+      firstName: 'ToLevel',
+      lastName: 'High',
+      parentId: null,
+      orphant: true,
+      level: 8,
+    })
+
+    const count = await app.admin.getOrphansCount(adminUser, '', 0, 5)
+
+    expect(count).toBe(2)
+  })
+
+  it('filters orphans count by level range combined with search', async () => {
+    const app = await createApp()
+    const company = await createTestCompany(app)
+    const adminUser = { company: { id: company.id } }
+
+    await createTestUser(app, company.id, {
+      email: 'alpha-low@test.com',
+      firstName: 'Alpha',
+      lastName: 'Low',
+      parentId: null,
+      orphant: true,
+      level: 3,
+    })
+    await createTestUser(app, company.id, {
+      email: 'alpha-high@test.com',
+      firstName: 'Alpha',
+      lastName: 'High',
+      parentId: null,
+      orphant: true,
+      level: 7,
+    })
+    await createTestUser(app, company.id, {
+      email: 'beta@test.com',
+      firstName: 'Beta',
+      lastName: 'User',
+      parentId: null,
+      orphant: true,
+      level: 6,
+    })
+
+    const count = await app.admin.getOrphansCount(adminUser, 'Alpha', 5, 10)
+
+    expect(count).toBe(1)
+  })
 })

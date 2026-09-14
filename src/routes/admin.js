@@ -1,6 +1,6 @@
 import { OrderStatus, PaymentStatus, UserRole } from '../generated/prisma/client'
 import { serializePayment } from '../lib/payment'
-import { PAGE_LIMIT } from '../plugins/admin.js'
+import { PAGE_LIMIT, MIN_LEVEL, MAX_LEVEL } from '../lib/constants.js'
 import { uniqConstraintLabel } from '../lib/prismaHelpers.js'
 
 export default async (fastify) => {
@@ -129,6 +129,8 @@ export default async (fastify) => {
           query: { type: 'string' },
           orphansOnly: { type: 'boolean', default: false },
           sortBy: { type: 'string', enum: ['id', 'name', 'level', 'role', 'score'], default: 'id' },
+          fromLevel: { type: 'integer', minimum: MIN_LEVEL, maximum: MAX_LEVEL, default: MIN_LEVEL },
+          toLevel: { type: 'integer', minimum: MIN_LEVEL, maximum: MAX_LEVEL, default: MAX_LEVEL },
         },
       },
     },
@@ -138,10 +140,18 @@ export default async (fastify) => {
         return reply.code(403).send({ error: 'Доступ запрещен' })
       }
 
-      const { page = 1, limit = PAGE_LIMIT, query = '', orphansOnly = false, sortBy = 'id' } = req.query
+      const {
+        page = 1,
+        limit = PAGE_LIMIT,
+        query = '',
+        orphansOnly = false,
+        sortBy = 'id',
+        fromLevel,
+        toLevel,
+      } = req.query
       const [result, orphansCount] = await Promise.all([
-        fastify.admin.getClients(user, page, limit, query, orphansOnly, sortBy),
-        fastify.admin.getOrphansCount(user, query),
+        fastify.admin.getClients(user, page, limit, query, orphansOnly, sortBy, fromLevel, toLevel),
+        fastify.admin.getOrphansCount(user, query, fromLevel, toLevel),
       ])
       return reply.send({ ...result, orphansCount })
     },
@@ -613,7 +623,7 @@ export default async (fastify) => {
         required: ['userId', 'level', 'levelConfirmed'],
         properties: {
           userId: { type: 'integer', minimum: 1 },
-          level: { type: 'integer', minimum: 1, maximum: 10 },
+          level: { type: 'integer', minimum: MIN_LEVEL, maximum: MAX_LEVEL },
           levelConfirmed: { type: 'boolean' },
         },
       },

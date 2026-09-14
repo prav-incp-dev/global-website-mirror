@@ -66,6 +66,39 @@
   color: #d4af37;
 }
 
+.filterButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  background: transparent;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
+  cursor: pointer;
+  color: #e0e0e0;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.filterButton:hover {
+  border-color: rgba(212, 175, 55, 0.5);
+  background: rgba(212, 175, 55, 0.05);
+}
+
+.filterButtonActive {
+  background: rgba(212, 175, 55, 0.12);
+  border-color: #d4af37;
+  color: #d4af37;
+}
+
+.filterIcon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  color: currentColor;
+}
+
 .tableWrapper {
   overflow-x: auto;
   overflow-y: auto;
