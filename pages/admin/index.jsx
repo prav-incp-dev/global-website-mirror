@@ -94,7 +94,12 @@ const Admin = () => {
       <div className={styles.header}>
         <h1 className={styles.headerTitle}>Панель администратора</h1>
         <div className={styles.headerActions}>
-          <button className={styles.gearButton} aria-label="Настройки" title="Настройки" onClick={() => navigate('/admin/settings')}>
+          <button
+            className={styles.gearButton}
+            aria-label="Настройки"
+            title="Настройки"
+            onClick={() => navigate('/admin/settings')}
+          >
             <GearIcon />
           </button>
           <button className={styles.logoutButton} onClick={handleLogout}>

@@ -44,7 +44,7 @@ describe('getSetting', () => {
       companyId: 1,
       general: { staleDays: 30, orphantDays: 40, refundFee: 5 },
       levels: {
-        1: { percent: 20, plan: 3, confirm: 0 },
+        1: { percent: 20, personal: 3, general: 4, confirm: 0 },
       },
       prices: {
         0: 100,

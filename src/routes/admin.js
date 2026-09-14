@@ -1,6 +1,7 @@
 import { OrderStatus, PaymentStatus, UserRole } from '../generated/prisma/client'
 import { serializePayment } from '../lib/payment'
 import { PAGE_LIMIT } from '../plugins/admin.js'
+import { uniqConstraintLabel } from '../lib/prismaHelpers.js'
 
 export default async (fastify) => {
   fastify.put('/api/admin/profile', {
@@ -58,6 +59,18 @@ export default async (fastify) => {
               { type: 'string', maxLength: 0 },
             ],
           },
+          serviceWallet: {
+            anyOf: [
+              { type: 'string', format: 'wallet' },
+              { type: 'string', maxLength: 0 },
+            ],
+          },
+          cumulativeWallet: {
+            anyOf: [
+              { type: 'string', format: 'wallet' },
+              { type: 'string', maxLength: 0 },
+            ],
+          },
         },
       },
     },
@@ -67,7 +80,7 @@ export default async (fastify) => {
         return reply.code(403).send({ error: 'Доступ запрещен' })
       }
 
-      const { name, wallet } = req.body
+      const { name, wallet, serviceWallet, cumulativeWallet } = req.body
 
       try {
         const company = await fastify.prisma.company.update({
@@ -75,6 +88,8 @@ export default async (fastify) => {
           data: {
             name,
             wallet: wallet || null,
+            serviceWallet: serviceWallet || null,
+            cumulativeWallet: cumulativeWallet || null,
           },
         })
 
@@ -84,11 +99,20 @@ export default async (fastify) => {
             id: company.id,
             name: company.name,
             wallet: company.wallet,
+            serviceWallet: company.serviceWallet,
+            cumulativeWallet: company.cumulativeWallet,
           },
         })
       } catch (err) {
         if (err.code === 'P2002') {
-          return reply.code(409).send({ error: 'Компания с таким названием уже существует' })
+          const uniqFields = {
+            name: 'Такое имя компании',
+            wallet: 'Такой распределительный счет',
+            serviceWallet: 'Такой счет на обслуживание',
+            cumulativeWallet: 'Такой накопительный счет',
+          }
+
+          return reply.code(409).send({ error: `${uniqConstraintLabel(err.message, uniqFields)} уже есть в системе` })
         }
         return reply.code(500).send({ error: 'Ошибка обновления компании' })
       }
@@ -451,7 +475,7 @@ export default async (fastify) => {
       try {
         const targetUser = await fastify.prisma.user.findUnique({
           where: { id: userId },
-          select: { id: true, companyId: true, role: true },
+          select: { id: true, companyId: true, role: true, level: true },
         })
 
         if (!targetUser) {
@@ -475,6 +499,16 @@ export default async (fastify) => {
             levelConfirmed: true,
           },
         })
+
+        if (targetUser.level !== level) {
+          await fastify.prisma.levelHistory.create({
+            data: {
+              oldLevel: targetUser.level,
+              newLevel: level,
+              userId,
+            },
+          })
+        }
 
         return reply.send({ success: true, user: updatedUser })
       } catch {

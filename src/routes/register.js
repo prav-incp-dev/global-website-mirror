@@ -1,4 +1,5 @@
 import { sendRegistrationConfirmation } from '../services/emailService.js'
+import { uniqConstraintLabel } from '../lib/prismaHelpers.js'
 
 export default async (fastify) => {
   fastify.post('/api/register', {
@@ -44,12 +45,7 @@ export default async (fastify) => {
             code: 'Приглашенный',
           }
 
-          const errorMessage = String(err.message || '')
-          const fieldMatch = errorMessage.match(/\(`([^`]+)`\)/)
-          const rawField = fieldMatch ? fieldMatch[1] : null
-          const fieldLabel = (rawField && uniqFields[rawField]) || rawField || 'Поле'
-
-          return reply.code(409).send({ error: `${fieldLabel} уже есть в системе` })
+          return reply.code(409).send({ error: `${uniqConstraintLabel(err.message, uniqFields)} уже есть в системе` })
         }
 
         return reply.code(500).send({ error: err.message || 'Ошибка регистрации' })

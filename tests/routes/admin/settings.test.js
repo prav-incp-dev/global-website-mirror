@@ -129,8 +129,8 @@ describe('PUT /api/admin/settings', () => {
     const upsertSpy = vi.spyOn(app.prisma.setting, 'upsert').mockResolvedValue(ADMIN_SETTING_FIXTURE)
 
     const levelsData = {
-      1: { percent: 20, plan: 3, confirm: 0 },
-      2: { percent: 30, plan: 10, confirm: 2 },
+      1: { percent: 20, personal: 3, general: 4, confirm: 0 },
+      2: { percent: 30, personal: 10, general: 10, confirm: 2 },
     }
 
     const response = await app.inject({

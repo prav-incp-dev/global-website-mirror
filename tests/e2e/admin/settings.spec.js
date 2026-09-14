@@ -22,10 +22,7 @@ test.describe('admin manages company settings', () => {
     // save, so a visibility check alone could match a stale flash from the
     // previous save before the current request finishes.
     const responsePromise = page.waitForResponse(
-      (res) =>
-        res.url().includes('/api/admin/settings') &&
-        res.request().method() === 'PUT' &&
-        res.status() === 200,
+      (res) => res.url().includes('/api/admin/settings') && res.request().method() === 'PUT' && res.status() === 200,
     )
     await page.getByRole('button', { name: 'Сохранить' }).click()
     await responsePromise
@@ -45,7 +42,7 @@ test.describe('admin manages company settings', () => {
     // Levels tab — change level 1 percent and level 2 plan
     await page.getByRole('button', { name: 'Настройки уровней' }).click()
     await page.getByRole('spinbutton').nth(0).fill('25')
-    await page.getByRole('spinbutton').nth(4).fill('12')
+    await page.getByRole('spinbutton').nth(5).fill('12')
     await saveSettings(page)
 
     // Prices tab — change 0-units and 1-unit costs
@@ -58,7 +55,7 @@ test.describe('admin manages company settings', () => {
     const setting = await getPrisma().setting.findUnique({ where: { companyId: company.id } })
     expect(setting.general).toEqual({ staleDays: 45, orphantDays: 50, refundFee: 7 })
     expect(setting.levels[1].percent).toBe(25)
-    expect(setting.levels[2].plan).toBe(12)
+    expect(setting.levels[2].personal).toBe(12)
     expect(setting.prices[0]).toBe(150)
     expect(setting.prices[1]).toBe(1300)
   })

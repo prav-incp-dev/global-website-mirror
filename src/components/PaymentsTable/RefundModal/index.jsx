@@ -7,21 +7,26 @@ import Modal from '../../Modal'
 import styles from './index.module.css'
 
 const RefundModal = ({ onClose }) => {
-  const { selectedPayment, refundFee, companyWallet, updateSelectedPayment, csrfToken, fetchPayments } = usePaymentsContext()
+  const { selectedPayment, refundFee, companyWallet, updateSelectedPayment, csrfToken, fetchPayments } =
+    usePaymentsContext()
   const [isPaying, setIsPaying] = useState(false)
   const [payError, setPayError] = useState('')
   const [loaderText, setLoaderText] = useState('')
-  
+
   if (!selectedPayment) return null
-  
+
   const refundAmount = selectedPayment.amount * (1 - refundFee / 100)
   const formattedRefundAmount = `$${refundAmount.toFixed(2)}`
-  
+
   const paymentErrorMessage = (txHash) => {
-    return 'Произошла ошибка, но платеж был создан в сети. Хэш платежа:\n\n' + txHash + '.\n\n' +
+    return (
+      'Произошла ошибка, но платеж был создан в сети. Хэш платежа:\n\n' +
+      txHash +
+      '.\n\n' +
       'Проверьте статус платежа позже и, если он завершен успешно,\n' +
       "отмените его через кнопку 'Зачесть возврат.'\n" +
-      "Иначе, сделайте еще одну попытку."
+      'Иначе сделайте еще одну попытку.'
+    )
   }
 
   const walletError = (account) => {

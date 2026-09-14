@@ -140,7 +140,13 @@ const Index = () => {
             <UserProfile profile={profileData} csrfToken={csrfToken} onUpdate={handleUpdateProfile} />
           )}
           {activeTab === 'payments' && (
-            <Payments profile={profileData} initialPayments={payments} csrfToken={csrfToken} refundFee={refundFee} prices={prices} />
+            <Payments
+              profile={profileData}
+              initialPayments={payments}
+              csrfToken={csrfToken}
+              refundFee={refundFee}
+              prices={prices}
+            />
           )}
           {activeTab === 'stats' && <StatsDashboard profile={profileData} />}
           {activeTab === 'structure' && <Structure csrfToken={csrfToken} />}

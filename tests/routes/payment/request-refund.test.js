@@ -28,7 +28,7 @@ describe('POST /api/payments/:id/request-refund', () => {
     expect(response.json()).toEqual({ error: 'Доступ запрещен' })
   })
 
-  it('returns 409 when uid is already assigned', async () => {
+  it('returns 409 when payment is finalized', async () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
     vi.spyOn(app.prisma.payment, 'findUnique').mockResolvedValue({
@@ -37,6 +37,7 @@ describe('POST /api/payments/:id/request-refund', () => {
       userId: candidateUser.id,
       status: PaymentStatus.Completed,
       uid: 'ON-1234-01',
+      finalized: true,
       createdAt: new Date(),
       order: { id: 7, quantity: 1 },
     })
@@ -63,6 +64,7 @@ describe('POST /api/payments/:id/request-refund', () => {
       orderId: 7,
       userId: candidateUser.id,
       uid: null,
+      finalized: false,
       amount: 1200,
       status: PaymentStatus.Completed,
       txHash: TX_HASH,

@@ -92,7 +92,7 @@ describe('PUT /api/admin/company', () => {
       company: { id: 1 },
     }
 
-    const mockError = new Error('Unique constraint failed')
+    const mockError = new Error('Unique constraint failed on the fields: (`name`)')
     mockError.code = 'P2002'
 
     const app = await createApp()
@@ -106,7 +106,108 @@ describe('PUT /api/admin/company', () => {
     })
 
     expect(response.statusCode).toBe(409)
-    expect(response.json()).toEqual({ error: 'Компания с таким названием уже существует' })
+    expect(response.json()).toEqual({ error: 'Такое имя компании уже есть в системе' })
+  })
+
+  it('returns 409 when wallet is already taken', async () => {
+    const adminUser = {
+      id: 1,
+      email: 'admin@example.com',
+      role: 'Admin',
+      company: { id: 1 },
+    }
+
+    const mockError = new Error('Unique constraint failed on the fields: (`wallet`)')
+    mockError.code = 'P2002'
+
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+    vi.spyOn(app.prisma.company, 'update').mockRejectedValue(mockError)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/company',
+      payload: { name: 'Test Company', wallet: '0x1234567890abcdef1234567890abcdef12345678' },
+    })
+
+    expect(response.statusCode).toBe(409)
+    expect(response.json()).toEqual({ error: 'Такой распределительный счет уже есть в системе' })
+  })
+
+  it('returns 409 when serviceWallet is already taken', async () => {
+    const adminUser = {
+      id: 1,
+      email: 'admin@example.com',
+      role: 'Admin',
+      company: { id: 1 },
+    }
+
+    const mockError = new Error('Unique constraint failed on the fields: (`serviceWallet`)')
+    mockError.code = 'P2002'
+
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+    vi.spyOn(app.prisma.company, 'update').mockRejectedValue(mockError)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/company',
+      payload: { name: 'Test Company', serviceWallet: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' },
+    })
+
+    expect(response.statusCode).toBe(409)
+    expect(response.json()).toEqual({ error: 'Такой счет на обслуживание уже есть в системе' })
+  })
+
+  it('returns 409 when serviceWallet is already taken with real Prisma quoted message', async () => {
+    const adminUser = {
+      id: 1,
+      email: 'admin@example.com',
+      role: 'Admin',
+      company: { id: 1 },
+    }
+
+    // Prisma 7 quotes camelCase field names in P2002 messages: (`"serviceWallet"`)
+    const mockError = new Error('Unique constraint failed on the fields: (`"serviceWallet"`)')
+    mockError.code = 'P2002'
+
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+    vi.spyOn(app.prisma.company, 'update').mockRejectedValue(mockError)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/company',
+      payload: { name: 'Test Company', serviceWallet: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' },
+    })
+
+    expect(response.statusCode).toBe(409)
+    expect(response.json()).toEqual({ error: 'Такой счет на обслуживание уже есть в системе' })
+  })
+
+  it('returns 409 when cumulativeWallet is already taken', async () => {
+    const adminUser = {
+      id: 1,
+      email: 'admin@example.com',
+      role: 'Admin',
+      company: { id: 1 },
+    }
+
+    const mockError = new Error('Unique constraint failed on the fields: (`cumulativeWallet`)')
+    mockError.code = 'P2002'
+
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+    vi.spyOn(app.prisma.company, 'update').mockRejectedValue(mockError)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/company',
+      payload: { name: 'Test Company', cumulativeWallet: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' },
+    })
+
+    expect(response.statusCode).toBe(409)
+    expect(response.json()).toEqual({ error: 'Такой накопительный счет уже есть в системе' })
   })
 
   it('returns 500 on unexpected error', async () => {
@@ -143,6 +244,8 @@ describe('PUT /api/admin/company', () => {
       id: 1,
       name: 'Updated Company',
       wallet: '0x1234567890abcdef1234567890abcdef12345678',
+      serviceWallet: null,
+      cumulativeWallet: null,
     }
 
     const app = await createApp()
@@ -165,6 +268,8 @@ describe('PUT /api/admin/company', () => {
         id: 1,
         name: 'Updated Company',
         wallet: '0x1234567890abcdef1234567890abcdef12345678',
+        serviceWallet: null,
+        cumulativeWallet: null,
       },
     })
     expect(app.prisma.company.update).toHaveBeenCalledWith({
@@ -172,6 +277,110 @@ describe('PUT /api/admin/company', () => {
       data: {
         name: 'Updated Company',
         wallet: '0x1234567890abcdef1234567890abcdef12345678',
+        serviceWallet: null,
+        cumulativeWallet: null,
+      },
+    })
+  })
+
+  it('returns 200 and updates company with serviceWallet', async () => {
+    const adminUser = {
+      id: 1,
+      email: 'admin@example.com',
+      role: 'Admin',
+      company: { id: 1 },
+    }
+
+    const updatedCompany = {
+      id: 1,
+      name: 'Test Company',
+      wallet: null,
+      serviceWallet: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      cumulativeWallet: null,
+    }
+
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+    vi.spyOn(app.prisma.company, 'update').mockResolvedValue(updatedCompany)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/company',
+      payload: {
+        name: 'Test Company',
+        serviceWallet: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      },
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual({
+      success: true,
+      company: {
+        id: 1,
+        name: 'Test Company',
+        wallet: null,
+        serviceWallet: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        cumulativeWallet: null,
+      },
+    })
+    expect(app.prisma.company.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: {
+        name: 'Test Company',
+        wallet: null,
+        serviceWallet: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        cumulativeWallet: null,
+      },
+    })
+  })
+
+  it('returns 200 and updates company with cumulativeWallet', async () => {
+    const adminUser = {
+      id: 1,
+      email: 'admin@example.com',
+      role: 'Admin',
+      company: { id: 1 },
+    }
+
+    const updatedCompany = {
+      id: 1,
+      name: 'Test Company',
+      wallet: null,
+      serviceWallet: null,
+      cumulativeWallet: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+    }
+
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+    vi.spyOn(app.prisma.company, 'update').mockResolvedValue(updatedCompany)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/company',
+      payload: {
+        name: 'Test Company',
+        cumulativeWallet: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+      },
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual({
+      success: true,
+      company: {
+        id: 1,
+        name: 'Test Company',
+        wallet: null,
+        serviceWallet: null,
+        cumulativeWallet: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+      },
+    })
+    expect(app.prisma.company.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: {
+        name: 'Test Company',
+        wallet: null,
+        serviceWallet: null,
+        cumulativeWallet: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       },
     })
   })
@@ -188,6 +397,8 @@ describe('PUT /api/admin/company', () => {
       id: 1,
       name: 'Test Company',
       wallet: null,
+      serviceWallet: null,
+      cumulativeWallet: null,
     }
 
     const app = await createApp()
@@ -210,6 +421,8 @@ describe('PUT /api/admin/company', () => {
         id: 1,
         name: 'Test Company',
         wallet: null,
+        serviceWallet: null,
+        cumulativeWallet: null,
       },
     })
     expect(app.prisma.company.update).toHaveBeenCalledWith({
@@ -217,6 +430,8 @@ describe('PUT /api/admin/company', () => {
       data: {
         name: 'Test Company',
         wallet: null,
+        serviceWallet: null,
+        cumulativeWallet: null,
       },
     })
   })

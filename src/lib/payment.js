@@ -75,6 +75,7 @@ const serializePayment = (payment) => {
     updatedAt: payment.updatedAt,
     refundRequestedAt: payment.refundRequestedAt,
     refundedAt: payment.refundedAt,
+    finalized: payment.finalized,
 
     // Decorated fields
     quantity: payment.order?.quantity ?? null,
