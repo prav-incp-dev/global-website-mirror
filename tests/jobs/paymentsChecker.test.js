@@ -45,7 +45,11 @@ describe('checkPayments', () => {
     })
   }
 
-  const createPayment = async (app, user, { status, txHash, uid = null, createdAt = new Date(), quantity = 1 } = {}) => {
+  const createPayment = async (
+    app,
+    user,
+    { status, txHash, uid = null, createdAt = new Date(), quantity = 1 } = {},
+  ) => {
     // txHash is @unique — generate a unique one unless the caller explicitly
     // passes null (payment without txHash) or a specific value.
     const resolvedTxHash = txHash === undefined ? `0x${crypto.randomBytes(32).toString('hex')}` : txHash

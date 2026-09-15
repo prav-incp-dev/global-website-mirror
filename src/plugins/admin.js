@@ -244,5 +244,73 @@ export default fp(async (fastify) => {
         totalPages: Math.ceil(total / limit),
       }
     },
+
+    getAncestors: async (user) => {
+      const ancestors = await fastify.prisma.$queryRaw`
+        WITH RECURSIVE user_hierarchy AS (
+          SELECT *
+          FROM "User"
+          WHERE "id" = ${user.id}
+
+          UNION ALL
+
+          SELECT u.*
+          FROM "User" u
+          INNER JOIN user_hierarchy uh ON u."id" = uh."parentId"
+        )
+        SELECT *
+        FROM user_hierarchy
+        WHERE "id" != ${user.id}
+      `
+
+      return ancestors
+    },
+
+    distributePayment: async (paymentId) => {
+      const payment = await fastify.prisma.payment.findUnique({
+        where: { id: paymentId },
+        include: { user: true, order: true, company: true },
+      })
+      if (!payment) throw new Error('Payment not found')
+
+      const { user, company, order } = payment
+      if (!company.serviceWallet) throw new Error('Company serviceWallet is not set')
+      if (!company.cumulativeWallet) throw new Error('Company cumulativeWallet is not set')
+
+      const setting = await fastify.prisma.setting.findUnique({
+        where: { companyId: company.id },
+      })
+
+      const amount = Number(payment.amount)
+      let distributedAmount = 0
+
+      const result = {}
+      const addToResult = (wallet, value) => {
+        if (!wallet) return 0
+        const rounded = Number(value.toFixed(2))
+        result[wallet] = rounded
+        return rounded
+      }
+
+      distributedAmount += addToResult(company.serviceWallet, amount / 100)
+      const ancestors = await fastify.admin.getAncestors(user)
+
+      let prevPercent = 0
+      let currentUser = user
+      while (currentUser.parentId && order.quantity > 0) {
+        const parent = ancestors.find(user => user.id == currentUser.parentId)
+        const levelPercent = Number(setting?.levels?.[parent.level]?.percent) ?? 0
+        const percent = levelPercent - prevPercent
+        if (percent > 0) {
+          distributedAmount += addToResult(parent.wallet, (amount * percent) / 100)
+        }
+        prevPercent = levelPercent
+        currentUser = parent
+      }
+
+      addToResult(company.cumulativeWallet, amount - distributedAmount)
+
+      return result
+    },
   })
 })
