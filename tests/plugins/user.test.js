@@ -16,8 +16,8 @@ vi.mock('../../src/lib/chain.js', () => {
 })
 
 beforeAll(() => {
-  vi.stubEnv('VITE_BSC_TESTNET_USDT_ADDRESS', '0x0000000000000000000000000000000000000001')
-  vi.stubEnv('VITE_BSC_TESTNET_RPC_URL', 'https://mock-rpc.example.com')
+  vi.stubEnv('VITE_BSC_USDT_ADDRESS', '0x0000000000000000000000000000000000000001')
+  vi.stubEnv('VITE_BSC_RPC_URL', 'https://mock-rpc.example.com')
 })
 
 describe('user plugin', () => {
