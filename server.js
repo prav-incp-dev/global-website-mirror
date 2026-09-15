@@ -48,6 +48,6 @@ await server.register(fastifyCron, {
   ],
 })
 
-await server.listen({ port: process.env.PORT || 3000 })
+await server.listen({ port: process.env.PORT || 3000, host: '0.0.0.0' })
 
 server.cron.startAllJobs()
