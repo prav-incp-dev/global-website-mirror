@@ -167,7 +167,7 @@ describe('POST /api/payments/:id/verify', () => {
   }
 
   it('uses fallback RPC URL when env var is unset', async () => {
-    vi.stubEnv('VITE_BSC_TESTNET_RPC_URL', '')
+    vi.stubEnv('VITE_BSC_RPC_URL', '')
     await setupVerifyMocks()
 
     const now = new Date('2026-07-30T10:00:00.000Z')

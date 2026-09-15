@@ -1,5 +1,5 @@
 import { createPublicClient, createWalletClient, custom, http } from 'viem'
-import { bscTestnet } from 'viem/chains'
+import { bsc, bscTestnet } from 'viem/chains'
 
 const getEnvVar = (key) => {
   if (typeof import.meta !== 'undefined' && import.meta.env) return import.meta.env[key]
@@ -8,10 +8,13 @@ const getEnvVar = (key) => {
   return undefined
 }
 
-export const chainId = bscTestnet.id
+const useTestnet = getEnvVar('VITE_TEST_CHAIN') === 'true'
+const chain = useTestnet ? bscTestnet : bsc
 
-export const usdtAddress = getEnvVar('VITE_BSC_TESTNET_USDT_ADDRESS') || '0x337610d27c682E347C9cD60BD4b3b107C9d34dDd'
-const rpcUrl = getEnvVar('VITE_BSC_TESTNET_RPC_URL') || bscTestnet.rpcUrls.default.http[0]
+export const chainId = chain.id
+
+export const usdtAddress = getEnvVar('VITE_BSC_USDT_ADDRESS') || '0x337610d27c682E347C9cD60BD4b3b107C9d34dDd'
+const rpcUrl = getEnvVar('VITE_BSC_RPC_URL') || chain.rpcUrls.default.http[0]
 
 export const usdtDecimals = 18
 
@@ -53,10 +56,10 @@ export const ensureChain = async (provider) => {
       params: [
         {
           chainId: hexChainId,
-          chainName: bscTestnet.name,
-          nativeCurrency: bscTestnet.nativeCurrency,
+          chainName: chain.name,
+          nativeCurrency: chain.nativeCurrency,
           rpcUrls: [rpcUrl],
-          blockExplorerUrls: [bscTestnet.blockExplorers.default.url],
+          blockExplorerUrls: [chain.blockExplorers.default.url],
         },
       ],
     })
@@ -65,7 +68,7 @@ export const ensureChain = async (provider) => {
 
 export const getWalletClient = (provider) => {
   return createWalletClient({
-    chain: bscTestnet,
+    chain,
     transport: custom(provider),
   })
 }
@@ -74,7 +77,7 @@ export const getPublicClient = () => {
   if (client) return client
 
   client = createPublicClient({
-    chain: bscTestnet,
+    chain,
     transport: http(rpcUrl),
   })
 
