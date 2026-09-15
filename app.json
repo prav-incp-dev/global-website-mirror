@@ -1,7 +1,7 @@
 {
   "scripts": {
     "dokku": {
-      "predeploy": "npx prisma migrate deploy && npx prisma generate"
+      "predeploy": "npx prisma migrate deploy"
     }
   }
 }
