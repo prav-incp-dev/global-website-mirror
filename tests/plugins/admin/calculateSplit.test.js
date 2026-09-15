@@ -8,7 +8,7 @@ beforeAll(() => {
   vi.stubEnv('SESSION_SECRET', SESSION_SECRET)
 })
 
-describe('distributePayment', () => {
+describe('calculateSplit', () => {
   const createTestCompany = async (app, overrides = {}) => {
     return app.prisma.company.create({
       data: {
@@ -57,7 +57,7 @@ describe('distributePayment', () => {
       },
     })
 
-    return app.prisma.payment.create({
+    const payment = await app.prisma.payment.create({
       data: {
         userId,
         companyId,
@@ -70,6 +70,11 @@ describe('distributePayment', () => {
         toWallet: 'test-wallet',
         ...overrides,
       },
+    })
+
+    return app.prisma.payment.findUnique({
+      where: { id: payment.id },
+      include: { user: true, order: true, company: true },
     })
   }
 
@@ -88,7 +93,7 @@ describe('distributePayment', () => {
 
     const payment = await createTestPayment(app, mary.id, company.id)
 
-    const result = await app.admin.distributePayment(payment.id)
+    const result = await app.admin.calculateSplit(payment)
 
     expect(result).toEqual({
       '0xServiceWallet': 12,
@@ -107,7 +112,7 @@ describe('distributePayment', () => {
     const user = await createTestUser(app, company.id)
     const payment = await createTestPayment(app, user.id, company.id)
 
-    const result = await app.admin.distributePayment(payment.id)
+    const result = await app.admin.calculateSplit(payment)
 
     expect(result).toEqual({
       '0xServiceWallet': 12,
@@ -128,7 +133,7 @@ describe('distributePayment', () => {
     const mary = await createTestUser(app, company.id, { level: 1, parentId: john.id })
     const payment = await createTestPayment(app, mary.id, company.id)
 
-    const result = await app.admin.distributePayment(payment.id)
+    const result = await app.admin.calculateSplit(payment)
 
     // John (30%) has no wallet, Bob keeps 58 - 30 = 28%
     expect(result).toEqual({
@@ -151,7 +156,7 @@ describe('distributePayment', () => {
     const mary = await createTestUser(app, company.id, { level: 1, parentId: john.id })
     const payment = await createTestPayment(app, mary.id, company.id)
 
-    const result = await app.admin.distributePayment(payment.id)
+    const result = await app.admin.calculateSplit(payment)
 
     // Bob would get 20 - 30 = -10% so nothing goes to him
     expect(result).toEqual({
@@ -161,28 +166,33 @@ describe('distributePayment', () => {
     })
   })
 
-  it('throws when serviceWallet is not set', async () => {
+  it('handles fractional percentages and amounts with two-decimal precision', async () => {
     const app = await createApp()
-    const company = await createTestCompany(app, { serviceWallet: null })
-    const user = await createTestUser(app, company.id)
-    const payment = await createTestPayment(app, user.id, company.id)
+    const company = await createTestCompany(app)
+    await createTestSetting(app, company.id, {
+      1: { percent: 8.25, personal: 3, general: 3, confirm: 0 },
+      2: { percent: 15.5, personal: 3, general: 10, confirm: 2 },
+      5: { percent: 30, personal: 0, general: 750, confirm: 5 },
+    })
 
-    await expect(app.admin.distributePayment(payment.id)).rejects.toThrow('Company serviceWallet is not set')
-  })
+    const charlie = await createTestUser(app, company.id, { level: 5, wallet: '0xCharlieWallet' })
+    const bob = await createTestUser(app, company.id, { level: 2, parentId: charlie.id, wallet: '0xBobWallet' })
+    const alice = await createTestUser(app, company.id, { level: 1, parentId: bob.id, wallet: '0xAliceWallet' })
 
-  it('throws when cumulativeWallet is not set', async () => {
-    const app = await createApp()
-    const company = await createTestCompany(app, { cumulativeWallet: null })
-    const user = await createTestUser(app, company.id)
-    const payment = await createTestPayment(app, user.id, company.id)
+    const payment = await createTestPayment(app, alice.id, company.id, { amount: 100 })
 
-    await expect(app.admin.distributePayment(payment.id)).rejects.toThrow('Company cumulativeWallet is not set')
-  })
+    const result = await app.admin.calculateSplit(payment)
 
-  it('throws when the payment does not exist', async () => {
-    const app = await createApp()
-
-    await expect(app.admin.distributePayment(999999)).rejects.toThrow('Payment not found')
+    // Service: 100 / 100 = 1
+    // Bob (level 2, 15.5%) gets 15.5% - 0% = 15.5 → 15.5
+    // Charlie (level 5, 30%) gets 30% - 15.5% = 14.5% → 14.5
+    // Cumulative: 100 - 1 - 15.5 - 14.5 = 69
+    expect(result).toEqual({
+      '0xServiceWallet': 1,
+      '0xBobWallet': 15.5,
+      '0xCharlieWallet': 14.5,
+      '0xCumulativeWallet': 69,
+    })
   })
 
   it('distributes a zero-quantity order only to company wallets even with ancestors', async () => {
@@ -220,7 +230,12 @@ describe('distributePayment', () => {
       },
     })
 
-    const result = await app.admin.distributePayment(payment.id)
+    const paymentWithIncludes = await app.prisma.payment.findUnique({
+      where: { id: payment.id },
+      include: { user: true, order: true, company: true },
+    })
+
+    const result = await app.admin.calculateSplit(paymentWithIncludes)
 
     expect(result).toEqual({
       '0xServiceWallet': 12,

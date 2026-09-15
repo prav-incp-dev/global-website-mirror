@@ -228,6 +228,57 @@ export default async (fastify) => {
     },
   })
 
+  fastify.get('/api/admin/payments/:id/calculate-split', {
+    schema: {
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'integer', minimum: 1 },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      try {
+        const payment = await fastify.prisma.payment.findUnique({
+          where: { id: req.params.id },
+          include: { user: true, order: true, company: true },
+        })
+
+        if (!payment) {
+          return reply.code(404).send({ error: 'Платеж не найден' })
+        }
+
+        if (payment.companyId !== user.company.id) {
+          return reply.code(403).send({ error: 'Доступ запрещен' })
+        }
+
+        if (payment.status !== PaymentStatus.Completed) {
+          return reply.code(409).send({ error: 'Рассчитать сплит можно только для завершенного платежа' })
+        }
+
+        if (!payment.company.serviceWallet) {
+          return reply.code(400).send({ error: 'Не указан сервисный кошелек компании' })
+        }
+
+        if (!payment.company.cumulativeWallet) {
+          return reply.code(400).send({ error: 'Не указан накопительный кошелек компании' })
+        }
+
+        const split = await fastify.admin.calculateSplit(payment)
+
+        return reply.send({ success: true, split })
+      } catch {
+        return reply.code(500).send({ error: 'Ошибка расчета сплита' })
+      }
+    },
+  })
+
   fastify.post('/api/admin/payments/:id/refund', {
     schema: {
       params: {

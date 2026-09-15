@@ -266,16 +266,8 @@ export default fp(async (fastify) => {
       return ancestors
     },
 
-    distributePayment: async (paymentId) => {
-      const payment = await fastify.prisma.payment.findUnique({
-        where: { id: paymentId },
-        include: { user: true, order: true, company: true },
-      })
-      if (!payment) throw new Error('Payment not found')
-
+    calculateSplit: async (payment) => {
       const { user, company, order } = payment
-      if (!company.serviceWallet) throw new Error('Company serviceWallet is not set')
-      if (!company.cumulativeWallet) throw new Error('Company cumulativeWallet is not set')
 
       const setting = await fastify.prisma.setting.findUnique({
         where: { companyId: company.id },
