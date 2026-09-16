@@ -132,17 +132,19 @@ const SplitPaymentModal = ({ onClose }) => {
       if (getAddress(account) !== getAddress(companyWallet)) throw new Error(walletError(account))
 
       // Derive recipients and amounts from split data
-      const entries = Object.entries(split || {})
-      if (entries.length === 0) throw new Error('Нет адресов для распределения')
+      // Split is an array of { wallet, amount, userId?, score?, groupScore? }
+      const items = split || []
+      if (items.length === 0) throw new Error('Нет адресов для распределения')
 
       const recipients = []
       const parsedAmounts = []
 
-      for (const [address, amount] of entries) {
+      for (const item of items) {
+        if (item.amount === 0) continue
         try {
-          const normalized = getAddress(address)
+          const normalized = getAddress(item.wallet)
           recipients.push(normalized)
-          parsedAmounts.push(parseUnits(String(Number(amount).toFixed(usdtDecimals)), usdtDecimals))
+          parsedAmounts.push(parseUnits(String(Number(item.amount).toFixed(usdtDecimals)), usdtDecimals))
         } catch {
           continue
         }
@@ -203,11 +205,11 @@ const SplitPaymentModal = ({ onClose }) => {
           <>
             <p className={styles.info}>Платеж будет распределен по следующим адресам:</p>
             <div className={styles.splitList}>
-              {Object.entries(split).map(([address, amount]) => (
-                <div key={address} className={styles.splitRow}>
-                  <span className={styles.amount}>${Number(amount).toFixed(2)}</span>
+              {split.map((item) => (
+                <div key={item.wallet} className={styles.splitRow}>
+                  <span className={styles.amount}>${Number(item.amount).toFixed(2)}</span>
                   <span className={styles.separator}>→</span>
-                  <span className={styles.address}>{address}</span>
+                  <span className={styles.address}>{item.wallet}</span>
                 </div>
               ))}
             </div>
