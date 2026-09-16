@@ -14,9 +14,7 @@
 .splitList {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  border: 1px solid rgba(212, 175, 55, 0.12);
-  border-radius: 10px;
+  gap: 8px;
   overflow: hidden;
 }
 
@@ -24,8 +22,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 8px;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.08);
 }
 
 .splitRow:last-child {
