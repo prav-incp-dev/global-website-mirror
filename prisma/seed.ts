@@ -68,7 +68,7 @@ try {
     nick: 'admin',
     firstName: 'Alice',
     lastName: 'Admin',
-    phone: '+10000000001',
+    phone: '+70000000001',
     memberId: 'DOM-00000000-0001',
     // wallet: '0xABCDEF1234567890',
   }
@@ -92,7 +92,7 @@ try {
     nick: '@consultant',
     firstName: 'Test',
     lastName: 'Consultant',
-    phone: '+10000000003',
+    phone: '+70000000003',
     memberId: 'DOM-00000000-0003',
     level: 1,
     wallet: '0x70997970c51812dc3a010c7d01b50e0d17dc79c8',
@@ -114,7 +114,7 @@ try {
     nick: '@candidate',
     firstName: 'Test',
     lastName: 'Candidate',
-    phone: '+10000000002',
+    phone: '+70000000002',
     memberId: 'DOM-00000000-0002',
     wallet: '0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc',
   }

@@ -184,7 +184,7 @@ describe('GET /api/admin/payments/:id/calculate-split', () => {
     })
 
     expect(response.statusCode).toBe(400)
-    expect(response.json()).toEqual({ error: 'Не указан сервисный кошелек компании' })
+    expect(response.json()).toEqual({ error: 'Не задан cчет на обслуживание системы' })
   })
 
   it('returns 400 when company cumulativeWallet is not set', async () => {
@@ -203,7 +203,7 @@ describe('GET /api/admin/payments/:id/calculate-split', () => {
     })
 
     expect(response.statusCode).toBe(400)
-    expect(response.json()).toEqual({ error: 'Не указан накопительный кошелек компании' })
+    expect(response.json()).toEqual({ error: 'Не задан накопительный счет' })
   })
 
   it('returns 200 and calls calculateSplit with the payment', async () => {

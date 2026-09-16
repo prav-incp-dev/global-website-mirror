@@ -6,6 +6,7 @@ import styles from './index.module.css'
 import { PAYMENT_STATUSES } from '@/lib/payment'
 import ChangeUIDModal from '../ChangeUIDModal'
 import RefundModal from '../RefundModal'
+import SplitPaymentModal from '../SplitPaymentModal'
 
 const COMPLETE_CONFIRMATION_TEXT =
   'Вы подтверждаете, что платеж действительно поступил на распределительный счет компании?'
@@ -18,9 +19,11 @@ const PaymentModal = ({ onClose }) => {
   const [error, setError] = useState('')
   const [showChangeUID, setShowChangeUID] = useState(false)
   const [showRefund, setShowRefund] = useState(false)
+  const [showSplit, setShowSplit] = useState(false)
 
   if (!selectedPayment) return null
 
+  const isCompleted = selectedPayment.status === PaymentStatus.Completed
   const isFailed = selectedPayment.status === 'Failed'
   const isToRefund = selectedPayment.status === 'ToRefund'
 
@@ -71,6 +74,7 @@ const PaymentModal = ({ onClose }) => {
     <Modal title="Информация о платеже" onClose={onClose}>
       {showChangeUID && <ChangeUIDModal onClose={() => setShowChangeUID(false)} />}
       {showRefund && <RefundModal onClose={() => setShowRefund(false)} />}
+      {showSplit && <SplitPaymentModal onClose={() => setShowSplit(false)} />}
       <div className={styles.infoTable}>
         <div className={styles.infoRow}>
           <span className={styles.label}>Сумма:</span>
@@ -102,8 +106,13 @@ const PaymentModal = ({ onClose }) => {
         </div>
       </div>
 
-      {(isFailed || isToRefund || selectedPayment.uid) && (
+      {(isCompleted || isFailed || isToRefund || selectedPayment.uid) && (
         <div className={styles.actions}>
+          {isCompleted && selectedPayment.finalized && (
+            <button className={styles.actionButton} onClick={() => setShowSplit(true)}>
+              Распределить платеж
+            </button>
+          )}
           {isFailed && (
             <button
               className={styles.actionButton}

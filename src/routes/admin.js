@@ -263,11 +263,11 @@ export default async (fastify) => {
         }
 
         if (!payment.company.serviceWallet) {
-          return reply.code(400).send({ error: 'Не указан сервисный кошелек компании' })
+          return reply.code(400).send({ error: 'Не задан cчет на обслуживание системы' })
         }
 
         if (!payment.company.cumulativeWallet) {
-          return reply.code(400).send({ error: 'Не указан накопительный кошелек компании' })
+          return reply.code(400).send({ error: 'Не задан накопительный счет' })
         }
 
         const split = await fastify.admin.calculateSplit(payment)
@@ -275,6 +275,135 @@ export default async (fastify) => {
         return reply.send({ success: true, split })
       } catch {
         return reply.code(500).send({ error: 'Ошибка расчета сплита' })
+      }
+    },
+  })
+
+  fastify.post('/api/admin/payments/:id/confirm-split', {
+    schema: {
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'integer', minimum: 1 },
+        },
+      },
+      body: {
+        type: 'object',
+        required: ['splits'],
+        properties: {
+          splits: {
+            type: 'object',
+            additionalProperties: { type: 'number' },
+            minProperties: 1,
+          },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      try {
+        const payment = await fastify.prisma.payment.findUnique({
+          where: { id: req.params.id },
+          include: { company: true },
+        })
+
+        if (!payment) {
+          return reply.code(404).send({ error: 'Платеж не найден' })
+        }
+
+        if (payment.companyId !== user.company.id) {
+          return reply.code(403).send({ error: 'Доступ запрещен' })
+        }
+
+        if (payment.status !== PaymentStatus.Completed) {
+          return reply.code(409).send({ error: 'Подтвердить сплит можно только для завершенного платежа' })
+        }
+
+        if (!payment.company.serviceWallet) {
+          return reply.code(400).send({ error: 'Не задан cчет на обслуживание системы' })
+        }
+
+        if (!payment.company.cumulativeWallet) {
+          return reply.code(400).send({ error: 'Не задан накопительный счет' })
+        }
+
+        if (!payment.company.wallet) {
+          return reply.code(400).send({ error: 'Не задан распределительный счет' })
+        }
+
+        const { splits } = req.body
+        const company = payment.company
+
+        // Iterate through each address in splits and create wages
+        const wagesData = []
+
+        for (const [address, amount] of Object.entries(splits)) {
+          const wageBase = {
+            companyId: company.id,
+            paymentId: payment.id,
+            fromWallet: company.wallet,
+            toWallet: address,
+            amount,
+            score: 0,
+            groupScore: 0,
+          }
+
+          const normalizedAddress = address.toLowerCase()
+          const isServiceWallet = company.serviceWallet?.toLowerCase() === normalizedAddress
+          const isCumulativeWallet = company.cumulativeWallet?.toLowerCase() === normalizedAddress
+
+          if (isServiceWallet || isCumulativeWallet) {
+            // Company wallet — no user
+            wagesData.push(
+              fastify.prisma.wage.create({
+                data: {
+                  ...wageBase,
+                  userId: null,
+                  description: 'Начисление по распределению платежа',
+                },
+              }),
+            )
+          } else {
+            // Find user by wallet in the same company
+            const walletOwner = await fastify.prisma.user.findFirst({
+              where: {
+                wallet: { equals: address, mode: 'insensitive' },
+                companyId: company.id,
+              },
+              select: { id: true },
+            })
+
+            if (!walletOwner) continue
+
+            wagesData.push(
+              fastify.prisma.wage.create({
+                data: {
+                  ...wageBase,
+                  userId: walletOwner.id,
+                  description: 'Начисление по распределению платежа',
+                },
+              }),
+            )
+          }
+        }
+
+        // Create all wages and update payment status in a transaction
+        await fastify.prisma.$transaction([
+          ...wagesData,
+          fastify.prisma.payment.update({
+            where: { id: payment.id },
+            data: { status: PaymentStatus.Splitted },
+          }),
+        ])
+
+        return reply.send({ success: true, wagesCount: wagesData.length })
+      } catch {
+        return reply.code(500).send({ error: 'Ошибка подтверждения сплита' })
       }
     },
   })
