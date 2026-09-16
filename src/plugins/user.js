@@ -63,29 +63,6 @@ export default fp(async (server) => {
       }
     },
 
-    getAncestors: async (user) => {
-      if (user.role === UserRole.Candidate) return []
-
-      const ancestors = await server.prisma.$queryRaw`
-        WITH RECURSIVE user_hierarchy AS (
-          SELECT *
-          FROM "User"
-          WHERE "id" = ${user.id}
-
-          UNION ALL
-
-          SELECT u.*
-          FROM "User" u
-          INNER JOIN user_hierarchy uh ON u."id" = uh."parentId"
-        )
-        SELECT *
-        FROM user_hierarchy
-        WHERE "id" != ${user.id}
-      `
-
-      return ancestors
-    },
-
     getDescendants: async (user) => {
       if (user.role === UserRole.Candidate) return []
 

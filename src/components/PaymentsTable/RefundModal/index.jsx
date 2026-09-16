@@ -55,7 +55,6 @@ const RefundModal = ({ onClose }) => {
       if (!selectedPayment.fromWallet) throw new Error('Не указан кошелек получателя для возврата')
 
       const destination = getAddress(selectedPayment.fromWallet)
-      const companyAddr = getAddress(companyWallet)
       const tokenAddress = getAddress(usdtAddress)
 
       // Ensure correct chain
@@ -67,7 +66,7 @@ const RefundModal = ({ onClose }) => {
       if (!account) throw new Error('Не удалось получить адрес кошелька')
 
       // Verify the connected wallet matches the company wallet
-      if (getAddress(account) !== companyAddr) throw new Error(walletError(account))
+      if (getAddress(account) !== getAddress(companyWallet)) throw new Error(walletError(account))
 
       // Send USDT transfer from company wallet to the payment's fromWallet
       const transferValue = parseUnits(refundAmount.toFixed(2), usdtDecimals)

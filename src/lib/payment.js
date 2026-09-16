@@ -11,6 +11,7 @@ const PAYMENT_STATUSES = {
   Refunded: 'Отменен',
   Canceled: 'Отозван',
   Failed: 'Ошибка',
+  Splitted: 'Распределен',
 }
 
 const transferEventAbi = {

@@ -16,7 +16,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './tests/setup.js',
     fileParallelism: false,
-    exclude: ['**/node_modules/**', '**/dist/**', 'tests/e2e/**', '**/stryker-tmp/**'],
+    exclude: ['**/node_modules/**', '**/dist/**', 'tests/e2e/**', '**/stryker-tmp/**', 'lib/**'],
     coverage: {
       exclude: ['tests/**', 'src/generated/prisma/**'],
       reporter: ['text'],

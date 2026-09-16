@@ -81,7 +81,7 @@ test.describe('candidate payment flow', () => {
   })
 
   test('user sees error and canceled payment is hidden after transaction rejection', async ({ loginAs, page }) => {
-    const MOCK_ACCOUNT = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+    const MOCK_ACCOUNT = '0x1234567890abcdef1234567890abcdef22222222'
 
     // Stub window.ethereum BEFORE loginAs navigates to the page
     await page.addInitScript(
@@ -117,7 +117,7 @@ test.describe('candidate payment flow', () => {
       lastName: 'Test',
       role: 'Candidate',
       companyId: company.id,
-      wallet: '0x1234567890abcdef1234567890abcdef22222222',
+      wallet: MOCK_ACCOUNT,
     })
 
     await loginAs(candidate.id)

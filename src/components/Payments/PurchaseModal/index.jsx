@@ -108,6 +108,13 @@ const PurchaseModal = ({ onClose }) => {
         throw new Error('Не удалось получить адрес кошелька пользователя')
       }
 
+      // Verify the connected wallet matches the user's wallet
+      if (getAddress(account) !== getAddress(profile.wallet)) {
+        throw new Error(
+          `Подключенный кошелек (${account}) не совпадает с вашим кошельком (${profile.wallet}). Подключите свой кошелек.`,
+        )
+      }
+
       // Step 3: Send transaction
       const transferValue = parseUnits(String(price), usdtDecimals)
       txHash = await walletClient.writeContract({

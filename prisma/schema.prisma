@@ -26,6 +26,7 @@ enum PaymentStatus {
   Refunded
   Canceled
   Failed
+  Splitted
 }
 
 enum InteractionStatus {

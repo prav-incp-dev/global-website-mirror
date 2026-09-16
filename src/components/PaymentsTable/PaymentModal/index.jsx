@@ -6,9 +6,13 @@ import styles from './index.module.css'
 import { PAYMENT_STATUSES } from '@/lib/payment'
 import ChangeUIDModal from '../ChangeUIDModal'
 import RefundModal from '../RefundModal'
+import SplitPaymentModal from '../SplitPaymentModal'
 
 const COMPLETE_CONFIRMATION_TEXT =
   'Вы подтверждаете, что платеж действительно поступил на распределительный счет компании?'
+
+const COMPLETE_SPLIT_TEXT =
+  'Вы подтверждаете, что платеж действительно был распределен по корпоративным счетам и структуре?'
 
 const REFUND_CONFIRMATION_TEXT = 'Вы подтверждаете, что деньги были возвращены пользователю?'
 
@@ -18,9 +22,11 @@ const PaymentModal = ({ onClose }) => {
   const [error, setError] = useState('')
   const [showChangeUID, setShowChangeUID] = useState(false)
   const [showRefund, setShowRefund] = useState(false)
+  const [showSplit, setShowSplit] = useState(false)
 
   if (!selectedPayment) return null
 
+  const isCompleted = selectedPayment.status === PaymentStatus.Completed
   const isFailed = selectedPayment.status === 'Failed'
   const isToRefund = selectedPayment.status === 'ToRefund'
 
@@ -67,10 +73,43 @@ const PaymentModal = ({ onClose }) => {
     }
   }
 
+  const handleSplit = async () => {
+    setLoading(true)
+    setError('')
+
+    try {
+      const calcRes = await fetch(`/api/admin/payments/${selectedPayment.id}/calculate-split`, {
+        headers: {
+          'x-csrf-token': csrfToken,
+        },
+      })
+      const calcResult = await calcRes.json()
+      if (!calcRes.ok) throw new Error(calcResult.error)
+
+      const confirmRes = await fetch(`/api/admin/payments/${selectedPayment.id}/confirm-split`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
+        body: JSON.stringify({ splits: calcResult.split }),
+      })
+      const confirmResult = await confirmRes.json()
+      if (!confirmRes.ok) throw new Error(confirmResult.error)
+
+      updateSelectedPayment({ id: selectedPayment.id, status: PaymentStatus.Splitted })
+    } catch (err) {
+      setError(err.message || 'Ошибка зачтения распределения платежа')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <Modal title="Информация о платеже" onClose={onClose}>
       {showChangeUID && <ChangeUIDModal onClose={() => setShowChangeUID(false)} />}
       {showRefund && <RefundModal onClose={() => setShowRefund(false)} />}
+      {showSplit && <SplitPaymentModal onClose={() => setShowSplit(false)} />}
       <div className={styles.infoTable}>
         <div className={styles.infoRow}>
           <span className={styles.label}>Сумма:</span>
@@ -102,8 +141,24 @@ const PaymentModal = ({ onClose }) => {
         </div>
       </div>
 
-      {(isFailed || isToRefund || selectedPayment.uid) && (
+      {(isCompleted || isFailed || isToRefund || selectedPayment.uid) && (
         <div className={styles.actions}>
+          {isCompleted && selectedPayment.finalized && (
+            <button className={styles.actionButton} onClick={() => setShowSplit(true)}>
+              Распределить платеж
+            </button>
+          )}
+          {isCompleted && selectedPayment.finalized && (
+            <button 
+              className={styles.actionButton}
+              onClick={async () => {
+                if (window.confirm(COMPLETE_SPLIT_TEXT)) await handleSplit()
+              }}
+              disabled={loading}
+            >
+              {loading ? 'Зачтение…' : 'Зачесть распределение платежа'}
+            </button>
+          )}
           {isFailed && (
             <button
               className={styles.actionButton}

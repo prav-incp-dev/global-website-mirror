@@ -18,6 +18,9 @@ const rpcUrl = getEnvVar('VITE_BSC_RPC_URL') || chain.rpcUrls.default.http[0]
 
 export const usdtDecimals = 18
 
+export const splitPaymentAddress =
+  getEnvVar('VITE_BSC_SPLIT_ADDRESS') || '0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1'
+
 export const ERC20_ABI = [
   {
     type: 'function',
