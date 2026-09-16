@@ -122,6 +122,11 @@
   border-color: rgba(120, 184, 255, 0.45);
 }
 
+.statusSplitted {
+  color: #d4af37;
+  border-color: rgba(212, 175, 55, 0.45);
+}
+
 .hashValue {
   color: #8ea6c3;
   font-size: 0.75rem;
