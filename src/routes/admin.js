@@ -293,9 +293,19 @@ export default async (fastify) => {
         required: ['splits'],
         properties: {
           splits: {
-            type: 'object',
-            additionalProperties: { type: 'number' },
-            minProperties: 1,
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['wallet', 'amount'],
+              properties: {
+                wallet: { type: 'string' },
+                amount: { type: 'number' },
+                userId: { type: 'integer' },
+                score: { type: 'integer' },
+                groupScore: { type: 'integer' },
+              },
+            },
+            minItems: 1,
           },
         },
       },
@@ -339,58 +349,22 @@ export default async (fastify) => {
         const { splits } = req.body
         const company = payment.company
 
-        // Iterate through each address in splits and create wages
-        const wagesData = []
-
-        for (const [address, amount] of Object.entries(splits)) {
-          const wageBase = {
-            companyId: company.id,
-            paymentId: payment.id,
-            fromWallet: company.wallet,
-            toWallet: address,
-            amount,
-            score: 0,
-            groupScore: 0,
-          }
-
-          const normalizedAddress = address.toLowerCase()
-          const isServiceWallet = company.serviceWallet?.toLowerCase() === normalizedAddress
-          const isCumulativeWallet = company.cumulativeWallet?.toLowerCase() === normalizedAddress
-
-          if (isServiceWallet || isCumulativeWallet) {
-            // Company wallet — no user
-            wagesData.push(
-              fastify.prisma.wage.create({
-                data: {
-                  ...wageBase,
-                  userId: null,
-                  description: 'Начисление по распределению платежа',
-                },
-              }),
-            )
-          } else {
-            // Find user by wallet in the same company
-            const walletOwner = await fastify.prisma.user.findFirst({
-              where: {
-                wallet: { equals: address, mode: 'insensitive' },
-                companyId: company.id,
-              },
-              select: { id: true },
-            })
-
-            if (!walletOwner) continue
-
-            wagesData.push(
-              fastify.prisma.wage.create({
-                data: {
-                  ...wageBase,
-                  userId: walletOwner.id,
-                  description: 'Начисление по распределению платежа',
-                },
-              }),
-            )
-          }
-        }
+        // Create wages from split items (array of { wallet, amount, userId?, score?, groupScore? })
+        const wagesData = splits.map((item) =>
+          fastify.prisma.wage.create({
+            data: {
+              companyId: company.id,
+              paymentId: payment.id,
+              fromWallet: company.wallet,
+              toWallet: item.wallet,
+              amount: item.amount,
+              score: item.score ?? 0,
+              groupScore: item.groupScore ?? 0,
+              userId: item.userId ?? null,
+              description: 'Начисление по распределению платежа',
+            },
+          }),
+        )
 
         // Create all wages and update payment status in a transaction
         await fastify.prisma.$transaction([

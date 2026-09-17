@@ -95,7 +95,7 @@ describe('POST /api/admin/payments/:id/confirm-split', () => {
     const response = await app.inject({
       method: 'POST',
       url: '/api/admin/payments/1/confirm-split',
-      payload: { splits: { '0xAddress': 100 } },
+      payload: { splits: [{ wallet: '0xAddress', amount: 100 }] },
     })
 
     expect(response.statusCode).toBe(403)
@@ -114,7 +114,7 @@ describe('POST /api/admin/payments/:id/confirm-split', () => {
     const response = await app.inject({
       method: 'POST',
       url: '/api/admin/payments/1/confirm-split',
-      payload: { splits: { '0xAddress': 100 } },
+      payload: { splits: [{ wallet: '0xAddress', amount: 100 }] },
     })
 
     expect(response.statusCode).toBe(403)
@@ -128,12 +128,11 @@ describe('POST /api/admin/payments/:id/confirm-split', () => {
     const response = await app.inject({
       method: 'POST',
       url: '/api/admin/payments/abc/confirm-split',
-      payload: { splits: { '0xAddress': 100 } },
+      payload: { splits: [{ wallet: '0xAddress', amount: 100 }] },
     })
 
     expect(response.statusCode).toBe(400)
   })
-
 
   it('returns 400 when splits is missing from body', async () => {
     const app = await createApp()
@@ -148,14 +147,27 @@ describe('POST /api/admin/payments/:id/confirm-split', () => {
     expect(response.statusCode).toBe(400)
   })
 
-  it('returns 400 when splits is empty', async () => {
+  it('returns 400 when splits is empty array', async () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/admin/payments/1/confirm-split',
-      payload: { splits: {} },
+      payload: { splits: [] },
+    })
+
+    expect(response.statusCode).toBe(400)
+  })
+
+  it('returns 400 when split item is missing wallet or amount', async () => {
+    const app = await createApp()
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/admin/payments/1/confirm-split',
+      payload: { splits: [{ amount: 100 }] },
     })
 
     expect(response.statusCode).toBe(400)
@@ -168,7 +180,7 @@ describe('POST /api/admin/payments/:id/confirm-split', () => {
     const response = await app.inject({
       method: 'POST',
       url: '/api/admin/payments/999999/confirm-split',
-      payload: { splits: { '0xAddress': 100 } },
+      payload: { splits: [{ wallet: '0xAddress', amount: 100 }] },
     })
 
     expect(response.statusCode).toBe(404)
@@ -191,7 +203,7 @@ describe('POST /api/admin/payments/:id/confirm-split', () => {
     const response = await app.inject({
       method: 'POST',
       url: `/api/admin/payments/${payment.id}/confirm-split`,
-      payload: { splits: { '0xAddress': 100 } },
+      payload: { splits: [{ wallet: '0xAddress', amount: 100 }] },
     })
 
     expect(response.statusCode).toBe(403)
@@ -214,7 +226,7 @@ describe('POST /api/admin/payments/:id/confirm-split', () => {
       const response = await app.inject({
         method: 'POST',
         url: `/api/admin/payments/${payment.id}/confirm-split`,
-        payload: { splits: { '0xAddress': 100 } },
+        payload: { splits: [{ wallet: '0xAddress', amount: 100 }] },
       })
 
       expect(response.statusCode).toBe(409)
@@ -235,7 +247,7 @@ describe('POST /api/admin/payments/:id/confirm-split', () => {
     const response = await app.inject({
       method: 'POST',
       url: `/api/admin/payments/${payment.id}/confirm-split`,
-      payload: { splits: { '0xAddress': 100 } },
+      payload: { splits: [{ wallet: '0xAddress', amount: 100 }] },
     })
 
     expect(response.statusCode).toBe(400)
@@ -255,13 +267,12 @@ describe('POST /api/admin/payments/:id/confirm-split', () => {
     const response = await app.inject({
       method: 'POST',
       url: `/api/admin/payments/${payment.id}/confirm-split`,
-      payload: { splits: { '0xAddress': 100 } },
+      payload: { splits: [{ wallet: '0xAddress', amount: 100 }] },
     })
 
     expect(response.statusCode).toBe(400)
     expect(response.json()).toEqual({ error: 'Не задан накопительный счет' })
   })
-
 
   it('returns 400 when company wallet is not set', async () => {
     const app = await createApp()
@@ -276,58 +287,14 @@ describe('POST /api/admin/payments/:id/confirm-split', () => {
     const response = await app.inject({
       method: 'POST',
       url: `/api/admin/payments/${payment.id}/confirm-split`,
-      payload: { splits: { '0xAddress': 100 } },
+      payload: { splits: [{ wallet: '0xAddress', amount: 100 }] },
     })
 
     expect(response.statusCode).toBe(400)
     expect(response.json()).toEqual({ error: 'Не задан распределительный счет' })
   })
 
-
-
-  it('skips addresses that do not belong to any company user', async () => {
-    const app = await createApp()
-    const company = await createCompany(app)
-    const user = await createUser(app, company.id)
-    const { payment } = await createCompletedPayment(app, { user, company })
-
-    const adminUser = createAdminUser()
-    adminUser.company.id = company.id
-    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
-
-    const splits = {
-      [company.serviceWallet]: 12,
-      '0xUnknownWallet00000000000000000000000000000': 588,
-      [company.cumulativeWallet]: 600,
-    }
-
-    const res = await app.inject({
-      method: 'POST',
-      url: `/api/admin/payments/${payment.id}/confirm-split`,
-      payload: { splits },
-    })
-
-    expect(res.statusCode).toBe(200)
-    expect(res.json()).toEqual({ success: true, wagesCount: 2 })
-
-    const wages = await app.prisma.wage.findMany({
-      where: { paymentId: payment.id },
-      orderBy: { id: 'asc' },
-    })
-
-    expect(wages).toHaveLength(2)
-    expect(wages[0].toWallet).toBe(company.serviceWallet)
-    expect(wages[0].userId).toBeNull()
-    expect(Number(wages[0].amount)).toBe(12)
-    expect(wages[1].toWallet).toBe(company.cumulativeWallet)
-    expect(wages[1].userId).toBeNull()
-    expect(Number(wages[1].amount)).toBe(600)
-
-    const updated = await app.prisma.payment.findUnique({ where: { id: payment.id } })
-    expect(updated.status).toBe(PaymentStatus.Splitted)
-  })
-
-  it('returns 200 and creates wages for all address types', async () => {
+  it('returns 200 and creates wages with userId, score and groupScore', async () => {
     const app = await createApp()
     const company = await createCompany(app)
     const user = await createUser(app, company.id)
@@ -338,11 +305,12 @@ describe('POST /api/admin/payments/:id/confirm-split', () => {
     adminUser.company.id = company.id
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
 
-    const splits = {
-      [company.serviceWallet]: 12,
-      '0xConsultantWallet123': 588,
-      [company.cumulativeWallet]: 600,
-    }
+    // Send split items in the new array format with userId, score, groupScore
+    const splits = [
+      { wallet: company.serviceWallet, amount: 12 },
+      { wallet: '0xConsultantWallet123', amount: 588, userId: consultant.id, score: 1, groupScore: 0 },
+      { wallet: company.cumulativeWallet, amount: 600 },
+    ]
 
     const res = await app.inject({
       method: 'POST',
@@ -360,64 +328,32 @@ describe('POST /api/admin/payments/:id/confirm-split', () => {
 
     expect(wages).toHaveLength(3)
 
+    // Service wallet — no user, no scores
     expect(wages[0].toWallet).toBe(company.serviceWallet)
     expect(wages[0].fromWallet).toBe(company.wallet)
     expect(wages[0].userId).toBeNull()
     expect(Number(wages[0].amount)).toBe(12)
-    expect(wages[0].companyId).toBe(company.id)
+    expect(wages[0].score).toBe(0)
+    expect(wages[0].groupScore).toBe(0)
     expect(wages[0].description).toBe('Начисление по распределению платежа')
 
+    // Consultant wallet — has user, score=1, groupScore=0
     expect(wages[1].toWallet).toBe('0xConsultantWallet123')
     expect(wages[1].fromWallet).toBe(company.wallet)
     expect(wages[1].userId).toBe(consultant.id)
     expect(Number(wages[1].amount)).toBe(588)
+    expect(wages[1].score).toBe(1)
+    expect(wages[1].groupScore).toBe(0)
     expect(wages[1].description).toBe('Начисление по распределению платежа')
 
+    // Cumulative wallet — no user, no scores
     expect(wages[2].toWallet).toBe(company.cumulativeWallet)
     expect(wages[2].fromWallet).toBe(company.wallet)
     expect(wages[2].userId).toBeNull()
     expect(Number(wages[2].amount)).toBe(600)
+    expect(wages[2].score).toBe(0)
+    expect(wages[2].groupScore).toBe(0)
     expect(wages[2].description).toBe('Начисление по распределению платежа')
-
-    const updated = await app.prisma.payment.findUnique({ where: { id: payment.id } })
-    expect(updated.status).toBe(PaymentStatus.Splitted)
-  })
-
-  it('handles case-insensitive wallet matching with company wallets', async () => {
-    const app = await createApp()
-    const company = await createCompany(app)
-    const user = await createUser(app, company.id)
-    const { payment } = await createCompletedPayment(app, { user, company })
-
-    const adminUser = createAdminUser()
-    adminUser.company.id = company.id
-    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
-
-    const splits = {
-      [company.serviceWallet.toUpperCase()]: 12,
-      [company.cumulativeWallet.toUpperCase()]: 1188,
-    }
-
-    const res = await app.inject({
-      method: 'POST',
-      url: `/api/admin/payments/${payment.id}/confirm-split`,
-      payload: { splits },
-    })
-
-    expect(res.statusCode).toBe(200)
-    expect(res.json()).toEqual({ success: true, wagesCount: 2 })
-
-    const wages = await app.prisma.wage.findMany({
-      where: { paymentId: payment.id },
-    })
-
-    expect(wages).toHaveLength(2)
-    expect(wages[0].fromWallet).toBe(company.wallet)
-    expect(wages[0].userId).toBeNull()
-    expect(wages[0].description).toBe('Начисление по распределению платежа')
-    expect(wages[1].fromWallet).toBe(company.wallet)
-    expect(wages[1].userId).toBeNull()
-    expect(wages[1].description).toBe('Начисление по распределению платежа')
 
     const updated = await app.prisma.payment.findUnique({ where: { id: payment.id } })
     expect(updated.status).toBe(PaymentStatus.Splitted)

@@ -278,32 +278,36 @@ export default fp(async (fastify) => {
       const amount = Number(payment.amount)
       let distributedAmount = 0
 
-      const result = {}
-      const addToResult = (wallet, value) => {
-        if (!wallet) return 0
+      const result = []
+      const splitToCompany = (wallet, value) => {
         const rounded = Number(value.toFixed(2))
-        result[wallet] = rounded
+        result.push({ wallet: wallet, amount: rounded })
         return rounded
       }
 
-      distributedAmount += addToResult(company.serviceWallet, amount / 100)
+      const splitToUser = (user, value, score, groupScore) => {
+        if (!user.wallet) return 0
+        const rounded = Number(value.toFixed(2))
+        result.push({ wallet: user.wallet, amount: rounded, userId: user.id, score: score, groupScore: groupScore })
+        return rounded
+      }
+
+      distributedAmount += splitToCompany(company.serviceWallet, amount / 100)
       const ancestors = await fastify.admin.getAncestors(user)
 
       let prevPercent = 0
       let currentUser = user
       while (currentUser.parentId && order.quantity > 0) {
         const parent = ancestors.find(user => user.id == currentUser.parentId)
+        const owner = parent.id == user.parentId
         const levelPercent = Number(setting?.levels?.[parent.level]?.percent) ?? 0
         const percent = levelPercent - prevPercent
-        if (percent > 0) {
-          distributedAmount += addToResult(parent.wallet, (amount * percent) / 100)
-        }
+        distributedAmount += splitToUser(parent, percent > 0 ? (amount * percent) / 100 : 0, owner ? order.quantity : 0, owner ? 0 : order.quantity)
         prevPercent = levelPercent
         currentUser = parent
       }
 
-      addToResult(company.cumulativeWallet, amount - distributedAmount)
-
+      result.push({ wallet: company.cumulativeWallet, amount: amount - distributedAmount })
       return result
     },
   })
