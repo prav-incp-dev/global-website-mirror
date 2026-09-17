@@ -202,8 +202,8 @@ npm run test:e2e
 | `paymentId`  | Int? (FK → `Payment`)        | Оплата, по которой начислено     |
 | `fromWallet` | String?                      | Кошелёк отправителя              |
 | `toWallet`   | String?                      | Кошелёк получателя               |
-| `score`      | Int (default 0)              | Личные продажи                   |
-| `groupScore` | Int (default 0)              | Групповые продажи                |
+| `score`      | Int (default 0)              | Личные единицы                   |
+| `groupScore` | Int (default 0)              | Групповые единицы                |
 | `amount`     | Decimal(12,2) (default 0.00) | Сумма начисления                 |
 | `createdAt`  | DateTime                     | Дата создания                    |
 | `updatedAt`  | DateTime                     | Дата обновления                  |

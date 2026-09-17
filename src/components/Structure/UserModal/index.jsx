@@ -50,11 +50,11 @@ const UserModal = ({ data, csrfToken, currentUserId, onClose }) => {
             <span className={styles.value}>{data.level}</span>
           </div>,
           <div className={styles.infoRow} key="score">
-            <span className={styles.label}>Личные продажи:</span>
+            <span className={styles.label}>Личные единицы:</span>
             <span className={styles.value}>{data.score}</span>
           </div>,
           <div className={styles.infoRow} key="groupScore">
-            <span className={styles.label}>Групповые продажи:</span>
+            <span className={styles.label}>Групповые единицы:</span>
             <span className={styles.value}>{data.groupScore}</span>
           </div>,
         ]}

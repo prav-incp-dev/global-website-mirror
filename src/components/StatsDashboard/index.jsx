@@ -17,8 +17,8 @@ const StatsDashboard = ({ profile }) => {
           <thead>
             <tr>
               <th>Уровень</th>
-              <th>Личные продажи</th>
-              <th>Групповые продажи</th>
+              <th>Личные единицы</th>
+              <th>Групповые единицы</th>
             </tr>
           </thead>
           <tbody>

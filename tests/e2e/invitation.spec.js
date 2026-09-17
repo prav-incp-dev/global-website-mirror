@@ -52,7 +52,7 @@ test.describe('generate invitation link', () => {
 
     // Verify admin email is visible on profile
     await expect(page).toHaveURL('http://127.0.0.1:3101/admin')
-    await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Админка' })).toBeVisible()
     await expect(page.getByText(admin.email)).toBeVisible()
 
     // Click "Generate invitation" button
@@ -88,7 +88,7 @@ test.describe('generate invitation link', () => {
     await page.getByRole('button', { name: 'Закрыть' }).click()
 
     // Verify modal is closed and we are back on the profile page
-    await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Админка' })).toBeVisible()
     await expect(page.getByText(admin.email)).toBeVisible()
   })
 

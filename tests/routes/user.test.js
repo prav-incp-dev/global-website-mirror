@@ -560,4 +560,157 @@ describe('user routes', () => {
       })
     })
   })
+
+  describe('GET /api/user/wages', () => {
+    it('returns 403 when user is not authenticated', async () => {
+      const app = await createApp()
+      vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/user/wages',
+      })
+
+      expect(response.statusCode).toBe(403)
+      expect(response.json()).toEqual({ error: 'Доступ запрещен' })
+    })
+
+    it('returns 403 for Admin user', async () => {
+      const app = await createApp()
+      vi.spyOn(app.auth, 'getUser').mockResolvedValue({
+        id: 1,
+        role: UserRole.Admin,
+      })
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/user/wages',
+      })
+
+      expect(response.statusCode).toBe(403)
+      expect(response.json()).toEqual({ error: 'Доступ запрещен' })
+    })
+
+    it('returns paginated wages for a consultant user', async () => {
+      const app = await createApp()
+      const consultantUser = {
+        id: 1,
+        role: UserRole.Consultant,
+      }
+      vi.spyOn(app.auth, 'getUser').mockResolvedValue(consultantUser)
+
+      const createdAt = new Date()
+      const mockResult = {
+        wages: [
+          { id: 1, amount: 100, description: 'Test wage', score: 5, groupScore: 10, createdAt },
+        ],
+        total: 1,
+        page: 1,
+        limit: 20,
+        totalPages: 1,
+      }
+      vi.spyOn(app.user, 'getWages').mockResolvedValue(mockResult)
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/user/wages',
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json()).toEqual({
+        ...mockResult,
+        wages: [{ ...mockResult.wages[0], createdAt: createdAt.toISOString() }],
+      })
+      expect(app.user.getWages).toHaveBeenCalledWith(consultantUser, 1, 10, 'id', '')
+    })
+
+    it('passes page and limit query parameters', async () => {
+      const app = await createApp()
+      const consultantUser = {
+        id: 1,
+        role: UserRole.Consultant,
+      }
+      vi.spyOn(app.auth, 'getUser').mockResolvedValue(consultantUser)
+      vi.spyOn(app.user, 'getWages').mockResolvedValue({
+        wages: [],
+        total: 0,
+        page: 2,
+        limit: 5,
+        totalPages: 0,
+      })
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/user/wages?page=2&limit=5',
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(app.user.getWages).toHaveBeenCalledWith(consultantUser, 2, 5, 'id', '')
+    })
+
+    it('passes sortBy query parameter', async () => {
+      const app = await createApp()
+      const consultantUser = {
+        id: 1,
+        role: UserRole.Consultant,
+      }
+      vi.spyOn(app.auth, 'getUser').mockResolvedValue(consultantUser)
+      vi.spyOn(app.user, 'getWages').mockResolvedValue({
+        wages: [],
+        total: 0,
+        page: 1,
+        limit: 20,
+        totalPages: 0,
+      })
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/user/wages?sortBy=amount_asc',
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(app.user.getWages).toHaveBeenCalledWith(consultantUser, 1, 10, 'amount_asc', '')
+    })
+
+    it('passes query (search) parameter', async () => {
+      const app = await createApp()
+      const consultantUser = {
+        id: 1,
+        role: UserRole.Consultant,
+      }
+      vi.spyOn(app.auth, 'getUser').mockResolvedValue(consultantUser)
+      vi.spyOn(app.user, 'getWages').mockResolvedValue({
+        wages: [],
+        total: 0,
+        page: 1,
+        limit: 20,
+        totalPages: 0,
+      })
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/user/wages?query=test',
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(app.user.getWages).toHaveBeenCalledWith(consultantUser, 1, 10, 'id', 'test')
+    })
+
+    it('returns 403 for candidate users', async () => {
+      const app = await createApp()
+      const candidateUser = {
+        id: 2,
+        role: UserRole.Candidate,
+      }
+      vi.spyOn(app.auth, 'getUser').mockResolvedValue(candidateUser)
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/user/wages',
+      })
+
+      expect(response.statusCode).toBe(403)
+      expect(response.json()).toEqual({ error: 'Доступ запрещен' })
+    })
+  })
 })

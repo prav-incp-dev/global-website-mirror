@@ -9,6 +9,10 @@ import ClientsTable from '@/components/ClientsTable'
 import PaymentsTable from '@/components/PaymentsTable'
 import InvitationModal from '@/components/InvitationModal'
 import GearIcon from '@/assets/icons/GearIcon.svg?react'
+import ProfileIcon from '@/assets/icons/ProfileIcon.svg?react'
+import CompanyIcon from '@/assets/icons/CompanyIcon.svg?react'
+import ClientsIcon from '@/assets/icons/ClientsIcon.svg?react'
+import PaymentsIcon from '@/assets/icons/PaymentsIcon.svg?react'
 import styles from './index.module.css'
 
 export const getData = async ({ server, req, reply }) => {
@@ -43,10 +47,10 @@ export const getData = async ({ server, req, reply }) => {
 }
 
 const TABS = [
-  { key: 'admin', label: 'Профиль администратора' },
-  { key: 'company', label: 'Профиль компании' },
-  { key: 'clients', label: 'Клиенты' },
-  { key: 'payments', label: 'Платежи' },
+  { key: 'admin', label: 'Профиль администратора', icon: ProfileIcon },
+  { key: 'company', label: 'Профиль компании', icon: CompanyIcon },
+  { key: 'clients', label: 'Клиенты', icon: ClientsIcon },
+  { key: 'payments', label: 'Платежи', icon: PaymentsIcon },
 ]
 
 const Admin = () => {
@@ -92,7 +96,7 @@ const Admin = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.headerTitle}>Панель администратора</h1>
+        <h1 className={styles.headerTitle}>Админка</h1>
         <div className={styles.headerActions}>
           <button
             className={styles.gearButton}
@@ -116,15 +120,21 @@ const Admin = () => {
       </>
 
       <div className={styles.tabs}>
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            className={classNames(styles.tab, { [styles.tabActive]: activeTab === tab.key })}
-            onClick={() => setActiveTab(tab.key)}
-          >
-            {tab.label}
-          </button>
-        ))}
+        {TABS.map((tab) => {
+          const Icon = tab.icon
+
+          return (
+            <button
+              key={tab.key}
+              className={classNames(styles.tab, { [styles.tabActive]: activeTab === tab.key })}
+              onClick={() => setActiveTab(tab.key)}
+              title={tab.label}
+            >
+              <Icon className={styles.tabIcon} />
+              <span className={styles.tabLabel}>{tab.label}</span>
+            </button>
+          )
+        })}
       </div>
 
       <div className={styles.content}>

@@ -30,7 +30,7 @@ test.describe('update client achievements flow', () => {
     // 1. Login as admin and navigate to clients page
     await loginAs(admin.id)
     await page.goto('/admin')
-    await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Админка' })).toBeVisible()
     await page.getByRole('button', { name: 'Клиенты' }).click()
     await page.waitForLoadState('networkidle')
 
@@ -82,7 +82,7 @@ test.describe('update client achievements flow', () => {
     // 1. Login as admin and navigate to clients page
     await loginAs(admin.id)
     await page.goto('/admin')
-    await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Админка' })).toBeVisible()
     await page.getByRole('button', { name: 'Клиенты' }).click()
     await page.waitForLoadState('networkidle')
 
@@ -93,11 +93,11 @@ test.describe('update client achievements flow', () => {
     await consultantRow.locator('td:last-child').click()
 
     // 3. ClientModal opens — verify default score values displayed
-    await expect(page.getByText('Личные продажи:')).toBeVisible()
-    const scoreRow = page.getByText('Личные продажи:').locator('..')
+    await expect(page.getByText('Личные единицы:')).toBeVisible()
+    const scoreRow = page.getByText('Личные единицы:').locator('..')
     await expect(scoreRow).toContainText('10')
 
-    const groupScoreRow = page.getByText('Групповые продажи:').locator('..')
+    const groupScoreRow = page.getByText('Групповые единицы:').locator('..')
     await expect(groupScoreRow).toContainText('13')
 
     // 4. Click "Изменить единицы" to open UpdateScoresModal
@@ -137,7 +137,7 @@ test.describe('update client achievements flow', () => {
     // 1. Login as admin and navigate to clients page
     await loginAs(admin.id)
     await page.goto('/admin')
-    await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Админка' })).toBeVisible()
     await page.getByRole('button', { name: 'Клиенты' }).click()
     await page.waitForLoadState('networkidle')
 
@@ -150,8 +150,8 @@ test.describe('update client achievements flow', () => {
     // 3. Verify consultant-specific fields are NOT shown for a candidate
     await expect(page.getByText('Уровень:')).not.toBeVisible()
     await expect(page.getByText('Уровень подтвержден:')).not.toBeVisible()
-    await expect(page.getByText('Личные продажи:')).not.toBeVisible()
-    await expect(page.getByText('Групповые продажи:')).not.toBeVisible()
+    await expect(page.getByText('Личные единицы:')).not.toBeVisible()
+    await expect(page.getByText('Групповые единицы:')).not.toBeVisible()
     await expect(page.getByRole('button', { name: 'Изменить единицы' })).not.toBeVisible()
     await expect(page.getByRole('button', { name: 'Изменить уровень' })).not.toBeVisible()
 
