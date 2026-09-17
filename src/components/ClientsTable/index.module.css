@@ -107,7 +107,7 @@
   overflow-x: auto;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  max-height: 400px;
+  max-height: 560px;
   margin-bottom: 16px;
   position: relative;
 }
@@ -241,7 +241,7 @@
   text-align: center;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 560px) {
   .searchInput {
     display: none;
   }

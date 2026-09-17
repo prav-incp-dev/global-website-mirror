@@ -66,7 +66,7 @@
   font-size: 0.875rem;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 560px) {
   .item {
     padding: 14px 14px;
   }

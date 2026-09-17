@@ -105,7 +105,7 @@
   font-weight: 500;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 560px) {
   .pageButton {
     padding: 6px 14px;
     font-size: 0.75rem;
