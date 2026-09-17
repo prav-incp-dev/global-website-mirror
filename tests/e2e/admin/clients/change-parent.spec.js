@@ -38,7 +38,7 @@ test.describe('admin clients page', () => {
 
     // Click info icon on Tom's row, then open UpdateParentModal
     const tomRow = page.locator('table tbody tr').filter({ hasText: 'Tom Begging' })
-    await tomRow.locator('td:last-child').click()
+    await tomRow.locator('td:last-child svg').click()
 
     // Verify parent info
     await expect(page.getByRole('heading', { name: 'Информация о пользователе' })).toBeVisible()
@@ -128,7 +128,7 @@ test.describe('admin clients page', () => {
 
     // 5. Click info icon on Tom's row, then open UpdateParentModal
     const tomRow = page.locator('table tbody tr').filter({ hasText: 'Tom Begging' })
-    await tomRow.locator('td:last-child').click()
+    await tomRow.locator('td:last-child svg').click()
     await expect(page.getByText('Родитель:')).toBeVisible()
     await expect(page.getByText('Родитель:').locator('..')).toContainText('Нет родителя')
 

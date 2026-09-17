@@ -38,7 +38,7 @@ test.describe('update client achievements flow', () => {
     const rows = page.locator('table tbody tr')
     const consultantRow = rows.filter({ hasText: 'Abby Target' })
     await expect(consultantRow).toBeVisible()
-    await consultantRow.locator('td:last-child').click()
+    await consultantRow.locator('td:last-child svg').click()
 
     // 3. ClientModal opens — verify default level values displayed
     await expect(page.getByText('Уровень:')).toBeVisible()
@@ -90,7 +90,7 @@ test.describe('update client achievements flow', () => {
     const rows = page.locator('table tbody tr')
     const consultantRow = rows.filter({ hasText: 'Abby Target' })
     await expect(consultantRow).toBeVisible()
-    await consultantRow.locator('td:last-child').click()
+    await consultantRow.locator('td:last-child svg').click()
 
     // 3. ClientModal opens — verify default score values displayed
     await expect(page.getByText('Личные единицы:')).toBeVisible()
@@ -145,7 +145,7 @@ test.describe('update client achievements flow', () => {
     const rows = page.locator('table tbody tr')
     const candidateRow = rows.filter({ hasText: 'George Black' })
     await expect(candidateRow).toBeVisible()
-    await candidateRow.locator('td:last-child').click()
+    await candidateRow.locator('td:last-child svg').click()
 
     // 3. Verify consultant-specific fields are NOT shown for a candidate
     await expect(page.getByText('Уровень:')).not.toBeVisible()

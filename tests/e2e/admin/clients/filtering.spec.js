@@ -118,7 +118,7 @@ test.describe('admin clients filtering', () => {
     await expect(rows()).toHaveCount(2)
 
     // Search for 'Charlie' — found within range
-    const searchInput = page.locator('input[placeholder="Поиск"]')
+    const searchInput = page.locator('input[placeholder="Поиск"]').first()
     await searchInput.fill('Charlie')
     await page.waitForLoadState('networkidle')
 
