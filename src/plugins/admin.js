@@ -1,8 +1,7 @@
 import fp from 'fastify-plugin'
 import { PaymentStatus } from '../generated/prisma/client'
 import { userName } from '../../src/lib/user'
-
-export const PAGE_LIMIT = 20
+import { PAGE_LIMIT, MIN_LEVEL, MAX_LEVEL } from '../lib/constants.js'
 
 export default fp(async (fastify) => {
   fastify.decorate('admin', {
@@ -22,12 +21,13 @@ export default fp(async (fastify) => {
       })
     },
 
-    getOrphansCount: async (user, query = '') => {
+    getOrphansCount: async (user, query = '', fromLevel = MIN_LEVEL, toLevel = MAX_LEVEL) => {
       return fastify.prisma.user.count({
         where: {
           role: { not: 'Admin' },
           companyId: user.company.id,
           orphant: true,
+          level: { gte: fromLevel, lte: toLevel },
           ...(query
             ? {
                 OR: [
@@ -96,7 +96,16 @@ export default fp(async (fastify) => {
       return { success: true }
     },
 
-    getClients: async (user, page = 1, limit = PAGE_LIMIT, query = '', orphansOnly = false, sortBy = 'id') => {
+    getClients: async (
+      user,
+      page = 1,
+      limit = PAGE_LIMIT,
+      query = '',
+      orphansOnly = false,
+      sortBy = 'id',
+      fromLevel = MIN_LEVEL,
+      toLevel = MAX_LEVEL,
+    ) => {
       const skip = (page - 1) * limit
 
       const orderByMap = {
@@ -108,8 +117,8 @@ export default fp(async (fastify) => {
       }
       const orderBy = orderByMap[sortBy] ?? orderByMap.id
 
-      const baseParams = [user.company.id]
-      const whereParts = [`u."role" <> 'Admin'`, `u."companyId" = $1`]
+      const baseParams = [user.company.id, fromLevel, toLevel]
+      const whereParts = [`u."role" <> 'Admin'`, `u."companyId" = $1`, `u."level" >= $2`, `u."level" <= $3`]
       if (orphansOnly) whereParts.push(`u."orphant" = true`)
       if (query) {
         const likeStart = baseParams.length

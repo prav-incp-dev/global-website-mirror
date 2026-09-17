@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { createApp } from '../../helpers'
+import { MIN_LEVEL, MAX_LEVEL } from '../../../src/lib/constants.js'
 
 const SESSION_SECRET = 'test-secret-key-for-testing-purposes'
 
@@ -501,5 +502,214 @@ describe('getClients', () => {
     expect(result.users[0].id).toBe(user3.id)
     expect(result.users[1].id).toBe(user2.id)
     expect(result.users[2].id).toBe(user1.id)
+  })
+
+  it('filters by fromLevel', async () => {
+    const app = await createApp()
+    const company = await createTestCompany(app)
+    const adminUser = { company: { id: company.id } }
+
+    const level2 = await createTestUser(app, company.id, {
+      email: 'fromLevel-2@test.com',
+      firstName: 'FromLevel',
+      lastName: 'Two',
+      level: 2,
+    })
+    const level4 = await createTestUser(app, company.id, {
+      email: 'fromLevel-4@test.com',
+      firstName: 'FromLevel',
+      lastName: 'Four',
+      level: 4,
+    })
+    const level6 = await createTestUser(app, company.id, {
+      email: 'fromLevel-6@test.com',
+      firstName: 'FromLevel',
+      lastName: 'Six',
+      level: 6,
+    })
+    const level8 = await createTestUser(app, company.id, {
+      email: 'fromLevel-8@test.com',
+      firstName: 'FromLevel',
+      lastName: 'Eight',
+      level: 8,
+    })
+
+    const result = await app.admin.getClients(adminUser, 1, 20, '', false, 'id', 5, MAX_LEVEL)
+
+    expect(result.users).toHaveLength(2)
+    expect(result.users.map((u) => u.id)).toEqual(expect.arrayContaining([level6.id, level8.id]))
+    expect(result.total).toBe(2)
+  })
+
+  it('filters by toLevel', async () => {
+    const app = await createApp()
+    const company = await createTestCompany(app)
+    const adminUser = { company: { id: company.id } }
+
+    const level2 = await createTestUser(app, company.id, {
+      email: 'toLevel-2@test.com',
+      firstName: 'ToLevel',
+      lastName: 'Two',
+      level: 2,
+    })
+    const level4 = await createTestUser(app, company.id, {
+      email: 'toLevel-4@test.com',
+      firstName: 'ToLevel',
+      lastName: 'Four',
+      level: 4,
+    })
+    const level6 = await createTestUser(app, company.id, {
+      email: 'toLevel-6@test.com',
+      firstName: 'ToLevel',
+      lastName: 'Six',
+      level: 6,
+    })
+    const level8 = await createTestUser(app, company.id, {
+      email: 'toLevel-8@test.com',
+      firstName: 'ToLevel',
+      lastName: 'Eight',
+      level: 8,
+    })
+
+    const result = await app.admin.getClients(adminUser, 1, 20, '', false, 'id', MIN_LEVEL, 5)
+
+    expect(result.users).toHaveLength(2)
+    expect(result.users.map((u) => u.id)).toEqual(expect.arrayContaining([level2.id, level4.id]))
+    expect(result.total).toBe(2)
+  })
+
+  it('filters by fromLevel and toLevel range', async () => {
+    const app = await createApp()
+    const company = await createTestCompany(app)
+    const adminUser = { company: { id: company.id } }
+
+    const level1 = await createTestUser(app, company.id, {
+      email: 'range-1@test.com',
+      firstName: 'Range',
+      lastName: 'One',
+      level: 1,
+    })
+    const level3 = await createTestUser(app, company.id, {
+      email: 'range-3@test.com',
+      firstName: 'Range',
+      lastName: 'Three',
+      level: 3,
+    })
+    const level5 = await createTestUser(app, company.id, {
+      email: 'range-5@test.com',
+      firstName: 'Range',
+      lastName: 'Five',
+      level: 5,
+    })
+    const level7 = await createTestUser(app, company.id, {
+      email: 'range-7@test.com',
+      firstName: 'Range',
+      lastName: 'Seven',
+      level: 7,
+    })
+    const level10 = await createTestUser(app, company.id, {
+      email: 'range-10@test.com',
+      firstName: 'Range',
+      lastName: 'Ten',
+      level: 10,
+    })
+
+    const result = await app.admin.getClients(adminUser, 1, 20, '', false, 'id', 3, 7)
+
+    expect(result.users).toHaveLength(3)
+    expect(result.users.map((u) => u.id)).toEqual(expect.arrayContaining([level3.id, level5.id, level7.id]))
+    expect(result.total).toBe(3)
+  })
+
+  it('excludes users outside the level range', async () => {
+    const app = await createApp()
+    const company = await createTestCompany(app)
+    const adminUser = { company: { id: company.id } }
+
+    const level2 = await createTestUser(app, company.id, {
+      email: 'outside-2@test.com',
+      firstName: 'Outside',
+      lastName: 'Low',
+      level: 2,
+    })
+    const level5 = await createTestUser(app, company.id, {
+      email: 'outside-5@test.com',
+      firstName: 'Outside',
+      lastName: 'Mid',
+      level: 5,
+    })
+    const level8 = await createTestUser(app, company.id, {
+      email: 'outside-8@test.com',
+      firstName: 'Outside',
+      lastName: 'MidHigh',
+      level: 8,
+    })
+    const level11 = await createTestUser(app, company.id, {
+      email: 'outside-11@test.com',
+      firstName: 'Outside',
+      lastName: 'High',
+      level: 11,
+    })
+
+    const result = await app.admin.getClients(adminUser, 1, 20, '', false, 'id', 3, 9)
+
+    expect(result.users).toHaveLength(2)
+    expect(result.users.map((u) => u.id)).toEqual(expect.arrayContaining([level5.id, level8.id]))
+    expect(result.total).toBe(2)
+  })
+
+  it('works with text query and level filter simultaneously', async () => {
+    const app = await createApp()
+    const company = await createTestCompany(app)
+    const adminUser = { company: { id: company.id } }
+
+    await createTestUser(app, company.id, {
+      email: 'combined-alpha-1@test.com',
+      firstName: 'Alpha',
+      lastName: 'Low',
+      level: 1,
+    })
+    await createTestUser(app, company.id, {
+      email: 'combined-alpha-5@test.com',
+      firstName: 'Alpha',
+      lastName: 'High',
+      level: 5,
+    })
+    await createTestUser(app, company.id, {
+      email: 'combined-beta-5@test.com',
+      firstName: 'Beta',
+      lastName: 'High',
+      level: 5,
+    })
+
+    const result = await app.admin.getClients(adminUser, 1, 20, 'Alpha', false, 'id', 3, MAX_LEVEL)
+
+    expect(result.users).toHaveLength(1)
+    expect(result.users[0].email).toBe('combined-alpha-5@test.com')
+    expect(result.total).toBe(1)
+  })
+
+  it('default fromLevel and toLevel do not affect results', async () => {
+    const app = await createApp()
+    const company = await createTestCompany(app)
+    const adminUser = { company: { id: company.id } }
+
+    await createTestUser(app, company.id, {
+      email: 'default-null-1@test.com',
+      firstName: 'Default',
+      lastName: 'One',
+      level: 3,
+    })
+    await createTestUser(app, company.id, {
+      email: 'default-null-2@test.com',
+      firstName: 'Default',
+      lastName: 'Two',
+      level: 7,
+    })
+
+    const result = await app.admin.getClients(adminUser, 1, 20, '', false, 'id', MIN_LEVEL, MAX_LEVEL)
+
+    expect(result.users).toHaveLength(2)
+    expect(result.total).toBe(2)
   })
 })

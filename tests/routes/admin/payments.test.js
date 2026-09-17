@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createNoCsrfApp as createApp } from '../../helpers'
-import { PAGE_LIMIT } from '../../../src/plugins/admin.js'
+import { PAGE_LIMIT } from '../../../src/lib/constants.js'
 
 describe('GET /api/admin/payments', () => {
   it('returns 403 when user is not authenticated', async () => {

@@ -2,10 +2,8 @@ import { useState } from 'react'
 import { useClientsContext } from '../ClientsContext'
 import Modal from '../../Modal'
 import Stepper from '../../Stepper'
+import { MIN_LEVEL, MAX_LEVEL } from '@/lib/constants'
 import styles from './index.module.css'
-
-const MIN_LEVEL = 1
-const MAX_LEVEL = 10
 
 const UpdateLevelModal = ({ onClose }) => {
   const { csrfToken, selectedUser, updateSelectedUser } = useClientsContext()

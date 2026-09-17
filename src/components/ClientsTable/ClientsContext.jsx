@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react'
+import { MIN_LEVEL, MAX_LEVEL } from '@/lib/constants'
 
 const ClientsContext = createContext(null)
 
@@ -19,6 +20,8 @@ export const ClientsProvider = ({ initialUsers, initialPagination, initialOrphan
   const [orphansOnly, setOrphansOnly] = useState(false)
   const [sortBy, setSortBy] = useState('id')
   const [loading, setLoading] = useState(false)
+  const [fromLevel, setFromLevel] = useState(MIN_LEVEL)
+  const [toLevel, setToLevel] = useState(MAX_LEVEL)
 
   const updateSelectedUser = useCallback((data) => {
     setSelectedUser((prev) => (prev ? { ...prev, ...data } : prev))
@@ -26,13 +29,22 @@ export const ClientsProvider = ({ initialUsers, initialPagination, initialOrphan
   }, [])
 
   const fetchClients = useCallback(
-    async (page = pagination.page, searchQuery = query, filterOrphansOnly = orphansOnly, sortField = sortBy) => {
+    async (
+      page = pagination.page,
+      searchQuery = query,
+      filterOrphansOnly = orphansOnly,
+      sortField = sortBy,
+      filterFromLevel = fromLevel,
+      filterToLevel = toLevel,
+    ) => {
       setLoading(true)
       try {
         const params = new URLSearchParams({ page, limit: pagination.limit })
         if (searchQuery) params.set('query', searchQuery)
         if (filterOrphansOnly) params.set('orphansOnly', 'true')
         if (sortField) params.set('sortBy', sortField)
+        params.set('fromLevel', String(filterFromLevel))
+        params.set('toLevel', String(filterToLevel))
 
         const res = await fetch(`/api/admin/clients?${params}`, {
           headers: {
@@ -56,7 +68,7 @@ export const ClientsProvider = ({ initialUsers, initialPagination, initialOrphan
         setLoading(false)
       }
     },
-    [csrfToken, pagination.limit, pagination.page, query, orphansOnly, sortBy],
+    [csrfToken, pagination.limit, pagination.page, query, orphansOnly, sortBy, fromLevel, toLevel],
   )
 
   return (
@@ -81,6 +93,10 @@ export const ClientsProvider = ({ initialUsers, initialPagination, initialOrphan
         setOrphansOnly,
         sortBy,
         setSortBy,
+        fromLevel,
+        setFromLevel,
+        toLevel,
+        setToLevel,
       }}
     >
       {children}

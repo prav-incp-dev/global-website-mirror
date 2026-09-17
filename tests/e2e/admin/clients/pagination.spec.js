@@ -110,7 +110,7 @@ test.describe('admin clients page', () => {
     await expect(page.getByText('1 из 2')).toBeVisible()
 
     // 7. Search for 'nem'
-    const searchInput = page.locator('input[placeholder="Поиск (имя, почта)"]')
+    const searchInput = page.locator('input[placeholder="Поиск"]')
     await searchInput.fill('nem')
     await page.waitForLoadState('networkidle')
 
