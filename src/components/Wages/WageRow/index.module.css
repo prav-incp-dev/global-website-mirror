@@ -1,0 +1,81 @@
+.item {
+  padding: 10px 16px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+  background: rgba(212, 175, 55, 0.04);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.item:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  background: rgba(212, 175, 55, 0.07);
+}
+
+.itemRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.amount {
+  color: #d4af37;
+  font-weight: 700;
+  font-size: 0.9375rem;
+}
+
+.chevron {
+  display: inline-flex;
+  align-items: center;
+  color: #999;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.chevronIcon {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+  color: #d4af37;
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+}
+
+.date {
+  color: #999;
+  font-size: 0.75rem;
+}
+
+.description {
+  color: #dfdfdf;
+  font-size: 0.875rem;
+}
+
+.score {
+  color: #d4af37;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 560px) {
+  .item {
+    padding: 14px 14px;
+  }
+
+  .amount {
+    font-size: 0.875rem;
+  }
+
+  .date {
+    font-size: 0.7rem;
+  }
+}

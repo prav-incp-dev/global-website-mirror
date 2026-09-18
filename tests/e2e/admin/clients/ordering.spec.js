@@ -37,7 +37,7 @@ test.describe('ordering clients', () => {
     // 1. Login as admin and navigate to clients page
     await loginAs(admin.id)
     await page.goto('/admin')
-    await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Админка' })).toBeVisible()
     await page.getByRole('button', { name: 'Клиенты' }).click()
     await page.waitForLoadState('networkidle')
 

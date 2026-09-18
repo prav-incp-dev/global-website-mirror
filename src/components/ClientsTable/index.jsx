@@ -130,6 +130,14 @@ const ClientsTableInner = () => {
         />
       </div>
 
+      <input
+        type="text"
+        className={styles.searchInputMobile}
+        placeholder="Поиск"
+        value={query}
+        onChange={handleSearchChange}
+      />
+
       <div className={styles.tableWrapper}>
         <table className={classNames(styles.table, { [styles.tableLoading]: loading })}>
           <thead>

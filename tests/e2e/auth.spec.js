@@ -167,7 +167,7 @@ test.describe('login flow with 2FA', () => {
 
     // Should successfully log in and redirect to profile page
     await expect(page).toHaveURL('http://127.0.0.1:3101/admin')
-    await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Админка' })).toBeVisible()
     await expect(page.getByText(admin.email)).toBeVisible()
   })
 
@@ -191,7 +191,7 @@ test.describe('login flow with 2FA', () => {
 
     // Verify we are logged in
     await expect(page).toHaveURL('http://127.0.0.1:3101/admin')
-    await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Админка' })).toBeVisible()
     await expect(page.getByText(admin.email)).toBeVisible()
 
     // Click logout
@@ -273,7 +273,7 @@ test.describe('forgot password flow', () => {
 
     // Should be logged in and redirected to admin panel
     await expect(page).toHaveURL('http://127.0.0.1:3101/admin')
-    await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Админка' })).toBeVisible()
   })
 
   test('entering non-existent email still shows success', async ({ page }) => {

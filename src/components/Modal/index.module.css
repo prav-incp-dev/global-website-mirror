@@ -12,7 +12,7 @@
 
 .modal {
   width: 100%;
-  max-width: 480px;
+  max-width: 560px;
   background: linear-gradient(135deg, #1a1a1a 0%, #222 100%);
   border: 1px solid rgba(212, 175, 55, 0.15);
   border-radius: 16px;
@@ -67,7 +67,7 @@
   padding: 0 24px 24px;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 560px) {
   .overlay {
     padding: 16px;
   }

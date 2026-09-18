@@ -2,6 +2,7 @@ import fp from 'fastify-plugin'
 import { getAddress, formatUnits } from 'viem'
 import { getPublicClient, usdtAddress } from '../lib/chain.js'
 import { UserRole } from '../generated/prisma/client'
+import { WAGES_LIMIT } from '../lib/constants.js'
 
 const erc20Abi = [
   {
@@ -60,6 +61,63 @@ export default fp(async (server) => {
       return {
         score: wageSums[0]?._sum?.score ?? 0,
         groupScore: wageSums[0]?._sum?.groupScore ?? 0,
+      }
+    },
+
+    getWages: async (user, page = 1, limit = WAGES_LIMIT, sortBy = 'id', query = '') => {
+      const skip = (page - 1) * limit
+
+      const orderByMap = {
+        id: '"id" DESC',
+        amount_asc: 'CAST("amount" AS NUMERIC) ASC',
+        amount_desc: 'CAST("amount" AS NUMERIC) DESC',
+      }
+      const orderBy = orderByMap[sortBy] ?? orderByMap.id
+
+      const baseParams = [user.id]
+      const whereParts = ['"userId" = $1']
+
+      if (query) {
+        whereParts.push(`(CAST("amount" AS TEXT) ILIKE $2 OR "description" ILIKE $2)`)
+        baseParams.push(`%${query}%`)
+      }
+
+      const whereSql = whereParts.join(' AND ')
+
+      const [rows, totalRows] = await Promise.all([
+        server.prisma.$queryRawUnsafe(
+          `SELECT "id", "amount"::text, "description", "score", "groupScore", "createdAt"
+           FROM "Wage"
+           WHERE ${whereSql}
+           ORDER BY ${orderBy}
+           LIMIT $${baseParams.length + 1} OFFSET $${baseParams.length + 2}`,
+          ...baseParams,
+          limit,
+          skip,
+        ),
+        server.prisma.$queryRawUnsafe(
+          `SELECT COUNT(*)::int AS "total" FROM "Wage" WHERE ${whereSql}`,
+          ...baseParams,
+        ),
+      ])
+
+      const total = totalRows[0]?.total ?? 0
+
+      const wages = rows.map((row) => ({
+        id: row.id,
+        amount: Number(row.amount),
+        description: row.description,
+        score: row.score,
+        groupScore: row.groupScore,
+        createdAt: row.createdAt,
+      }))
+
+      return {
+        wages,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       }
     },
 

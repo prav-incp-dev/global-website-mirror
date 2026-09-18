@@ -1,0 +1,113 @@
+.toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.searchInput {
+  flex: 1;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
+  color: #f5f5f5;
+  font-size: 0.8125rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+  min-width: 0;
+}
+
+.searchInput::placeholder {
+  color: #666;
+}
+
+.searchInput:focus {
+  border-color: #d4af37;
+}
+
+.emptyState {
+  text-align: center;
+  color: #999;
+  font-size: 0.95rem;
+  padding: 32px 0;
+}
+
+.listWrapper {
+  position: relative;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.loadingOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(26, 26, 26, 0.6);
+  border-radius: 12px;
+}
+
+.spinnerLarge {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(212, 175, 55, 0.2);
+  border-top-color: #d4af37;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.pageButton {
+  padding: 8px 18px;
+  background: transparent;
+  color: #d4af37;
+  border: 1px solid #d4af37;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pageButton:hover:not(:disabled) {
+  background: #d4af37;
+  color: #0d0d0d;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+}
+
+.pageButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  font-size: 0.8125rem;
+  color: #999;
+  font-weight: 500;
+}
+
+@media (max-width: 560px) {
+  .pageButton {
+    padding: 6px 14px;
+    font-size: 0.75rem;
+  }
+}

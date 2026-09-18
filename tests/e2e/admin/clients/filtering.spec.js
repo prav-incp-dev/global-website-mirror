@@ -43,7 +43,7 @@ test.describe('admin clients filtering', () => {
 
   const navigateToClients = async (page) => {
     await page.goto('/admin')
-    await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Админка' })).toBeVisible()
     await page.getByRole('button', { name: 'Клиенты' }).click()
     await page.waitForLoadState('networkidle')
   }
@@ -118,7 +118,7 @@ test.describe('admin clients filtering', () => {
     await expect(rows()).toHaveCount(2)
 
     // Search for 'Charlie' — found within range
-    const searchInput = page.locator('input[placeholder="Поиск"]')
+    const searchInput = page.locator('input[placeholder="Поиск"]').first()
     await searchInput.fill('Charlie')
     await page.waitForLoadState('networkidle')
 

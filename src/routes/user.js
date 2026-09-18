@@ -1,7 +1,32 @@
 import { UserRole } from '../generated/prisma/client'
 import { uniqConstraintLabel } from '../lib/prismaHelpers.js'
+import { WAGES_LIMIT } from '../lib/constants.js'
 
 export default async (fastify) => {
+  fastify.get('/api/user/wages', {
+    schema: {
+      querystring: {
+        type: 'object',
+        properties: {
+          page: { type: 'integer', minimum: 1, default: 1 },
+          limit: { type: 'integer', minimum: 1, maximum: 100, default: WAGES_LIMIT },
+          sortBy: { type: 'string', enum: ['id', 'amount_asc', 'amount_desc'], default: 'id' },
+          query: { type: 'string' },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Consultant) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      const { page = 1, limit = WAGES_LIMIT, sortBy = 'id', query = '' } = req.query
+      const result = await fastify.user.getWages(user, page, limit, sortBy, query)
+      return reply.send(result)
+    },
+  })
+
   fastify.get('/api/user/balance', {
     handler: async (req, reply) => {
       const user = await fastify.auth.getUser(req)

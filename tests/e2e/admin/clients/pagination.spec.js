@@ -49,7 +49,7 @@ test.describe('admin clients page', () => {
     // 1. Login as admin
     await loginAs(admin.id)
     await page.goto('/admin')
-    await expect(page.getByRole('heading', { name: 'Панель администратора' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Админка' })).toBeVisible()
 
     // 2. Click 'Клиенты' tab
     await page.getByRole('button', { name: 'Клиенты' }).click()
@@ -110,7 +110,7 @@ test.describe('admin clients page', () => {
     await expect(page.getByText('1 из 2')).toBeVisible()
 
     // 7. Search for 'nem'
-    const searchInput = page.locator('input[placeholder="Поиск"]')
+    const searchInput = page.locator('input[placeholder="Поиск"]').first()
     await searchInput.fill('nem')
     await page.waitForLoadState('networkidle')
 

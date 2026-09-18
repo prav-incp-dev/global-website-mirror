@@ -7,6 +7,12 @@ import InvitationModal from '@/components/InvitationModal'
 import Payments from '@/components/Payments'
 import StatsDashboard from '@/components/StatsDashboard'
 import Structure from '@/components/Structure'
+import Wage from '@/components/Wages'
+import ProfileIcon from '@/assets/icons/ProfileIcon.svg?react'
+import PaymentsIcon from '@/assets/icons/PaymentsIcon.svg?react'
+import StatsIcon from '@/assets/icons/StatsIcon.svg?react'
+import StructureIcon from '@/assets/icons/StructureIcon.svg?react'
+import WagesIcon from '@/assets/icons/WagesIcon.svg?react'
 import { DescendantsProvider } from '@/components/Structure/DescendantsContext'
 import styles from './index.module.css'
 
@@ -60,13 +66,14 @@ export const getData = async ({ server, req, reply }) => {
 
 const TABS = (role) => {
   const commonTabs = [
-    { key: 'profile', label: 'Профиль' },
-    { key: 'payments', label: 'Покупки' },
+    { key: 'profile', label: 'Профиль', icon: ProfileIcon },
+    { key: 'payments', label: 'Покупки', icon: PaymentsIcon },
   ]
 
   const consultantTabs = [
-    { key: 'stats', label: 'Статистика' },
-    { key: 'structure', label: 'Структура' },
+    { key: 'stats', label: 'Статистика', icon: StatsIcon },
+    { key: 'structure', label: 'Структура', icon: StructureIcon },
+    { key: 'wages', label: 'Начисления', icon: WagesIcon },
   ]
   return commonTabs.concat(role === UserRole.Consultant ? consultantTabs : [])
 }
@@ -124,15 +131,21 @@ const Index = () => {
           </>
         )}
         <div className={styles.tabs}>
-          {TABS(profileData.role).map((tab) => (
-            <button
-              key={tab.key}
-              className={classNames(styles.tab, { [styles.tabActive]: activeTab === tab.key })}
-              onClick={() => setActiveTab(tab.key)}
-            >
-              {tab.label}
-            </button>
-          ))}
+          {TABS(profileData.role).map((tab) => {
+            const Icon = tab.icon
+
+            return (
+              <button
+                key={tab.key}
+                className={classNames(styles.tab, { [styles.tabActive]: activeTab === tab.key })}
+                onClick={() => setActiveTab(tab.key)}
+                title={tab.label}
+              >
+                <Icon className={styles.tabIcon} />
+                <span className={styles.tabLabel}>{tab.label}</span>
+              </button>
+            )
+          })}
         </div>
 
         <div className={styles.content}>
@@ -150,6 +163,7 @@ const Index = () => {
           )}
           {activeTab === 'stats' && <StatsDashboard profile={profileData} />}
           {activeTab === 'structure' && <Structure csrfToken={csrfToken} />}
+          {activeTab === 'wages' && <Wage csrfToken={csrfToken} />}
         </div>
       </div>
     </DescendantsProvider>
