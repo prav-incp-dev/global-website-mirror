@@ -60,8 +60,8 @@ test.describe('consultant wages tab', () => {
 
     // Verify expanded details are shown
     await expect(page.getByText('Test wage payment')).toBeVisible()
-    await expect(page.getByText('10')).toBeVisible()
-    await expect(page.getByText('25')).toBeVisible()
+    await expect(page.getByText('Начислено личных единиц: 10')).toBeVisible()
+    await expect(page.getByText('Начислено групповых единиц: 25')).toBeVisible()
 
     // Click again to collapse
     await page.getByText('$150.50 USDT').click()

@@ -70,7 +70,6 @@ try {
     lastName: 'Admin',
     phone: '+70000000001',
     memberId: 'DOM-00000000-0001',
-    // wallet: '0xABCDEF1234567890',
   }
 
   const admin = await prisma.user.upsert({
@@ -83,8 +82,29 @@ try {
     },
   })
 
+  const secondAdminData = {
+    password: passwordHash,
+    role: UserRole.Admin,
+    nick: 'incp',
+    firstName: 'INCP',
+    lastName: 'Admin',
+    phone: '+70000000004',
+    memberId: 'DOM-00000000-0004',
+  }
+
+  const secondAdmin = await prisma.user.upsert({
+    where: { email: 'incpinfo@proton.me' },
+    update: secondAdminData,
+    create: {
+      email: 'incpinfo@proton.me',
+      ...secondAdminData,
+      company: { connect: { id: company.id } },
+    },
+  })
+
   console.log(`Seeded company: ${company.name}`)
   console.log(`Seeded admin user: ${admin.email}`)
+  console.log(`Seeded admin user: ${secondAdmin.email}`)
 
   const consultantData = {
     password: passwordHash,

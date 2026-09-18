@@ -387,6 +387,7 @@ describe('getClients', () => {
     const user = result.users.find((u) => u.email === 'no-wages@test.com')
 
     expect(user).toBeTruthy()
+    expect(user.isLocked).toBe(false)
   })
 
   it('sums score and groupScore across multiple wages per user', async () => {
@@ -413,6 +414,32 @@ describe('getClients', () => {
     expect(found).toBeTruthy()
     expect(found.score).toBe(30)
     expect(found.groupScore).toBe(20)
+    expect(found.isLocked).toBe(false)
+  })
+
+  it('sets isLocked to true when user has wages with non-zero amount', async () => {
+    const app = await createApp()
+    const company = await createTestCompany(app)
+    const adminUser = { company: { id: company.id } }
+
+    const user = await createTestUser(app, company.id, {
+      email: 'isLocked-true@test.com',
+      firstName: 'isLocked',
+      lastName: 'True',
+    })
+
+    await app.prisma.wage.create({
+      data: { companyId: company.id, userId: user.id, amount: 150, score: 5, groupScore: 10 },
+    })
+
+    const result = await app.admin.getClients(adminUser, 1, 20, '')
+
+    const found = result.users.find((u) => u.email === 'isLocked-true@test.com')
+
+    expect(found).toBeTruthy()
+    expect(found.score).toBe(5)
+    expect(found.groupScore).toBe(10)
+    expect(found.isLocked).toBe(true)
   })
 
   // GET_CLIENTS_ANCHOR_3
