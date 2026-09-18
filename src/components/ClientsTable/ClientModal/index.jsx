@@ -88,7 +88,7 @@ const ClientModal = ({ onClose }) => {
         <button className={styles.actionButton} onClick={() => setShowChangeParent(true)}>
           Изменить родителя
         </button>
-        {isConsultant && (
+        {isConsultant && !selectedUser.isLocked && (
           <>
             <button className={styles.actionButton} onClick={() => setShowUpdateScores(true)}>
               Изменить единицы

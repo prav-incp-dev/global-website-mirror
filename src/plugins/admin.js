@@ -135,6 +135,7 @@ export default fp(async (fastify) => {
           u."email", u."phone", u."memberId", u."nick", u."parentId",
           COALESCE(SUM(w."score"), 0)::int AS "score",
           COALESCE(SUM(w."groupScore"), 0)::int AS "groupScore",
+          COALESCE(SUM(w."amount"), 0)::numeric AS "totalAmount",
           p."firstName" AS "parentFirstName",
           p."lastName" AS "parentLastName"
         FROM "User" u
@@ -172,6 +173,7 @@ export default fp(async (fastify) => {
         parentId: row.parentId,
         score: row.score,
         groupScore: row.groupScore,
+        isLocked: row.totalAmount > 0,
         parent: row.parentId != null ? { firstName: row.parentFirstName, lastName: row.parentLastName } : null,
       }))
 

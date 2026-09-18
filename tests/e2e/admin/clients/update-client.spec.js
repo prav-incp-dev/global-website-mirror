@@ -160,4 +160,57 @@ test.describe('update client achievements flow', () => {
     await expect(page.getByText('Статус:')).toBeVisible()
     await expect(page.getByText('Почта:')).toBeVisible()
   })
+
+  test('hides score and level buttons for a consultant with non-zero wage amount', async ({ loginAs, page }) => {
+    const prisma = getPrisma()
+
+    // Create a consultant with a non-zero amount wage (actual sales)
+    const company = await prisma.company.findFirst({ where: { name: 'Update Client Company' } })
+    const consultingUser = await createTestUser({
+      firstName: 'Hugh',
+      lastName: 'Sales',
+      role: 'Consultant',
+      companyId: company.id,
+      level: 2,
+      levelConfirmed: true,
+    })
+    await prisma.wage.create({
+      data: {
+        companyId: company.id,
+        userId: consultingUser.id,
+        amount: 500,
+        score: 10,
+        groupScore: 20,
+        description: 'Sale payment',
+      },
+    })
+
+    // 1. Login as admin and navigate to clients page
+    await loginAs(admin.id)
+    await page.goto('/admin')
+    await expect(page.getByRole('heading', { name: 'Админка' })).toBeVisible()
+    await page.getByRole('button', { name: 'Клиенты' }).click()
+    await page.waitForLoadState('networkidle')
+
+    // 2. Find the consultant row and click its info icon
+    const rows = page.locator('table tbody tr')
+    const consultantRow = rows.filter({ hasText: 'Hugh Sales' })
+    await expect(consultantRow).toBeVisible()
+    await consultantRow.locator('td:last-child svg').click()
+
+    // 3. Verify consultant-specific fields are shown
+    await expect(page.getByText('Уровень:')).toBeVisible()
+    await expect(page.getByText('Личные единицы:')).toBeVisible()
+    await expect(page.getByText('Групповые единицы:')).toBeVisible()
+
+    // 4. Verify score/level buttons are NOT visible due to non-zero wage amount
+    await expect(page.getByRole('button', { name: 'Изменить единицы' })).not.toBeVisible()
+    await expect(page.getByRole('button', { name: 'Изменить уровень' })).not.toBeVisible()
+
+    // 5. Verify "Изменить родителя" is still visible (should always be available)
+    await expect(page.getByRole('button', { name: 'Изменить родителя' })).toBeVisible()
+
+    // Close the modal
+    await page.locator('button[aria-label="Закрыть"]').click()
+  })
 })
