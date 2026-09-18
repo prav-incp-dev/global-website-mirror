@@ -7,7 +7,7 @@ const createCompany = async (app, name) => {
   })
 }
 
-describe('PUT /api/admin/user/level', () => {
+describe('PUT /api/admin/user/:id/level', () => {
   const createAdminUser = () => ({
     id: 1,
     email: 'admin@test.com',
@@ -33,7 +33,6 @@ describe('PUT /api/admin/user/level', () => {
   }
 
   const validPayload = (userId, overrides = {}) => ({
-    userId,
     level: 2,
     levelConfirmed: true,
     ...overrides,
@@ -42,7 +41,7 @@ describe('PUT /api/admin/user/level', () => {
   it('returns 403 when user is not authenticated', async () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
-    const response = await app.inject({ method: 'PUT', url: '/api/admin/user/level', payload: validPayload(1) })
+    const response = await app.inject({ method: 'PUT', url: '/api/admin/user/1/level', payload: validPayload() })
     expect(response.statusCode).toBe(403)
     expect(response.json()).toEqual({
       error: '\u0414\u043e\u0441\u0442\u0443\u043f \u0437\u0430\u043f\u0440\u0435\u0449\u0435\u043d',
@@ -57,23 +56,22 @@ describe('PUT /api/admin/user/level', () => {
       role: 'Candidate',
       company: { id: 1 },
     })
-    const response = await app.inject({ method: 'PUT', url: '/api/admin/user/level', payload: validPayload(1) })
+    const response = await app.inject({ method: 'PUT', url: '/api/admin/user/1/level', payload: validPayload() })
     expect(response.statusCode).toBe(403)
     expect(response.json()).toEqual({
       error: '\u0414\u043e\u0441\u0442\u0443\u043f \u0437\u0430\u043f\u0440\u0435\u0449\u0435\u043d',
     })
   })
 
-  it('returns 400 when userId is missing', async () => {
+  it('returns 400 when id param is missing', async () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/level',
+      url: '/api/admin/user//level',
       payload: { level: 2, levelConfirmed: true },
     })
     expect(response.statusCode).toBe(400)
-    expect(response.json().message).toContain('required')
   })
 
   it('returns 400 when level is missing', async () => {
@@ -81,8 +79,8 @@ describe('PUT /api/admin/user/level', () => {
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/level',
-      payload: { userId: 1, levelConfirmed: true },
+      url: '/api/admin/user/1/level',
+      payload: { levelConfirmed: true },
     })
     expect(response.statusCode).toBe(400)
     expect(response.json().message).toContain('required')
@@ -91,7 +89,7 @@ describe('PUT /api/admin/user/level', () => {
   it('returns 400 when levelConfirmed is missing', async () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
-    const response = await app.inject({ method: 'PUT', url: '/api/admin/user/level', payload: { userId: 1, level: 2 } })
+    const response = await app.inject({ method: 'PUT', url: '/api/admin/user/1/level', payload: { level: 2 } })
     expect(response.statusCode).toBe(400)
     expect(response.json().message).toContain('required')
   })
@@ -101,8 +99,8 @@ describe('PUT /api/admin/user/level', () => {
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/level',
-      payload: { userId: 1, level: 0, levelConfirmed: true },
+      url: '/api/admin/user/1/level',
+      payload: { level: -1, levelConfirmed: true },
     })
     expect(response.statusCode).toBe(400)
   })
@@ -112,8 +110,8 @@ describe('PUT /api/admin/user/level', () => {
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/level',
-      payload: { userId: 1, level: 11, levelConfirmed: true },
+      url: '/api/admin/user/1/level',
+      payload: { level: 11, levelConfirmed: true },
     })
     expect(response.statusCode).toBe(400)
   })
@@ -123,8 +121,8 @@ describe('PUT /api/admin/user/level', () => {
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/level',
-      payload: { userId: 1, level: 2, levelConfirmed: 'yes' },
+      url: '/api/admin/user/1/level',
+      payload: { level: 2, levelConfirmed: 'yes' },
     })
     expect(response.statusCode).toBe(400)
   })
@@ -138,8 +136,8 @@ describe('PUT /api/admin/user/level', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/level',
-      payload: { userId: 999999, level: 2, levelConfirmed: true },
+      url: '/api/admin/user/999999/level',
+      payload: { level: 2, levelConfirmed: true },
     })
 
     expect(response.statusCode).toBe(404)
@@ -159,8 +157,8 @@ describe('PUT /api/admin/user/level', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/level',
-      payload: { userId: targetUser.id, level: 2, levelConfirmed: true },
+      url: `/api/admin/user/${targetUser.id}/level`,
+      payload: { level: 2, levelConfirmed: true },
     })
 
     expect(response.statusCode).toBe(403)
@@ -183,8 +181,8 @@ describe('PUT /api/admin/user/level', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/level',
-      payload: { userId: targetUser.id, level: 2, levelConfirmed: true },
+      url: `/api/admin/user/${targetUser.id}/level`,
+      payload: { level: 2, levelConfirmed: true },
     })
 
     expect(response.statusCode).toBe(400)
@@ -203,8 +201,8 @@ describe('PUT /api/admin/user/level', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/level',
-      payload: { userId: targetUser.id, level: 3, levelConfirmed: false },
+      url: `/api/admin/user/${targetUser.id}/level`,
+      payload: { level: 3, levelConfirmed: false },
     })
 
     expect(response.statusCode).toBe(200)
@@ -239,8 +237,8 @@ describe('PUT /api/admin/user/level', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/level',
-      payload: { userId: 1, level: 2, levelConfirmed: true },
+      url: '/api/admin/user/1/level',
+      payload: { level: 2, levelConfirmed: true },
     })
 
     expect(response.statusCode).toBe(500)

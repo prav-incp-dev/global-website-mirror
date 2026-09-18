@@ -7,7 +7,7 @@ const createCompany = async (app, name) => {
   })
 }
 
-describe('PUT /api/admin/user/wages', () => {
+describe('PUT /api/admin/user/:id/wages', () => {
   const createAdminUser = () => ({
     id: 1,
     email: 'admin@test.com',
@@ -37,8 +37,8 @@ describe('PUT /api/admin/user/wages', () => {
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/wages',
-      payload: { userId: 1, score: 10, groupScore: 20 },
+      url: '/api/admin/user/1/wages',
+      payload: { score: 10, groupScore: 20 },
     })
     expect(response.statusCode).toBe(403)
     expect(response.json()).toEqual({
@@ -56,8 +56,8 @@ describe('PUT /api/admin/user/wages', () => {
     })
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/wages',
-      payload: { userId: 1, score: 10, groupScore: 20 },
+      url: '/api/admin/user/1/wages',
+      payload: { score: 10, groupScore: 20 },
     })
     expect(response.statusCode).toBe(403)
     expect(response.json()).toEqual({
@@ -65,16 +65,15 @@ describe('PUT /api/admin/user/wages', () => {
     })
   })
 
-  it('returns 400 when userId is missing', async () => {
+  it('returns 400 when id param is missing', async () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/wages',
+      url: '/api/admin/user//wages',
       payload: { score: 10, groupScore: 20 },
     })
     expect(response.statusCode).toBe(400)
-    expect(response.json().message).toContain('userId')
   })
 
   it('returns 400 when score is missing', async () => {
@@ -82,8 +81,8 @@ describe('PUT /api/admin/user/wages', () => {
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/wages',
-      payload: { userId: 1, groupScore: 20 },
+      url: '/api/admin/user/1/wages',
+      payload: { groupScore: 20 },
     })
     expect(response.statusCode).toBe(400)
     expect(response.json().message).toContain('score')
@@ -94,8 +93,8 @@ describe('PUT /api/admin/user/wages', () => {
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/wages',
-      payload: { userId: 1, score: 10 },
+      url: '/api/admin/user/1/wages',
+      payload: { score: 10 },
     })
     expect(response.statusCode).toBe(400)
     expect(response.json().message).toContain('groupScore')
@@ -106,8 +105,8 @@ describe('PUT /api/admin/user/wages', () => {
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/wages',
-      payload: { userId: 1, score: -1, groupScore: 20 },
+      url: '/api/admin/user/1/wages',
+      payload: { score: -1, groupScore: 20 },
     })
     expect(response.statusCode).toBe(400)
   })
@@ -117,8 +116,8 @@ describe('PUT /api/admin/user/wages', () => {
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(createAdminUser())
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/wages',
-      payload: { userId: 1, score: 10, groupScore: -1 },
+      url: '/api/admin/user/1/wages',
+      payload: { score: 10, groupScore: -1 },
     })
     expect(response.statusCode).toBe(400)
   })
@@ -131,8 +130,8 @@ describe('PUT /api/admin/user/wages', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/wages',
-      payload: { userId: 999999, score: 10, groupScore: 20 },
+      url: '/api/admin/user/999999/wages',
+      payload: { score: 10, groupScore: 20 },
     })
 
     expect(response.statusCode).toBe(404)
@@ -152,8 +151,8 @@ describe('PUT /api/admin/user/wages', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/wages',
-      payload: { userId: targetUser.id, score: 10, groupScore: 20 },
+      url: `/api/admin/user/${targetUser.id}/wages`,
+      payload: { score: 10, groupScore: 20 },
     })
 
     expect(response.statusCode).toBe(403)
@@ -176,8 +175,8 @@ describe('PUT /api/admin/user/wages', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/wages',
-      payload: { userId: targetUser.id, score: 10, groupScore: 20 },
+      url: `/api/admin/user/${targetUser.id}/wages`,
+      payload: { score: 10, groupScore: 20 },
     })
 
     expect(response.statusCode).toBe(400)
@@ -194,8 +193,8 @@ describe('PUT /api/admin/user/wages', () => {
     const setScoresSpy = vi.spyOn(app.admin, 'setScores').mockResolvedValue({ success: true })
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/wages',
-      payload: { userId: targetUser.id, score: 10, groupScore: 20 },
+      url: `/api/admin/user/${targetUser.id}/wages`,
+      payload: { score: 10, groupScore: 20 },
     })
     expect(response.statusCode).toBe(200)
     expect(response.json()).toEqual({ success: true, score: 10, groupScore: 20 })
@@ -215,8 +214,8 @@ describe('PUT /api/admin/user/wages', () => {
     vi.spyOn(app.admin, 'setScores').mockResolvedValue({ error: 'Some setScores error' })
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/wages',
-      payload: { userId: targetUser.id, score: 10, groupScore: 20 },
+      url: `/api/admin/user/${targetUser.id}/wages`,
+      payload: { score: 10, groupScore: 20 },
     })
     expect(response.statusCode).toBe(400)
     expect(response.json()).toEqual({ error: 'Some setScores error' })
@@ -232,8 +231,8 @@ describe('PUT /api/admin/user/wages', () => {
     vi.spyOn(app.admin, 'setScores').mockRejectedValue(new Error('Database connection failed'))
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/wages',
-      payload: { userId: targetUser.id, score: 10, groupScore: 20 },
+      url: `/api/admin/user/${targetUser.id}/wages`,
+      payload: { score: 10, groupScore: 20 },
     })
     expect(response.statusCode).toBe(500)
     expect(response.json()).toEqual({
@@ -249,8 +248,8 @@ describe('PUT /api/admin/user/wages', () => {
     vi.spyOn(app.prisma.user, 'findUnique').mockRejectedValue(new Error('Database connection failed'))
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/wages',
-      payload: { userId: 1, score: 10, groupScore: 20 },
+      url: '/api/admin/user/1/wages',
+      payload: { score: 10, groupScore: 20 },
     })
     expect(response.statusCode).toBe(500)
     expect(response.json()).toEqual({

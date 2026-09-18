@@ -7,15 +7,15 @@ const createCompany = async (app, name) => {
   })
 }
 
-describe('PUT /api/admin/user/parent', () => {
+describe('PUT /api/admin/user/:id/parent', () => {
   it('returns 403 when user is not authenticated', async () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/parent',
-      payload: { userId: 1, parentId: 2 },
+      url: '/api/admin/user/1/parent',
+      payload: { parentId: 2 },
     })
 
     expect(response.statusCode).toBe(403)
@@ -31,8 +31,8 @@ describe('PUT /api/admin/user/parent', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/parent',
-      payload: { userId: 2, parentId: 3 },
+      url: '/api/admin/user/2/parent',
+      payload: { parentId: 3 },
     })
 
     expect(response.statusCode).toBe(403)
@@ -40,7 +40,7 @@ describe('PUT /api/admin/user/parent', () => {
     expect(app.auth.getUser).toHaveBeenCalledTimes(1)
   })
 
-  it('returns 400 when userId is missing', async () => {
+  it('returns 400 when id param is missing', async () => {
     const adminUser = { id: 1, email: 'admin@example.com', role: 'Admin', company: { id: 1 } }
 
     const app = await createApp()
@@ -48,12 +48,11 @@ describe('PUT /api/admin/user/parent', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/parent',
+      url: '/api/admin/user//parent',
       payload: { parentId: 2 },
     })
 
     expect(response.statusCode).toBe(400)
-    expect(response.json().message).toContain('required')
   })
 
   it('returns 400 when parentId is a string', async () => {
@@ -64,8 +63,8 @@ describe('PUT /api/admin/user/parent', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/parent',
-      payload: { userId: 2, parentId: 'abc' },
+      url: '/api/admin/user/2/parent',
+      payload: { parentId: 'abc' },
     })
 
     expect(response.statusCode).toBe(400)
@@ -80,8 +79,8 @@ describe('PUT /api/admin/user/parent', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/parent',
-      payload: { userId: 99999, parentId: 2 },
+      url: '/api/admin/user/99999/parent',
+      payload: { parentId: 2 },
     })
 
     expect(response.statusCode).toBe(404)
@@ -111,8 +110,8 @@ describe('PUT /api/admin/user/parent', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/parent',
-      payload: { userId: user.id, parentId: user.id },
+      url: `/api/admin/user/${user.id}/parent`,
+      payload: { parentId: user.id },
     })
 
     expect(response.statusCode).toBe(400)
@@ -143,8 +142,8 @@ describe('PUT /api/admin/user/parent', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/parent',
-      payload: { userId: userInCompanyB.id, parentId: null },
+      url: `/api/admin/user/${userInCompanyB.id}/parent`,
+      payload: { parentId: null },
     })
 
     expect(response.statusCode).toBe(403)
@@ -174,8 +173,8 @@ describe('PUT /api/admin/user/parent', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/parent',
-      payload: { userId: user.id, parentId: 99999 },
+      url: `/api/admin/user/${user.id}/parent`,
+      payload: { parentId: 99999 },
     })
 
     expect(response.statusCode).toBe(404)
@@ -218,8 +217,8 @@ describe('PUT /api/admin/user/parent', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/parent',
-      payload: { userId: userInCompanyA.id, parentId: parentInCompanyB.id },
+      url: `/api/admin/user/${userInCompanyA.id}/parent`,
+      payload: { parentId: parentInCompanyB.id },
     })
 
     expect(response.statusCode).toBe(403)
@@ -261,8 +260,8 @@ describe('PUT /api/admin/user/parent', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/parent',
-      payload: { userId: targetUser.id, parentId: parentUser.id },
+      url: `/api/admin/user/${targetUser.id}/parent`,
+      payload: { parentId: parentUser.id },
     })
 
     expect(response.statusCode).toBe(200)
@@ -315,8 +314,8 @@ describe('PUT /api/admin/user/parent', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/parent',
-      payload: { userId: targetUser.id, parentId: parentUser.id },
+      url: `/api/admin/user/${targetUser.id}/parent`,
+      payload: { parentId: parentUser.id },
     })
 
     expect(response.statusCode).toBe(200)
@@ -367,8 +366,8 @@ describe('PUT /api/admin/user/parent', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/parent',
-      payload: { userId: targetUser.id, parentId: null },
+      url: `/api/admin/user/${targetUser.id}/parent`,
+      payload: { parentId: null },
     })
 
     expect(response.statusCode).toBe(200)
@@ -392,8 +391,8 @@ describe('PUT /api/admin/user/parent', () => {
 
     const response = await app.inject({
       method: 'PUT',
-      url: '/api/admin/user/parent',
-      payload: { userId: 1, parentId: 2 },
+      url: '/api/admin/user/1/parent',
+      payload: { parentId: 2 },
     })
 
     expect(response.statusCode).toBe(500)

@@ -24,12 +24,11 @@ const UpdateScoresModal = ({ onClose }) => {
 
     try {
       const payload = {
-        userId: selectedUser.id,
         score,
         groupScore,
       }
 
-      const res = await fetch('/api/admin/user/wages', {
+      const res = await fetch(`/api/admin/user/${selectedUser.id}/wages`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

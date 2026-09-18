@@ -61,10 +61,9 @@ const UpdateParentModal = ({ onClose }) => {
     setSaving(true)
     try {
       const payload = {
-        userId: selectedUser.id,
         parentId: selectedOption?.id ?? null,
       }
-      const res = await fetch('/api/admin/user/parent', {
+      const res = await fetch(`/api/admin/user/${selectedUser.id}/parent`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
