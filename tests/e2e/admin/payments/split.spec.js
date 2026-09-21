@@ -1,5 +1,6 @@
 import { test, expect } from '../../fixtures.js'
 import { createTestCompany, createTestUser, createTestOrder, getPrisma } from '../../db.js'
+import { walletPreview } from '@/lib/wallet'
 
 test.describe('admin payments split', () => {
   let admin
@@ -42,7 +43,7 @@ test.describe('admin payments split', () => {
     await prisma.payment.update({ where: { id: finalizedOrder.payment.id }, data: { finalized: true } })
 
     // 2. Completed but not finalized
-    const nonFinalizedOrder = await createTestOrder(company, candidate, 200, 'Completed', 'ON-2000-01')
+    await createTestOrder(company, candidate, 200, 'Completed', 'ON-2000-01')
 
     // 3. Already splitted
     const splittedOrder = await createTestOrder(company, candidate, 300, 'Splitted', 'ON-3000-01')
@@ -265,9 +266,20 @@ test.describe('admin payments split', () => {
     // The modal shows the split amounts
     await expect(page.getByText('Платеж будет распределен по следующим адресам:')).toBeVisible()
 
-    // The company wallets appear in the split list
-    await expect(page.getByText(MOCK_SERVICE_WALLET)).toBeVisible()
-    await expect(page.getByText('0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee')).toBeVisible()
+    // The split list shows exact amounts paired with wallet previews
+    const splitRows = page.locator('[class*="splitRow"]')
+
+    // $12.00 → 0xbbbbbbbb...bbbbbbbb (company serviceWallet)
+    const serviceRow = splitRows.filter({ hasText: '$12.00' })
+    await expect(serviceRow).toContainText(walletPreview(MOCK_SERVICE_WALLET))
+
+    // $360.00 → 0xeeeeeeee...eeeeeeee (parent wallet)
+    const userRow = splitRows.filter({ hasText: '$360.00' })
+    await expect(userRow).toContainText(walletPreview('0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'))
+
+    // $828.00 → 0xcccccccc...cccccccc (cumulative wallet)
+    const cumulativeRow = splitRows.filter({ hasText: '$828.00' })
+    await expect(cumulativeRow).toContainText(walletPreview(MOCK_CUMULATIVE_WALLET))
 
     // The confirm button is present
     const confirmButton = page.getByRole('button', { name: 'Подтвердить' })

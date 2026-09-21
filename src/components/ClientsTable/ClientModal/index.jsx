@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import classNames from 'classnames'
 import { useClientsContext } from '../ClientsContext'
 import Modal from '../../Modal'
 import UpdateParentModal from '../UpdateParentModal'
@@ -10,8 +11,12 @@ import { userName } from '@/lib/user'
 import { walletPreview } from '@/lib/wallet'
 import styles from './index.module.css'
 
+const TAB_GENERAL = 'general'
+const TAB_ACHIEVEMENTS = 'achievements'
+
 const ClientModal = ({ onClose }) => {
   const { selectedUser } = useClientsContext()
+  const [activeTab, setActiveTab] = useState(TAB_GENERAL)
   const [showChangeParent, setShowChangeParent] = useState(false)
   const [showUpdateScores, setShowUpdateScores] = useState(false)
   const [showUpdateLevel, setShowUpdateLevel] = useState(false)
@@ -55,37 +60,71 @@ const ClientModal = ({ onClose }) => {
       {notification && (
         <div className={styles.notification}>{notification}</div>
       )}
-      <div className={styles.infoTable}>
-        <div className={styles.infoRow}>
-          <span className={styles.label}>Имя:</span>
-          <span className={styles.value}>{selectedUser.firstName}</span>
+      {isConsultant && (
+        <div className={styles.tabs}>
+          <button
+            className={classNames(styles.tab, { [styles.tabActive]: activeTab === TAB_GENERAL })}
+            onClick={() => setActiveTab(TAB_GENERAL)}
+          >
+            Общая информация
+          </button>
+          <button
+            className={classNames(styles.tab, { [styles.tabActive]: activeTab === TAB_ACHIEVEMENTS })}
+            onClick={() => setActiveTab(TAB_ACHIEVEMENTS)}
+          >
+            Достижения
+          </button>
         </div>
-        <div className={styles.infoRow}>
-          <span className={styles.label}>Фамилия:</span>
-          <span className={styles.value}>{selectedUser.lastName || '—'}</span>
-        </div>
-        <div className={styles.infoRow}>
-          <span className={styles.label}>Статус:</span>
-          <span className={styles.value}>{isConsultant ? 'Консультант' : 'Кандидат'}</span>
-        </div>
-        <div className={styles.infoRow}>
-          <span className={styles.label}>Почта:</span>
-          <span className={styles.value}>{selectedUser.email}</span>
-        </div>
-        <div className={styles.infoRow}>
-          <span className={styles.label}>Номер телефона:</span>
-          <span className={styles.value}>{selectedUser.phone || '—'}</span>
-        </div>
-        <div className={styles.infoRow}>
-          <span className={styles.label}>Номер пайщика:</span>
-          <span className={styles.value}>{selectedUser.memberId || '—'}</span>
-        </div>
-        <div className={styles.infoRow}>
-          <span className={styles.label}>Ник в Телеграм:</span>
-          <span className={styles.value}>{selectedUser.nick || '—'}</span>
-        </div>
-        {isConsultant && (
-          <>
+      )}
+
+      {activeTab === TAB_GENERAL && (
+        <>
+          <div className={styles.infoTable}>
+            <div className={styles.infoRow}>
+              <span className={styles.label}>Имя:</span>
+              <span className={styles.value}>{selectedUser.firstName}</span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.label}>Фамилия:</span>
+              <span className={styles.value}>{selectedUser.lastName || '—'}</span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.label}>Статус:</span>
+              <span className={styles.value}>{isConsultant ? 'Консультант' : 'Кандидат'}</span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.label}>Почта:</span>
+              <span className={styles.value}>{selectedUser.email}</span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.label}>Номер телефона:</span>
+              <span className={styles.value}>{selectedUser.phone || '—'}</span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.label}>Номер пайщика:</span>
+              <span className={styles.value}>{selectedUser.memberId || '—'}</span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.label}>Ник в Телеграм:</span>
+              <span className={styles.value}>{selectedUser.nick || '—'}</span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.label}>Родитель:</span>
+              <span className={styles.value}>{parentName()}</span>
+            </div>
+          </div>
+
+          <div className={styles.actions}>
+            <button className={styles.actionButton} onClick={() => setShowChangeParent(true)}>
+              Изменить родителя
+            </button>
+          </div>
+        </>
+      )}
+
+      {activeTab === TAB_ACHIEVEMENTS && isConsultant && (
+        <>
+          <div className={styles.infoTable}>
             <div className={styles.infoRow}>
               <span className={styles.label}>Уровень:</span>
               <span className={styles.value}>{selectedUser.level}</span>
@@ -106,34 +145,25 @@ const ClientModal = ({ onClose }) => {
               <span className={styles.label}>Кошелек:</span>
               <span className={styles.value}>{walletPreview(selectedUser.wallet)}</span>
             </div>
-          </>
-        )}
-        <div className={styles.infoRow}>
-          <span className={styles.label}>Родитель:</span>
-          <span className={styles.value}>{parentName()}</span>
-        </div>
-      </div>
+          </div>
 
-      <div className={styles.actions}>
-        <button className={styles.actionButton} onClick={() => setShowChangeParent(true)}>
-          Изменить родителя
-        </button>
-        {isConsultant && !selectedUser.isLocked && (
-          <>
-            <button className={styles.actionButton} onClick={() => setShowUpdateScores(true)}>
-              Изменить единицы
+          <div className={styles.actions}>
+            {!selectedUser.isLocked && (
+              <>
+                <button className={styles.actionButton} onClick={() => setShowUpdateScores(true)}>
+                  Изменить единицы
+                </button>
+                <button className={styles.actionButton} onClick={() => setShowUpdateLevel(true)}>
+                  Изменить уровень
+                </button>
+              </>
+            )}
+            <button className={styles.actionButton} onClick={() => setShowAddWage(true)}>
+              Добавить начисление
             </button>
-            <button className={styles.actionButton} onClick={() => setShowUpdateLevel(true)}>
-              Изменить уровень
-            </button>
-          </>
-        )}
-        {isConsultant && (
-          <button className={styles.actionButton} onClick={() => setShowAddWage(true)}>
-            Добавить начисление
-          </button>
-        )}
-      </div>
+          </div>
+        </>
+      )}
     </Modal>
   )
 }

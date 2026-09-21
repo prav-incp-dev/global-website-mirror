@@ -130,7 +130,7 @@ const PaymentModal = ({ onClose }) => {
         </div>
         <div className={styles.infoRow}>
           <span className={styles.label}>Хэш:</span>
-          <span className={styles.value}>{selectedPayment.txHash || '—'}</span>
+          <span className={styles.value}>{walletPreview(selectedPayment.txHash)}</span>
         </div>
         <div className={styles.infoRow}>
           <span className={styles.label}>С адреса:</span>
