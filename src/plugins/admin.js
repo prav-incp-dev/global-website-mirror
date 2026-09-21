@@ -280,6 +280,82 @@ export default fp(async (fastify) => {
       return ancestors
     },
 
+    exportClients: async (
+      user,
+      fromDate,
+      toDate,
+      query = '',
+      orphansOnly = false,
+      sortBy = 'id',
+      fromLevel = MIN_LEVEL,
+      toLevel = MAX_LEVEL,
+    ) => {
+      const baseParams = [user.company.id, fromLevel, toLevel, fromDate, toDate]
+      const whereParts = [
+        `u."role" <> 'Admin'`,
+        `u."companyId" = $1`,
+        `u."level" >= $2`,
+        `u."level" <= $3`,
+      ]
+      if (orphansOnly) whereParts.push(`u."orphant" = true`)
+      if (query) {
+        const likeStart = baseParams.length + 1
+        baseParams.push(`%${query}%`, `%${query}%`, `%${query}%`)
+        whereParts.push(
+          `(u."firstName" ILIKE $${likeStart} OR u."lastName" ILIKE $${likeStart + 1} OR u."email" ILIKE $${likeStart + 2})`,
+        )
+      }
+      const whereSql = whereParts.join(' AND ')
+
+      const orderByMap = {
+        name: `u."firstName" ASC, u."lastName" ASC`,
+        level: `u."level" DESC`,
+        role: `u."role" ASC`,
+        score: `"wageScore" DESC, u."id" DESC`,
+        id: `u."id" DESC`,
+      }
+      const orderBy = orderByMap[sortBy] ?? orderByMap.id
+
+      const sql = `
+        SELECT
+          u."id", u."firstName", u."lastName", u."level", u."email", u."memberId",
+          lh."createdAt" AS "levelDate",
+          COALESCE(w."score", 0)::int AS "wageScore",
+          COALESCE(w."groupScore", 0)::int AS "wageGroupScore"
+        FROM "User" u
+        LEFT JOIN LATERAL (
+          SELECT "createdAt" FROM "LevelHistory"
+          WHERE "userId" = u."id" AND "newLevel" = u."level"
+          ORDER BY "createdAt" DESC
+          LIMIT 1
+        ) lh ON true
+        LEFT JOIN LATERAL (
+          SELECT
+            COALESCE(SUM("score"), 0)::int AS "score",
+            COALESCE(SUM("groupScore"), 0)::int AS "groupScore"
+          FROM "Wage"
+          WHERE "userId" = u."id"
+            AND "createdAt" >= $4::date
+            AND "createdAt" < ($5::date + INTERVAL '1 day')
+        ) w ON true
+        WHERE ${whereSql}
+        ORDER BY ${orderBy}
+      `
+
+      const rows = await fastify.prisma.$queryRawUnsafe(sql, ...baseParams)
+
+      return rows.map((row) => ({
+        firstName: row.firstName,
+        lastName: row.lastName,
+        email: row.email,
+        memberId: row.memberId,
+        level: row.level,
+        levelDate: row.levelDate ? new Date(row.levelDate).toLocaleDateString('ru-RU') : '',
+        wageScore: row.wageScore,
+        wageGroupScore: row.wageGroupScore,
+      }))
+    },
+
     calculateSplit: async (payment) => {
       const { user, company, order } = payment
 

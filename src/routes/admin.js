@@ -1,3 +1,4 @@
+import { stringify } from 'csv-stringify/sync'
 import { OrderStatus, PaymentStatus, UserRole } from '../generated/prisma/client'
 import { serializePayment } from '../lib/payment'
 import { PAGE_LIMIT, MIN_LEVEL, MAX_LEVEL } from '../lib/constants.js'
@@ -154,6 +155,58 @@ export default async (fastify) => {
         fastify.admin.getOrphansCount(user, query, fromLevel, toLevel),
       ])
       return reply.send({ ...result, orphansCount })
+    },
+  })
+
+  fastify.get('/api/admin/clients/export', {
+    schema: {
+      querystring: {
+        type: 'object',
+        required: ['fromDate', 'toDate'],
+        properties: {
+          fromDate: { type: 'string' },
+          toDate: { type: 'string' },
+          query: { type: 'string', default: '' },
+          orphansOnly: { type: 'boolean', default: false },
+          sortBy: { type: 'string', enum: ['id', 'name', 'level', 'role', 'score'], default: 'id' },
+          fromLevel: { type: 'integer', default: MIN_LEVEL },
+          toLevel: { type: 'integer', default: MAX_LEVEL },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      const { fromDate, toDate, query, orphansOnly, sortBy, fromLevel, toLevel } = req.query
+
+      // Fetch all clients with level history date and wage scores in a single query
+      const clients = await fastify.admin.exportClients(
+        user, fromDate, toDate, query, orphansOnly, sortBy, fromLevel, toLevel,
+      )
+
+      const rows = clients.map((client) => [
+        `${client.firstName} ${client.lastName || ''}`.trim(),
+        client.email,
+        client.memberId || '',
+        String(client.level),
+        client.levelDate,
+        String(client.wageScore),
+        String(client.wageGroupScore),
+      ])
+
+      // Build CSV with BOM for Excel
+      const csv = stringify(rows, {
+        header: true,
+        columns: ['Имя', 'Почта', 'Номер пайщика', 'Уровень', 'Дата получения уровня', 'Личные единицы за период', 'Групповые единицы за период'],
+        bom: true
+      })
+
+      reply.header('Content-Type', 'text/csv; charset=utf-8')
+      reply.header('Content-Disposition', `attachment; filename="clients-${fromDate}-${toDate}.csv"`)
+      return reply.send(csv)
     },
   })
 
