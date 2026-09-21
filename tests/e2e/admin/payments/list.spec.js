@@ -1,5 +1,6 @@
 import { test, expect } from '../../fixtures.js'
 import { createTestCompany, createTestUser, createTestOrder } from '../../db.js'
+import { walletPreview } from '@/lib/wallet'
 
 test.describe('admin payments filters and details', () => {
   let admin
@@ -78,7 +79,7 @@ test.describe('admin payments filters and details', () => {
     await expect(infoTable.getByText('В обработке')).toBeVisible()
     await expect(infoTable.getByText('Дата:')).toBeVisible()
     await expect(infoTable.getByText('Хэш:')).toBeVisible()
-    await expect(infoTable.getByText(order444.payment.txHash)).toBeVisible()
+    await expect(infoTable.getByText(walletPreview(order444.payment.txHash))).toBeVisible()
     await expect(infoTable.getByText('Пользователь:')).toBeVisible()
     await expect(infoTable.getByText('Ivan Petrov')).toBeVisible()
 

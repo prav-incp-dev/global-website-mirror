@@ -23,12 +23,11 @@ const UpdateLevelModal = ({ onClose }) => {
 
     try {
       const payload = {
-        userId: selectedUser.id,
         level,
         levelConfirmed,
       }
 
-      const res = await fetch('/api/admin/user/level', {
+      const res = await fetch(`/api/admin/user/${selectedUser.id}/level`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

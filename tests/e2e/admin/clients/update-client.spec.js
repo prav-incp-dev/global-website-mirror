@@ -41,12 +41,17 @@ test.describe('update client achievements flow', () => {
     await consultantRow.locator('td:last-child svg').click()
 
     // 3. ClientModal opens — verify default level values displayed
+    await page.getByRole('button', { name: 'Достижения' }).click()
     await expect(page.getByText('Уровень:')).toBeVisible()
     const levelRow = page.getByText('Уровень:').locator('..')
     await expect(levelRow).toContainText('1')
 
     const confirmedRow = page.getByText('Уровень подтвержден:').locator('..')
     await expect(confirmedRow).toContainText('Да')
+
+    const walletRow = page.getByText('Кошелек:').locator('..')
+    await expect(walletRow).toContainText('0x')
+    await expect(walletRow).toContainText('...')
 
     // 4. Click "Изменить уровень" to open UpdateLevelModal
     await page.getByRole('button', { name: 'Изменить уровень' }).click()
@@ -92,7 +97,8 @@ test.describe('update client achievements flow', () => {
     await expect(consultantRow).toBeVisible()
     await consultantRow.locator('td:last-child svg').click()
 
-    // 3. ClientModal opens — verify default score values displayed
+    // 3. ClientModal opens — verify default score values displayed on 'Достижения' tab
+    await page.getByRole('button', { name: 'Достижения' }).click()
     await expect(page.getByText('Личные единицы:')).toBeVisible()
     const scoreRow = page.getByText('Личные единицы:').locator('..')
     await expect(scoreRow).toContainText('10')
@@ -148,6 +154,9 @@ test.describe('update client achievements flow', () => {
     await candidateRow.locator('td:last-child svg').click()
 
     // 3. Verify consultant-specific fields are NOT shown for a candidate
+    await expect(page.getByText('Фамилия:')).toBeVisible()
+    await expect(page.getByText('Статус:')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Достижения' })).not.toBeVisible()
     await expect(page.getByText('Уровень:')).not.toBeVisible()
     await expect(page.getByText('Уровень подтвержден:')).not.toBeVisible()
     await expect(page.getByText('Личные единицы:')).not.toBeVisible()
@@ -198,7 +207,12 @@ test.describe('update client achievements flow', () => {
     await expect(consultantRow).toBeVisible()
     await consultantRow.locator('td:last-child svg').click()
 
-    // 3. Verify consultant-specific fields are shown
+    await expect(page.getByText('Почта:')).toBeVisible()
+    await expect(page.getByText('Номер телефона:')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Изменить родителя' })).toBeVisible()
+
+    // 3. Verify consultant-specific fields are shown on tab 'Достижения'
+    await page.getByRole('button', { name: 'Достижения' }).click()
     await expect(page.getByText('Уровень:')).toBeVisible()
     await expect(page.getByText('Личные единицы:')).toBeVisible()
     await expect(page.getByText('Групповые единицы:')).toBeVisible()
@@ -206,9 +220,6 @@ test.describe('update client achievements flow', () => {
     // 4. Verify score/level buttons are NOT visible due to non-zero wage amount
     await expect(page.getByRole('button', { name: 'Изменить единицы' })).not.toBeVisible()
     await expect(page.getByRole('button', { name: 'Изменить уровень' })).not.toBeVisible()
-
-    // 5. Verify "Изменить родителя" is still visible (should always be available)
-    await expect(page.getByRole('button', { name: 'Изменить родителя' })).toBeVisible()
 
     // Close the modal
     await page.locator('button[aria-label="Закрыть"]').click()

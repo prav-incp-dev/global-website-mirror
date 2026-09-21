@@ -11,7 +11,7 @@ export const useClientsContext = () => {
   return ctx
 }
 
-export const ClientsProvider = ({ initialUsers, initialPagination, initialOrphansCount = 0, csrfToken, children }) => {
+export const ClientsProvider = ({ initialUsers, initialPagination, initialOrphansCount = 0, csrfToken, companyWallet, children }) => {
   const [users, setUsers] = useState(initialUsers)
   const [pagination, setPagination] = useState(initialPagination)
   const [orphansCount, setOrphansCount] = useState(initialOrphansCount)
@@ -83,6 +83,7 @@ export const ClientsProvider = ({ initialUsers, initialPagination, initialOrphan
         loading,
         setLoading,
         csrfToken,
+        companyWallet,
         selectedUser,
         setSelectedUser,
         updateSelectedUser,

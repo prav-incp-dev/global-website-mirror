@@ -185,13 +185,14 @@ const ClientsTableInner = () => {
   )
 }
 
-const ClientsTable = ({ initialUsers, initialPagination, initialOrphansCount = 0, csrfToken }) => {
+const ClientsTable = ({ initialUsers, initialPagination, initialOrphansCount = 0, csrfToken, companyWallet }) => {
   return (
     <ClientsProvider
       initialUsers={initialUsers}
       initialPagination={initialPagination}
       initialOrphansCount={initialOrphansCount}
       csrfToken={csrfToken}
+      companyWallet={companyWallet}
     >
       <ClientsTableInner />
     </ClientsProvider>

@@ -132,7 +132,7 @@ export default fp(async (fastify) => {
       const selectSql = `
         SELECT
           u."id", u."firstName", u."lastName", u."level", u."levelConfirmed", u."role",
-          u."email", u."phone", u."memberId", u."nick", u."parentId",
+          u."email", u."phone", u."memberId", u."nick", u."parentId", u."wallet",
           COALESCE(SUM(w."score"), 0)::int AS "score",
           COALESCE(SUM(w."groupScore"), 0)::int AS "groupScore",
           COALESCE(SUM(w."amount"), 0)::numeric AS "totalAmount",
@@ -171,6 +171,7 @@ export default fp(async (fastify) => {
         memberId: row.memberId,
         nick: row.nick,
         parentId: row.parentId,
+        wallet: row.wallet,
         score: row.score,
         groupScore: row.groupScore,
         isLocked: row.totalAmount > 0,

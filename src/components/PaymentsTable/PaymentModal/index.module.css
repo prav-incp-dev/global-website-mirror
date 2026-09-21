@@ -30,18 +30,6 @@
   word-break: break-all;
 }
 
-@media (max-width: 560px) {
-  .infoRow {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .value {
-    text-align: left;
-  }
-}
-
 .actions {
   display: flex;
   flex-direction: column;

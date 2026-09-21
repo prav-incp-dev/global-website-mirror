@@ -537,13 +537,18 @@ export default async (fastify) => {
     },
   })
 
-  fastify.put('/api/admin/user/parent', {
+  fastify.put('/api/admin/user/:id/parent', {
     schema: {
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'integer', minimum: 1 },
+        },
+      },
       body: {
         type: 'object',
-        required: ['userId'],
         properties: {
-          userId: { type: 'integer', minimum: 1 },
           parentId: {
             anyOf: [{ type: 'integer', minimum: 1 }, { type: 'null' }],
           },
@@ -556,7 +561,8 @@ export default async (fastify) => {
         return reply.code(403).send({ error: 'Доступ запрещен' })
       }
 
-      const { userId, parentId } = req.body
+      const { id: userId } = req.params
+      const { parentId } = req.body
 
       if (userId === parentId) {
         return reply.code(400).send({ error: 'Пользователь не может быть собственным родителем' })
@@ -616,13 +622,19 @@ export default async (fastify) => {
     },
   })
 
-  fastify.put('/api/admin/user/level', {
+  fastify.put('/api/admin/user/:id/level', {
     schema: {
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'integer', minimum: 1 },
+        },
+      },
       body: {
         type: 'object',
-        required: ['userId', 'level', 'levelConfirmed'],
+        required: ['level', 'levelConfirmed'],
         properties: {
-          userId: { type: 'integer', minimum: 1 },
           level: { type: 'integer', minimum: MIN_LEVEL, maximum: MAX_LEVEL },
           levelConfirmed: { type: 'boolean' },
         },
@@ -634,7 +646,8 @@ export default async (fastify) => {
         return reply.code(403).send({ error: 'Доступ запрещен' })
       }
 
-      const { userId, level, levelConfirmed } = req.body
+      const { id: userId } = req.params
+      const { level, levelConfirmed } = req.body
 
       try {
         const targetUser = await fastify.prisma.user.findUnique({
@@ -719,13 +732,19 @@ export default async (fastify) => {
     },
   })
 
-  fastify.put('/api/admin/user/wages', {
+  fastify.put('/api/admin/user/:id/wages', {
     schema: {
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'integer', minimum: 1 },
+        },
+      },
       body: {
         type: 'object',
-        required: ['userId', 'score', 'groupScore'],
+        required: ['score', 'groupScore'],
         properties: {
-          userId: { type: 'integer', minimum: 1 },
           score: { type: 'integer', minimum: 0 },
           groupScore: { type: 'integer', minimum: 0 },
         },
@@ -737,7 +756,8 @@ export default async (fastify) => {
         return reply.code(403).send({ error: 'Доступ запрещен' })
       }
 
-      const { userId, score, groupScore } = req.body
+      const { id: userId } = req.params
+      const { score, groupScore } = req.body
 
       try {
         const targetUser = await fastify.prisma.user.findUnique({
@@ -766,6 +786,69 @@ export default async (fastify) => {
         return reply.send({ success: true, score, groupScore })
       } catch {
         return reply.code(500).send({ error: 'Ошибка обновления пользователя' })
+      }
+    },
+  })
+
+  fastify.post('/api/admin/user/:id/wages', {
+    schema: {
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'integer', minimum: 1 },
+        },
+      },
+      body: {
+        type: 'object',
+        required: ['amount', 'description'],
+        properties: {
+          amount: { type: 'number', minimum: 0 },
+          description: { type: 'string', minLength: 1 },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      const { id: userId } = req.params
+      const { amount, description } = req.body
+
+      try {
+        const targetUser = await fastify.prisma.user.findUnique({
+          where: { id: userId },
+          select: { id: true, companyId: true, role: true },
+        })
+
+        if (!targetUser) {
+          return reply.code(404).send({ error: 'Пользователь не найден' })
+        }
+
+        if (targetUser.companyId !== user.company.id) {
+          return reply.code(403).send({ error: 'Доступ запрещен' })
+        }
+
+        if (targetUser.role !== UserRole.Consultant) {
+          return reply.code(400).send({ error: 'Начислять можно только консультантам' })
+        }
+
+        const wage = await fastify.prisma.wage.create({
+          data: {
+            companyId: user.company.id,
+            userId: targetUser.id,
+            amount,
+            description,
+            score: 0,
+            groupScore: 0,
+          },
+        })
+
+        return reply.send({ success: true, wage })
+      } catch {
+        return reply.code(500).send({ error: 'Ошибка создания начисления' })
       }
     },
   })
