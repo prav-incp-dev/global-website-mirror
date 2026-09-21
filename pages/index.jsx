@@ -25,9 +25,7 @@ export const getData = async ({ server, req, reply }) => {
   }
 
   // Redirect Admin users to the admin panel
-  if (user.role === UserRole.Admin) {
-    return reply.redirect('/admin')
-  }
+  if (user.role === UserRole.Admin) return reply.redirect('/admin')
 
   const csrfToken = reply.generateCsrf()
   const payments = await server.payment.getPayments(user)
@@ -97,9 +95,7 @@ const Index = () => {
   const [invitationOpen, setInvitationOpen] = useState(false)
   const [profileData, setProfileData] = useState(profile)
 
-  if (isLanding) {
-    return <LandingPage />
-  }
+  if (isLanding) return <LandingPage />
 
   const handleLogout = async (e) => {
     e.preventDefault()
@@ -110,9 +106,7 @@ const Index = () => {
       },
     })
     const result = await res.json()
-    if (result.success) {
-      window.location.href = result.redirect
-    }
+    if (result.success) window.location.href = result.redirect
   }
 
   const handleUpdateProfile = (updatedProfile) => {
