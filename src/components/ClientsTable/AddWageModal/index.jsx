@@ -7,7 +7,7 @@ import Modal from '../../Modal'
 import styles from './index.module.css'
 
 const CONFIRMATION_TEXT =
-  'Вы подтверждаете, что пльзователю было выполнено начисление?'
+  'Вы подтверждаете, что пользователю было выполнено начисление?'
 
 const AddWageModal = ({ onClose, onSuccess }) => {
   const { csrfToken, selectedUser, companyWallet } = useClientsContext()

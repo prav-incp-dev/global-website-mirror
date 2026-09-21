@@ -106,7 +106,7 @@ test.describe('admin clients add wage', () => {
     // Confirm the dialog
     page.once('dialog', (dialog) => {
       expect(dialog.message()).toBe(
-        'Вы подтверждаете, что пльзователю было выполнено начисление?',
+        'Вы подтверждаете, что пользователю было выполнено начисление?',
       )
       dialog.accept()
     })
