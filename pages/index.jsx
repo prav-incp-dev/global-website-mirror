@@ -8,6 +8,7 @@ import Payments from '@/components/Payments'
 import StatsDashboard from '@/components/StatsDashboard'
 import Structure from '@/components/Structure'
 import Wage from '@/components/Wages'
+import LandingPage from '@/components/LandingPage'
 import ProfileIcon from '@/assets/icons/ProfileIcon.svg?react'
 import PaymentsIcon from '@/assets/icons/PaymentsIcon.svg?react'
 import StatsIcon from '@/assets/icons/StatsIcon.svg?react'
@@ -17,10 +18,10 @@ import { DescendantsProvider } from '@/components/Structure/DescendantsContext'
 import styles from './index.module.css'
 
 export const getData = async ({ server, req, reply }) => {
-  // Protect the route — redirect to login if not authenticated
   const user = await server.auth.getUser(req)
   if (!user) {
-    return reply.redirect('/auth')
+    const csrfToken = reply.generateCsrf()
+    return { isLanding: true, csrfToken }
   }
 
   // Redirect Admin users to the admin panel
@@ -89,10 +90,16 @@ const Index = () => {
     refundFee = 5,
     prices = {},
     csrfToken = '',
+    isLanding = false,
   } = data
+
   const [activeTab, setActiveTab] = useState('profile')
   const [invitationOpen, setInvitationOpen] = useState(false)
   const [profileData, setProfileData] = useState(profile)
+
+  if (isLanding) {
+    return <LandingPage />
+  }
 
   const handleLogout = async (e) => {
     e.preventDefault()
