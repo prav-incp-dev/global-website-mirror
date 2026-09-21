@@ -151,17 +151,20 @@ const AddWageModal = ({ onClose, onSuccess }) => {
 
         <div className={styles.fieldGroup}>
           <label className={styles.label} htmlFor="description">Описание</label>
-          <textarea
+          <select
             id="description"
-            className={styles.textarea}
-            rows={3}
-            placeholder="Введите описание начисления"
+            className={styles.select}
             disabled={saving}
             {...register('description', {
               required: 'Обязательное поле',
-              minLength: { value: 1, message: 'Описание обязательно' },
+              validate: (value) => value !== '' || 'Выберите назначение',
             })}
-          />
+          >
+            <option value="" disabled>Выберите назначение</option>
+            <option value="Лидерское вознаграждение">Лидерское вознаграждение</option>
+            <option value="На офис">На офис</option>
+            <option value="На путешествие">На путешествие</option>
+          </select>
           {errors.description && <p className={styles.fieldError}>{errors.description.message}</p>}
         </div>
 
