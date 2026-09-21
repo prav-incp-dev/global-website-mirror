@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { PaymentStatus } from '@/generated/prisma/enums'
+import { walletPreview } from '@/lib/wallet'
 import { usePaymentsContext } from '../PaymentsContext'
 import Modal from '../../Modal'
 import styles from './index.module.css'
@@ -133,7 +134,7 @@ const PaymentModal = ({ onClose }) => {
         </div>
         <div className={styles.infoRow}>
           <span className={styles.label}>С адреса:</span>
-          <span className={styles.value}>{selectedPayment.fromWallet || '—'}</span>
+          <span className={styles.value}>{walletPreview(selectedPayment.fromWallet)}</span>
         </div>
         <div className={styles.infoRow}>
           <span className={styles.label}>Пользователь:</span>

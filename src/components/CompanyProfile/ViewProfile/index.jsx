@@ -1,12 +1,7 @@
 import styles from './index.module.css'
+import { walletPreview } from '@/lib/wallet'
 
 const ViewProfile = ({ company, onEdit }) => {
-  const walletPreview = (wallet) => {
-    if (!wallet) return '—'
-
-    return `${wallet.slice(0, 10)}...${wallet.slice(-8)}`
-  }
-
   return (
     <div>
       <div className={styles.row}>

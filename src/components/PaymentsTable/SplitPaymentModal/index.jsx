@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getAddress, parseUnits } from 'viem'
+import { walletPreview } from '@/lib/wallet'
 import Modal from '../../Modal'
 import {
   getPublicClient,
@@ -209,7 +210,7 @@ const SplitPaymentModal = ({ onClose }) => {
                 <div key={item.wallet} className={styles.splitRow}>
                   <span className={styles.amount}>${Number(item.amount).toFixed(2)}</span>
                   <span className={styles.separator}>→</span>
-                  <span className={styles.address}>{item.wallet}</span>
+                  <span className={styles.address}>{walletPreview(item.wallet)}</span>
                 </div>
               ))}
             </div>

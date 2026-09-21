@@ -789,4 +789,67 @@ export default async (fastify) => {
       }
     },
   })
+
+  fastify.post('/api/admin/user/:id/wages', {
+    schema: {
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'integer', minimum: 1 },
+        },
+      },
+      body: {
+        type: 'object',
+        required: ['amount', 'description'],
+        properties: {
+          amount: { type: 'number', minimum: 0 },
+          description: { type: 'string', minLength: 1 },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      const { id: userId } = req.params
+      const { amount, description } = req.body
+
+      try {
+        const targetUser = await fastify.prisma.user.findUnique({
+          where: { id: userId },
+          select: { id: true, companyId: true, role: true },
+        })
+
+        if (!targetUser) {
+          return reply.code(404).send({ error: 'Пользователь не найден' })
+        }
+
+        if (targetUser.companyId !== user.company.id) {
+          return reply.code(403).send({ error: 'Доступ запрещен' })
+        }
+
+        if (targetUser.role !== UserRole.Consultant) {
+          return reply.code(400).send({ error: 'Начислять можно только консультантам' })
+        }
+
+        const wage = await fastify.prisma.wage.create({
+          data: {
+            companyId: user.company.id,
+            userId: targetUser.id,
+            amount,
+            description,
+            score: 0,
+            groupScore: 0,
+          },
+        })
+
+        return reply.send({ success: true, wage })
+      } catch {
+        return reply.code(500).send({ error: 'Ошибка создания начисления' })
+      }
+    },
+  })
 }

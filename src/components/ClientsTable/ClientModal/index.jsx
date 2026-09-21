@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useClientsContext } from '../ClientsContext'
 import Modal from '../../Modal'
 import UpdateParentModal from '../UpdateParentModal'
 import UpdateScoresModal from '../UpdateScoresModal'
 import UpdateLevelModal from '../UpdateLevelModal'
+import AddWageModal from '../AddWageModal'
 import { UserRole } from '@/generated/prisma/enums'
 import { userName } from '@/lib/user'
+import { walletPreview } from '@/lib/wallet'
 import styles from './index.module.css'
 
 const ClientModal = ({ onClose }) => {
@@ -13,6 +15,15 @@ const ClientModal = ({ onClose }) => {
   const [showChangeParent, setShowChangeParent] = useState(false)
   const [showUpdateScores, setShowUpdateScores] = useState(false)
   const [showUpdateLevel, setShowUpdateLevel] = useState(false)
+  const [showAddWage, setShowAddWage] = useState(false)
+  const [notification, setNotification] = useState('')
+  const notificationTimer = useRef(null)
+
+  useEffect(() => {
+    return () => {
+      if (notificationTimer.current) clearTimeout(notificationTimer.current)
+    }
+  }, [])
 
   if (!selectedUser) return null
 
@@ -24,11 +35,26 @@ const ClientModal = ({ onClose }) => {
     return userName(selectedUser.parent)
   }
 
+  const handleWageSuccess = () => {
+    setShowAddWage(false)
+
+    if (notificationTimer.current) clearTimeout(notificationTimer.current)
+    setNotification('Начисление успешно добавлено')
+    notificationTimer.current = setTimeout(() => {
+      setNotification('')
+      notificationTimer.current = null
+    }, 2500)
+  }
+
   return (
     <Modal title="Информация о пользователе" onClose={onClose}>
       {showChangeParent && <UpdateParentModal onClose={() => setShowChangeParent(false)} />}
       {showUpdateScores && <UpdateScoresModal onClose={() => setShowUpdateScores(false)} />}
       {showUpdateLevel && <UpdateLevelModal onClose={() => setShowUpdateLevel(false)} />}
+      {showAddWage && <AddWageModal onClose={() => setShowAddWage(false)} onSuccess={handleWageSuccess} />}
+      {notification && (
+        <div className={styles.notification}>{notification}</div>
+      )}
       <div className={styles.infoTable}>
         <div className={styles.infoRow}>
           <span className={styles.label}>Имя:</span>
@@ -76,6 +102,10 @@ const ClientModal = ({ onClose }) => {
               <span className={styles.label}>Групповые единицы:</span>
               <span className={styles.value}>{selectedUser.groupScore}</span>
             </div>
+            <div className={styles.infoRow}>
+              <span className={styles.label}>Кошелек:</span>
+              <span className={styles.value}>{walletPreview(selectedUser.wallet)}</span>
+            </div>
           </>
         )}
         <div className={styles.infoRow}>
@@ -97,6 +127,11 @@ const ClientModal = ({ onClose }) => {
               Изменить уровень
             </button>
           </>
+        )}
+        {isConsultant && (
+          <button className={styles.actionButton} onClick={() => setShowAddWage(true)}>
+            Добавить начисление
+          </button>
         )}
       </div>
     </Modal>

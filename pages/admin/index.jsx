@@ -155,6 +155,7 @@ const Admin = () => {
             }}
             initialOrphansCount={orphansCount}
             csrfToken={csrfToken}
+            companyWallet={companyData?.wallet}
           />
         )}
         {activeTab === 'payments' && payments && (

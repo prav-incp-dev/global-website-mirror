@@ -2,6 +2,7 @@ import { useState } from 'react'
 import classNames from 'classnames'
 import { UserRole } from '@/generated/prisma/enums'
 import { userName } from '@/lib/user'
+import { walletPreview } from '@/lib/wallet'
 import styles from './index.module.css'
 
 const ViewProfile = ({ profile, onEdit }) => {
@@ -15,12 +16,6 @@ const ViewProfile = ({ profile, onEdit }) => {
     return parent.nick || userName(parent)
   }
   const parent = getParent()
-
-  const walletPreview = () => {
-    if (!profile.wallet) return '—'
-
-    return `${profile.wallet.slice(0, 10)}...${profile.wallet.slice(-8)}`
-  }
 
   const handleCheckBalance = async () => {
     setBalanceLoading(true)
@@ -69,7 +64,7 @@ const ViewProfile = ({ profile, onEdit }) => {
       <div className={styles.row}>
         <span className={styles.label}>Номер кошелька в сети BNB:</span>
         <span className={classNames(styles.value, styles.wallet)} title={profile.wallet || '—'}>
-          {walletPreview()}
+          {walletPreview(profile.wallet)}
         </span>
       </div>
       {profile.wallet && (

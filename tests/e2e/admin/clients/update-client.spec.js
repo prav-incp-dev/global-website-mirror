@@ -48,6 +48,10 @@ test.describe('update client achievements flow', () => {
     const confirmedRow = page.getByText('Уровень подтвержден:').locator('..')
     await expect(confirmedRow).toContainText('Да')
 
+    const walletRow = page.getByText('Кошелек:').locator('..')
+    await expect(walletRow).toContainText('0x')
+    await expect(walletRow).toContainText('...')
+
     // 4. Click "Изменить уровень" to open UpdateLevelModal
     await page.getByRole('button', { name: 'Изменить уровень' }).click()
 
