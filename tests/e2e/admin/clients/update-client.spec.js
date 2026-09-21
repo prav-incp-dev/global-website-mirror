@@ -40,6 +40,10 @@ test.describe('update client achievements flow', () => {
     await expect(consultantRow).toBeVisible()
     await consultantRow.locator('td:last-child svg').click()
 
+    const walletRow = page.getByText('Кошелек:').locator('..')
+    await expect(walletRow).toContainText('0x')
+    await expect(walletRow).toContainText('...')
+
     // 3. ClientModal opens — verify default level values displayed
     await page.getByRole('button', { name: 'Достижения' }).click()
     await expect(page.getByText('Уровень:')).toBeVisible()
@@ -48,10 +52,6 @@ test.describe('update client achievements flow', () => {
 
     const confirmedRow = page.getByText('Уровень подтвержден:').locator('..')
     await expect(confirmedRow).toContainText('Да')
-
-    const walletRow = page.getByText('Кошелек:').locator('..')
-    await expect(walletRow).toContainText('0x')
-    await expect(walletRow).toContainText('...')
 
     // 4. Click "Изменить уровень" to open UpdateLevelModal
     await page.getByRole('button', { name: 'Изменить уровень' }).click()

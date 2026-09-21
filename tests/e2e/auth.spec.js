@@ -201,9 +201,10 @@ test.describe('login flow with 2FA', () => {
     await expect(page.getByRole('heading', { name: 'Вход в систему' })).toBeVisible()
     await expect(page).toHaveURL('http://127.0.0.1:3101/auth')
 
-    // Navigate to homepage / profile, check that we get redirected to /auth again because we are logged out
+    // Navigate to homepage — landing page appears for unauthenticated users
     await page.goto('/')
-    await expect(page).toHaveURL('http://127.0.0.1:3101/auth')
+    await expect(page.getByRole('heading', { name: 'International Club of Participants' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'ВОЙТИ' })).toBeVisible()
   })
 })
 

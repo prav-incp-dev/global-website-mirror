@@ -109,6 +109,10 @@ const ClientModal = ({ onClose }) => {
               <span className={styles.value}>{selectedUser.nick || '—'}</span>
             </div>
             <div className={styles.infoRow}>
+              <span className={styles.label}>Кошелек:</span>
+              <span className={styles.value}>{walletPreview(selectedUser.wallet)}</span>
+            </div>
+            <div className={styles.infoRow}>
               <span className={styles.label}>Родитель:</span>
               <span className={styles.value}>{parentName()}</span>
             </div>
@@ -140,10 +144,6 @@ const ClientModal = ({ onClose }) => {
             <div className={styles.infoRow}>
               <span className={styles.label}>Групповые единицы:</span>
               <span className={styles.value}>{selectedUser.groupScore}</span>
-            </div>
-            <div className={styles.infoRow}>
-              <span className={styles.label}>Кошелек:</span>
-              <span className={styles.value}>{walletPreview(selectedUser.wallet)}</span>
             </div>
           </div>
 
