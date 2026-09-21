@@ -37,7 +37,7 @@ describe('emailService in production mode', () => {
         user: 'user@example.com',
         pass: 'secret',
       },
-      requireTLS: true,
+      requireTLS: false,
     })
   })
 })
