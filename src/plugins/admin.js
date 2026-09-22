@@ -319,26 +319,18 @@ export default fp(async (fastify) => {
       const sql = `
         SELECT
           u."id", u."firstName", u."lastName", u."level", u."email", u."memberId",
-          lh."createdAt" AS "levelDate",
-          COALESCE(w."score", 0)::int AS "wageScore",
-          COALESCE(w."groupScore", 0)::int AS "wageGroupScore"
+          MAX(lh."createdAt") AS "levelDate",
+          COALESCE(SUM(w."score"), 0)::int AS "wageScore",
+          COALESCE(SUM(w."groupScore"), 0)::int AS "wageGroupScore"
         FROM "User" u
-        LEFT JOIN LATERAL (
-          SELECT "createdAt" FROM "LevelHistory"
-          WHERE "userId" = u."id" AND "newLevel" = u."level"
-          ORDER BY "createdAt" DESC
-          LIMIT 1
-        ) lh ON true
-        LEFT JOIN LATERAL (
-          SELECT
-            COALESCE(SUM("score"), 0)::int AS "score",
-            COALESCE(SUM("groupScore"), 0)::int AS "groupScore"
-          FROM "Wage"
-          WHERE "userId" = u."id"
-            AND "createdAt" >= $4::date
-            AND "createdAt" < ($5::date + INTERVAL '1 day')
-        ) w ON true
+        LEFT JOIN "LevelHistory" lh
+          ON lh."userId" = u."id" AND lh."newLevel" = u."level"
+        LEFT JOIN "Wage" w
+          ON w."userId" = u."id"
+          AND w."createdAt" >= $4::date
+          AND w."createdAt" < ($5::date + INTERVAL '1 day')
         WHERE ${whereSql}
+        GROUP BY u."id"
         ORDER BY ${orderBy}
       `
 
