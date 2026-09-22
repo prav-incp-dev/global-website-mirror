@@ -29,6 +29,35 @@
   line-height: 1.5;
 }
 
+.valueRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.downloadButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  color: #d4af37;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.downloadButton:hover {
+  background: rgba(212, 175, 55, 0.12);
+  border-color: #d4af37;
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.2);
+}
+
 .editButton {
   display: block;
   width: 100%;
