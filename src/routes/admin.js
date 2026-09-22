@@ -187,20 +187,18 @@ export default async (fastify) => {
         user, fromDate, toDate, query, orphansOnly, sortBy, fromLevel, toLevel,
       )
 
-      const rows = clients.map((client) => [
-        `${client.firstName} ${client.lastName || ''}`.trim(),
-        client.email,
-        client.memberId || '',
-        String(client.level),
-        client.levelDate,
-        String(client.wageScore),
-        String(client.wageGroupScore),
-      ])
-
       // Build CSV with BOM for Excel
-      const csv = stringify(rows, {
+      const csv = stringify(clients, {
         header: true,
-        columns: ['Имя', 'Почта', 'Номер пайщика', 'Уровень', 'Дата получения уровня', 'Личные единицы за период', 'Групповые единицы за период'],
+        columns: [
+          { key: "name", header: "Имя" },
+          { key: "email", header: "Почта" },
+          { key: "memberId", header: "Номер пайщика" },
+          { key: "level", header: "Уровень" },
+          { key: "levelDate", header: "Дата получения уровня" },
+          { key: "wageScore", header: "Личные единицы за период" },
+          { key: "wageGroupScore", header: "Групповые единицы за период" },
+        ],
         bom: true
       })
 

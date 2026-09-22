@@ -16,8 +16,8 @@ const nonAdminUser = {
 }
 
 const mockClients = [
-  { firstName: 'Alice', lastName: 'Smith', email: 'alice@test.com', memberId: 'M-001', level: 2, levelDate: '10.05.2025', wageScore: 15, wageGroupScore: 35 },
-  { firstName: 'Bob', lastName: 'Jones', email: 'bob@test.com', memberId: 'M-002', level: 1, levelDate: '', wageScore: 0, wageGroupScore: 0 },
+  { name: 'Alice Smith', email: 'alice@test.com', memberId: 'M-001', level: 2, levelDate: '10.05.2025', wageScore: 15, wageGroupScore: 35 },
+  { name: 'Bob Jones', email: 'bob@test.com', memberId: 'M-002', level: 1, levelDate: '', wageScore: 0, wageGroupScore: 0 },
 ]
 
 describe('GET /api/admin/clients/export', () => {

@@ -337,10 +337,11 @@ export default fp(async (fastify) => {
       const rows = await fastify.prisma.$queryRawUnsafe(sql, ...baseParams)
 
       return rows.map((row) => ({
+        name: `${row.firstName} ${row.lastName || ''}`.trim(),
         firstName: row.firstName,
         lastName: row.lastName,
         email: row.email,
-        memberId: row.memberId,
+        memberId: row.memberId || '',
         level: row.level,
         levelDate: row.levelDate ? new Date(row.levelDate).toLocaleDateString('ru-RU') : '',
         wageScore: row.wageScore,
