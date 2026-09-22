@@ -196,7 +196,7 @@ describe('GET /api/admin/company/wages/export', () => {
 
     const lines = body.replace('\uFEFF', '').split('\n')
     expect(lines[0]).toBe('Дата,Сумма,Пользователь,Кошелек отправителя,Хэш транзакции')
-    expect(lines[1]).toBe(`2025-06-15,150.50,Test User,${payment.fromWallet},${payment.txHash}`)
+    expect(lines[1]).toBe(`15.06.2025,150.50,Test User,${payment.fromWallet},${payment.txHash}`)
     expect(lines[2]).toBe('')
   })
 
@@ -296,7 +296,7 @@ describe('GET /api/admin/company/wages/export', () => {
 
     const lines = response.body.replace('\uFEFF', '').split('\n')
     expect(lines[0]).toBe('Дата,Сумма,Пользователь,Кошелек отправителя,Хэш транзакции')
-    expect(lines[1]).toBe(`2025-06-15,100.00,Test User,${payment.fromWallet},${payment.txHash}`)
+    expect(lines[1]).toBe(`15.06.2025,100.00,Test User,${payment.fromWallet},${payment.txHash}`)
     expect(lines[2]).toBe('')
   })
 
@@ -338,7 +338,7 @@ describe('GET /api/admin/company/wages/export', () => {
 
     const lines = response.body.replace('\uFEFF', '').split('\n')
     expect(lines[0]).toBe('Дата,Сумма,Пользователь,Кошелек отправителя,Хэш транзакции')
-    expect(lines[1]).toBe(`2025-06-15,75.00,Test User,${payment.fromWallet},${payment.txHash}`)
+    expect(lines[1]).toBe(`15.06.2025,75.00,Test User,${payment.fromWallet},${payment.txHash}`)
     expect(lines[2]).toBe('')
   })
 
@@ -374,7 +374,7 @@ describe('GET /api/admin/company/wages/export', () => {
 
     const lines = response.body.replace('\uFEFF', '').split('\n')
     expect(lines[0]).toBe('Дата,Сумма,Пользователь,Кошелек отправителя,Хэш транзакции')
-    expect(lines[1]).toBe(`2025-06-15,50.00,—,0xUserWallet,—`)
+    expect(lines[1]).toBe(`15.06.2025,50.00,—,0xUserWallet,—`)
     expect(lines[2]).toBe('')
   })
 })

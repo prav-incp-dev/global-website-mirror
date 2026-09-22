@@ -258,7 +258,7 @@ export default async (fastify) => {
       })
 
       const rows = wages.map((w) => ({
-        date: w.createdAt.toISOString().slice(0, 10),
+        date: new Date(w.createdAt).toLocaleDateString('ru-RU'),
         amount: Number(w.amount).toFixed(2),
         userName: w.payment?.user ? userName(w.payment.user) : '—',
         fromWallet: w.fromWallet || '—',
