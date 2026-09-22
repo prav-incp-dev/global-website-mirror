@@ -42,7 +42,7 @@ const ExportModal = ({ onClose }) => {
         </p>
 
         <div className={styles.fieldGroup}>
-          <label className={styles.label} htmlFor="fromDate">Дата от</label>
+          <label className={styles.label} htmlFor="fromDate">Единицы с</label>
           <input
             id="fromDate"
             type="date"
@@ -53,7 +53,7 @@ const ExportModal = ({ onClose }) => {
         </div>
 
         <div className={styles.fieldGroup}>
-          <label className={styles.label} htmlFor="toDate">Дата до</label>
+          <label className={styles.label} htmlFor="toDate">Единицы по</label>
           <input
             id="toDate"
             type="date"

@@ -1,5 +1,7 @@
 import { test, expect } from '../../fixtures.js'
 import { createTestCompany, createTestUser, getPrisma } from '../../db.js'
+import fs from 'fs'
+import path from 'path'
 
 test.describe('admin clients export csv', () => {
   let admin
@@ -9,7 +11,6 @@ test.describe('admin clients export csv', () => {
 
     admin = await createTestUser({ firstName: 'Export', lastName: 'Admin', role: 'Admin', companyId: company.id })
 
-    // Consultant with wage records and level history
     const consultant = await createTestUser({
       firstName: 'Export',
       lastName: 'Consultant',
@@ -18,7 +19,6 @@ test.describe('admin clients export csv', () => {
       level: 3,
     })
 
-    // Candidate — should also appear in export
     await createTestUser({
       firstName: 'Export',
       lastName: 'Candidate',
@@ -29,7 +29,6 @@ test.describe('admin clients export csv', () => {
 
     const prisma = getPrisma()
 
-    // LevelHistory: consultant reached level 3 on 2025-05-10
     await prisma.levelHistory.create({
       data: {
         userId: consultant.id,
@@ -39,7 +38,6 @@ test.describe('admin clients export csv', () => {
       },
     })
 
-    // Wages inside the default date range (last 30 days from now)
     await prisma.wage.create({
       data: {
         companyId: company.id,
@@ -69,62 +67,55 @@ test.describe('admin clients export csv', () => {
     await page.getByRole('button', { name: 'Клиенты' }).click()
     await page.waitForLoadState('networkidle')
 
-    // Both users are visible in the table
     await expect(page.getByText('Export Consultant')).toBeVisible()
     await expect(page.getByText('Export Candidate')).toBeVisible()
 
-    // Click the download button
-    await page.getByTitle('Выгрузить отчет').click()
+    await page.getByTitle('Выгрузка').click()
 
-    // The ExportModal opens
     const modalTitle = page.getByRole('heading', { name: 'Выгрузка клиентов' })
     await expect(modalTitle).toBeVisible()
 
-    // Date inputs and the confirm button are present
-    await expect(page.getByLabel('Дата от')).toBeVisible()
-    await expect(page.getByLabel('Дата до')).toBeVisible()
+    await expect(page.getByLabel('Единицы с')).toBeVisible()
+    await expect(page.getByLabel('Единицы по')).toBeVisible()
     const confirmButton = page.getByRole('button', { name: 'Сформировать' })
     await expect(confirmButton).toBeVisible()
     await expect(confirmButton).toBeEnabled()
 
-    // Intercept the export request
-    const responsePromise = page.waitForResponse(
-      (response) =>
-        response.url().includes('/api/admin/clients/export') && response.status() === 200,
-    )
+    const downloadPromise = page.waitForEvent('download')
 
-    // Click "Сформировать"
     await confirmButton.click()
 
-    // Wait for the response and verify it
-    const response = await responsePromise
-    expect(response.status()).toBe(200)
-    expect(response.headers()['content-type']).toBe('text/csv; charset=utf-8')
-    expect(response.headers()['content-disposition']).toMatch(/^attachment; filename="clients-.+\.csv"$/)
+    const download = await downloadPromise
+    const fileName = download.suggestedFilename()
+    expect(fileName).toMatch(/^clients-.+\.csv$/)
 
-    const csvText = await response.text()
+    const tempPath = path.join('tests/fixtures', fileName)
+    await download.saveAs(tempPath)
 
-    // CSV starts with BOM
-    expect(csvText.startsWith('\uFEFF')).toBe(true)
+    expect(fs.existsSync(tempPath)).toBeTruthy()
+    const fileStats = fs.statSync(tempPath)
+    expect(fileStats.size).toBeGreaterThan(0)
 
-    const lines = csvText.replace('\uFEFF', '').split('\n').filter(Boolean)
+    const fileContent = fs.readFileSync(tempPath, 'utf-8')
 
-    // Header row
-    expect(lines[0]).toBe('Имя,Почта,Номер пайщика,Уровень,Дата получения уровня,Личные единицы за период,Групповые единицы за период')
+    expect(fileContent.startsWith('\uFEFF')).toBeTruthy()
 
-    // Both users appear in the CSV (order may vary, check by unique fields)
-    const consultantLine = lines.find((l) => l.includes('Export Consultant'))
+    const csvLines = fileContent.replace('\uFEFF', '').split('\n').filter(Boolean)
+
+    expect(csvLines[0]).toBe('Имя,Почта,Номер пайщика,Уровень,Дата получения уровня,Личные единицы за период,Групповые единицы за период')
+
+    const consultantLine = csvLines.find((l) => l.includes('Export Consultant'))
     expect(consultantLine).toBeTruthy()
-    expect(consultantLine).toContain('3') // level
-    expect(consultantLine).toContain('15') // wageScore (10 + 5)
-    expect(consultantLine).toContain('35') // wageGroupScore (20 + 15)
+    expect(consultantLine).toContain('3')
+    expect(consultantLine).toContain('15')
+    expect(consultantLine).toContain('35')
 
-    const candidateLine = lines.find((l) => l.includes('Export Candidate'))
+    const candidateLine = csvLines.find((l) => l.includes('Export Candidate'))
     expect(candidateLine).toBeTruthy()
-    expect(candidateLine).toContain('1') // level
+    expect(candidateLine).toContain('1')
 
-    // The modal closed after submitting
+    fs.unlinkSync(tempPath)
+
     await expect(modalTitle).not.toBeVisible()
   })
 })
-
