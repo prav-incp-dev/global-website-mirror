@@ -169,11 +169,13 @@ describe('GET /api/admin/company/wages/export', () => {
       companyId: company.id,
     })
 
+    // Company wallet wages have null userId — user comes from payment.user
     await createWage(app, {
       companyId: company.id,
-      userId: user.id,
+      userId: null,
       paymentId: payment.id,
-      fromWallet: company.serviceWallet,
+      fromWallet: payment.fromWallet,
+      toWallet: company.serviceWallet,
       amount: 150.50,
       createdAt: new Date('2025-06-15T10:00:00Z'),
     })
@@ -194,7 +196,7 @@ describe('GET /api/admin/company/wages/export', () => {
 
     const lines = body.replace('\uFEFF', '').split('\n')
     expect(lines[0]).toBe('Дата,Сумма,Пользователь,Кошелек отправителя,Хэш транзакции')
-    expect(lines[1]).toBe(`2025-06-15,150.50,Test User,${company.serviceWallet},${payment.txHash}`)
+    expect(lines[1]).toBe(`2025-06-15,150.50,Test User,${payment.fromWallet},${payment.txHash}`)
     expect(lines[2]).toBe('')
   })
 
@@ -218,7 +220,8 @@ describe('GET /api/admin/company/wages/export', () => {
       companyId: company.id,
       userId: user.id,
       paymentId: payment.id,
-      fromWallet: '0xffffffffffffffffffffffffffffffffffffffff',
+      fromWallet: payment.fromWallet,
+      toWallet: '0xffffffffffffffffffffffffffffffffffffffff',
     })
 
     const otherWallet = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
@@ -256,27 +259,30 @@ describe('GET /api/admin/company/wages/export', () => {
 
     await createWage(app, {
       companyId: company.id,
-      userId: user.id,
+      userId: null,
       paymentId: payment.id,
-      fromWallet: company.serviceWallet,
+      fromWallet: payment.fromWallet,
+      toWallet: company.serviceWallet,
       amount: 100,
       createdAt: new Date('2025-06-15T10:00:00Z'),
     })
 
     await createWage(app, {
       companyId: company.id,
-      userId: user.id,
+      userId: null,
       paymentId: payment.id,
-      fromWallet: company.serviceWallet,
+      fromWallet: payment.fromWallet,
+      toWallet: company.serviceWallet,
       amount: 200,
       createdAt: new Date('2024-11-15T10:00:00Z'),
     })
 
     await createWage(app, {
       companyId: company.id,
-      userId: user.id,
+      userId: null,
       paymentId: payment.id,
-      fromWallet: company.serviceWallet,
+      fromWallet: payment.fromWallet,
+      toWallet: company.serviceWallet,
       amount: 300,
       createdAt: new Date('2026-01-15T10:00:00Z'),
     })
@@ -290,7 +296,7 @@ describe('GET /api/admin/company/wages/export', () => {
 
     const lines = response.body.replace('\uFEFF', '').split('\n')
     expect(lines[0]).toBe('Дата,Сумма,Пользователь,Кошелек отправителя,Хэш транзакции')
-    expect(lines[1]).toBe(`2025-06-15,100.00,Test User,${company.serviceWallet},${payment.txHash}`)
+    expect(lines[1]).toBe(`2025-06-15,100.00,Test User,${payment.fromWallet},${payment.txHash}`)
     expect(lines[2]).toBe('')
   })
 
@@ -311,12 +317,14 @@ describe('GET /api/admin/company/wages/export', () => {
       companyId: company.id,
     })
 
-    // Create a wage with null userId (no associated user) but valid paymentId
+    // Create a wage with null userId (no wage user) but valid paymentId
+    // The user name should come from payment.user
     await createWage(app, {
       companyId: company.id,
       userId: null,
       paymentId: payment.id,
-      fromWallet: company.serviceWallet,
+      fromWallet: payment.fromWallet,
+      toWallet: company.serviceWallet,
       amount: 75,
       createdAt: new Date('2025-06-15T10:00:00Z'),
     })
@@ -330,7 +338,7 @@ describe('GET /api/admin/company/wages/export', () => {
 
     const lines = response.body.replace('\uFEFF', '').split('\n')
     expect(lines[0]).toBe('Дата,Сумма,Пользователь,Кошелек отправителя,Хэш транзакции')
-    expect(lines[1]).toBe(`2025-06-15,75.00,—,${company.serviceWallet},${payment.txHash}`)
+    expect(lines[1]).toBe(`2025-06-15,75.00,Test User,${payment.fromWallet},${payment.txHash}`)
     expect(lines[2]).toBe('')
   })
 
@@ -349,9 +357,10 @@ describe('GET /api/admin/company/wages/export', () => {
 
     await createWage(app, {
       companyId: company.id,
-      userId: user.id,
+      userId: null,
       paymentId: null,
-      fromWallet: company.serviceWallet,
+      fromWallet: '0xUserWallet',
+      toWallet: company.serviceWallet,
       amount: 50,
       createdAt: new Date('2025-06-15T10:00:00Z'),
     })
@@ -365,7 +374,7 @@ describe('GET /api/admin/company/wages/export', () => {
 
     const lines = response.body.replace('\uFEFF', '').split('\n')
     expect(lines[0]).toBe('Дата,Сумма,Пользователь,Кошелек отправителя,Хэш транзакции')
-    expect(lines[1]).toBe(`2025-06-15,50.00,Test User,${company.serviceWallet},—`)
+    expect(lines[1]).toBe(`2025-06-15,50.00,—,0xUserWallet,—`)
     expect(lines[2]).toBe('')
   })
 })

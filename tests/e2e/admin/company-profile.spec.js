@@ -158,11 +158,11 @@ test.describe('admin company wages export', () => {
     })
 
     await prisma.wage.create({
-      data: { companyId: company.id, userId: consultant.id, paymentId: payment.id, fromWallet: SERVICE_WALLET, amount: 100, score: 0, groupScore: 0, createdAt: new Date('2025-06-15T10:00:00Z') },
+      data: { companyId: company.id, userId: null, paymentId: payment.id, fromWallet: consultant.wallet, toWallet: SERVICE_WALLET, amount: 100, score: 0, groupScore: 0, createdAt: new Date('2025-06-15T10:00:00Z') },
     })
 
     await prisma.wage.create({
-      data: { companyId: company.id, userId: consultant.id, paymentId: payment.id, fromWallet: SERVICE_WALLET, amount: 250.50, score: 0, groupScore: 0, description: 'Service fee', createdAt: new Date('2025-07-20T10:00:00Z') },
+      data: { companyId: company.id, userId: null, paymentId: payment.id, fromWallet: consultant.wallet, toWallet: SERVICE_WALLET, amount: 250.50, score: 0, groupScore: 0, description: 'Service fee', createdAt: new Date('2025-07-20T10:00:00Z') },
     })
 
     await loginAs(adminUser.id)
@@ -210,13 +210,13 @@ test.describe('admin company wages export', () => {
 
     const wage100Line = csvLines.find((l) => l.includes('100.00'))
     expect(wage100Line).toBeTruthy()
-    expect(wage100Line).toContain(SERVICE_WALLET)
+    expect(wage100Line).toContain(consultant.wallet)
     expect(wage100Line).toContain('0xTESTTXHASH1234567890abcdef1234567890abcdef')
 
     const wage250Line = csvLines.find((l) => l.includes('250.50'))
     expect(wage250Line).toBeTruthy()
     expect(wage250Line).toContain('Wage Consultant')
-    expect(wage250Line).toContain(SERVICE_WALLET)
+    expect(wage250Line).toContain(consultant.wallet)
 
     fs.unlinkSync(tempPath)
 

@@ -232,7 +232,7 @@ export default async (fastify) => {
       const wages = await fastify.prisma.wage.findMany({
         where: {
           companyId: user.company.id,
-          fromWallet: wallet,
+          toWallet: wallet,
           createdAt: {
             gte: new Date(fromDate),
             lte: new Date(toDate + 'T23:59:59.999Z'),
@@ -243,12 +243,12 @@ export default async (fastify) => {
             select: {
               txHash: true,
               fromWallet: true,
-            },
-          },
-          user: {
-            select: {
-              firstName: true,
-              lastName: true,
+              user: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                },
+              },
             },
           },
         },
@@ -260,7 +260,7 @@ export default async (fastify) => {
       const rows = wages.map((w) => ({
         date: w.createdAt.toISOString().slice(0, 10),
         amount: Number(w.amount).toFixed(2),
-        userName: w.user ? userName(w.user) : '—',
+        userName: w.payment?.user ? userName(w.payment.user) : '—',
         fromWallet: w.fromWallet || '—',
         txHash: w.payment?.txHash || '—',
       }))
