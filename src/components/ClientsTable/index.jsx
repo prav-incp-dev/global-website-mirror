@@ -5,8 +5,10 @@ import { MIN_LEVEL, MAX_LEVEL } from '@/lib/constants'
 import styles from './index.module.css'
 import InfoIcon from '@/assets/icons/InfoIcon.svg?react'
 import FilterIcon from '@/assets/icons/FilterIcon.svg?react'
+import DownloadIcon from '@/assets/icons/DownloadIcon.svg?react'
 import ClientModal from './ClientModal'
 import FilterModal from './FilterModal'
+import ExportModal from './ExportModal'
 import { ClientsProvider, useClientsContext } from './ClientsContext'
 import { userName } from '@/lib/user'
 import Sorter from '../Sorter'
@@ -39,6 +41,7 @@ const ClientsTableInner = () => {
   } = useClientsContext()
   const debounceRef = useRef(null)
   const [levelFilterOpen, setLevelFilterOpen] = useState(false)
+  const [exportModalOpen, setExportModalOpen] = useState(false)
   const activeFilter = fromLevel !== MIN_LEVEL || toLevel !== MAX_LEVEL
 
   const handleSearchChange = (e) => {
@@ -121,6 +124,13 @@ const ClientsTableInner = () => {
           <FilterIcon className={styles.filterIcon} />
         </button>
         <Sorter sortBy={sortBy} onSortChange={handleSortChange} options={SORT_OPTIONS} />
+        <button
+          className={styles.downloadButton}
+          onClick={() => setExportModalOpen(true)}
+          title="Выгрузка"
+        >
+          <DownloadIcon className={styles.downloadIcon} />
+        </button>
         <input
           type="text"
           className={styles.searchInput}
@@ -180,6 +190,7 @@ const ClientsTableInner = () => {
       )}
 
       {levelFilterOpen && <FilterModal onClose={() => setLevelFilterOpen(false)} />}
+      {exportModalOpen && <ExportModal onClose={() => setExportModalOpen(false)} />}
       {selectedUser && <ClientModal onClose={() => setSelectedUser(null)} />}
     </div>
   )

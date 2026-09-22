@@ -280,6 +280,75 @@ export default fp(async (fastify) => {
       return ancestors
     },
 
+    exportClients: async (
+      user,
+      fromDate,
+      toDate,
+      query = '',
+      orphansOnly = false,
+      sortBy = 'id',
+      fromLevel = MIN_LEVEL,
+      toLevel = MAX_LEVEL,
+    ) => {
+      const baseParams = [user.company.id, fromLevel, toLevel, fromDate, toDate]
+      const whereParts = [
+        `u."role" <> 'Admin'`,
+        `u."companyId" = $1`,
+        `u."level" >= $2`,
+        `u."level" <= $3`,
+      ]
+      if (orphansOnly) whereParts.push(`u."orphant" = true`)
+      if (query) {
+        const likeStart = baseParams.length + 1
+        baseParams.push(`%${query}%`, `%${query}%`, `%${query}%`)
+        whereParts.push(
+          `(u."firstName" ILIKE $${likeStart} OR u."lastName" ILIKE $${likeStart + 1} OR u."email" ILIKE $${likeStart + 2})`,
+        )
+      }
+      const whereSql = whereParts.join(' AND ')
+
+      const orderByMap = {
+        name: `u."firstName" ASC, u."lastName" ASC`,
+        level: `u."level" DESC`,
+        role: `u."role" ASC`,
+        score: `"wageScore" DESC, u."id" DESC`,
+        id: `u."id" DESC`,
+      }
+      const orderBy = orderByMap[sortBy] ?? orderByMap.id
+
+      const sql = `
+        SELECT
+          u."id", u."firstName", u."lastName", u."level", u."email", u."memberId",
+          MAX(lh."createdAt") AS "levelDate",
+          COALESCE(SUM(w."score"), 0)::int AS "wageScore",
+          COALESCE(SUM(w."groupScore"), 0)::int AS "wageGroupScore"
+        FROM "User" u
+        LEFT JOIN "LevelHistory" lh
+          ON lh."userId" = u."id" AND lh."newLevel" = u."level"
+        LEFT JOIN "Wage" w
+          ON w."userId" = u."id"
+          AND w."createdAt" >= $4::date
+          AND w."createdAt" < ($5::date + INTERVAL '1 day')
+        WHERE ${whereSql}
+        GROUP BY u."id"
+        ORDER BY ${orderBy}
+      `
+
+      const rows = await fastify.prisma.$queryRawUnsafe(sql, ...baseParams)
+
+      return rows.map((row) => ({
+        name: `${row.firstName} ${row.lastName || ''}`.trim(),
+        firstName: row.firstName,
+        lastName: row.lastName,
+        email: row.email,
+        memberId: row.memberId || '',
+        level: row.level,
+        levelDate: row.levelDate ? new Date(row.levelDate).toLocaleDateString('ru-RU') : '',
+        wageScore: row.wageScore,
+        wageGroupScore: row.wageGroupScore,
+      }))
+    },
+
     calculateSplit: async (payment) => {
       const { user, company, order } = payment
 

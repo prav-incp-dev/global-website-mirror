@@ -39,7 +39,7 @@
 
 .orphansToggle {
   flex: 1;
-  padding: 12px 0;
+  padding: 12px 4px;
   background: transparent;
   color: #e0e0e0;
   border: 1px solid rgba(212, 175, 55, 0.2);
@@ -97,6 +97,33 @@
 }
 
 .filterIcon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  color: currentColor;
+}
+
+.downloadButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  background: transparent;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
+  cursor: pointer;
+  color: #e0e0e0;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.downloadButton:hover {
+  border-color: rgba(212, 175, 55, 0.5);
+  background: rgba(212, 175, 55, 0.05);
+}
+
+.downloadIcon {
   width: 20px;
   height: 20px;
   display: block;
