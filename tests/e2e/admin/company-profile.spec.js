@@ -128,7 +128,12 @@ test.describe('admin company wages export', () => {
       cumulativeWallet: CUMULATIVE_WALLET,
     })
 
-    const adminUser = await createTestUser({ firstName: 'Wages', lastName: 'Admin', role: 'Admin', companyId: company.id })
+    const adminUser = await createTestUser({
+      firstName: 'Wages',
+      lastName: 'Admin',
+      role: 'Admin',
+      companyId: company.id,
+    })
     const consultant = await createTestUser({
       firstName: 'Wage',
       lastName: 'Consultant',
@@ -158,11 +163,32 @@ test.describe('admin company wages export', () => {
     })
 
     await prisma.wage.create({
-      data: { companyId: company.id, userId: null, paymentId: payment.id, fromWallet: consultant.wallet, toWallet: SERVICE_WALLET, amount: 100, score: 0, groupScore: 0, createdAt: new Date('2025-06-15T10:00:00Z') },
+      data: {
+        companyId: company.id,
+        userId: null,
+        paymentId: payment.id,
+        fromWallet: consultant.wallet,
+        toWallet: SERVICE_WALLET,
+        amount: 100,
+        score: 0,
+        groupScore: 0,
+        createdAt: new Date('2025-06-15T10:00:00Z'),
+      },
     })
 
     await prisma.wage.create({
-      data: { companyId: company.id, userId: null, paymentId: payment.id, fromWallet: consultant.wallet, toWallet: SERVICE_WALLET, amount: 250.50, score: 0, groupScore: 0, description: 'Service fee', createdAt: new Date('2025-07-20T10:00:00Z') },
+      data: {
+        companyId: company.id,
+        userId: null,
+        paymentId: payment.id,
+        fromWallet: consultant.wallet,
+        toWallet: SERVICE_WALLET,
+        amount: 250.5,
+        score: 0,
+        groupScore: 0,
+        description: 'Service fee',
+        createdAt: new Date('2025-07-20T10:00:00Z'),
+      },
     })
 
     await loginAs(adminUser.id)
@@ -178,14 +204,14 @@ test.describe('admin company wages export', () => {
     const modalTitle = page.getByRole('heading', { name: 'Выгрузка начислений на сервисный счет' })
     await expect(modalTitle).toBeVisible()
 
-    await expect(page.getByLabel('С', { exact: true})).toBeVisible()
-    await expect(page.getByLabel('По', { exact: true})).toBeVisible()
+    await expect(page.getByLabel('С', { exact: true })).toBeVisible()
+    await expect(page.getByLabel('По', { exact: true })).toBeVisible()
     const confirmButton = page.getByRole('button', { name: 'Сформировать' })
     await expect(confirmButton).toBeVisible()
     await expect(confirmButton).toBeEnabled()
 
-    await page.getByLabel('С', { exact: true}).fill('2025-01-01')
-    await page.getByLabel('По', { exact: true}).fill('2025-12-31')
+    await page.getByLabel('С', { exact: true }).fill('2025-01-01')
+    await page.getByLabel('По', { exact: true }).fill('2025-12-31')
 
     const downloadPromise = page.waitForEvent('download')
     await confirmButton.click()

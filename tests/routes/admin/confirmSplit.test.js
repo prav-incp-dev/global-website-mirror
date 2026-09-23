@@ -210,13 +210,17 @@ describe('POST /api/admin/payments/:id/confirm-split', () => {
     expect(response.json()).toEqual({ error: 'Доступ запрещен' })
   })
 
-
   it('returns 409 when payment is not Completed', async () => {
     const app = await createApp()
     const company = await createCompany(app)
     const user = await createUser(app, company.id)
 
-    for (const status of [PaymentStatus.Pending, PaymentStatus.Failed, PaymentStatus.ToRefund, PaymentStatus.Splitted]) {
+    for (const status of [
+      PaymentStatus.Pending,
+      PaymentStatus.Failed,
+      PaymentStatus.ToRefund,
+      PaymentStatus.Splitted,
+    ]) {
       const { payment } = await createCompletedPayment(app, { user, company, status })
 
       const adminUser = createAdminUser()
@@ -359,4 +363,3 @@ describe('POST /api/admin/payments/:id/confirm-split', () => {
     expect(updated.status).toBe(PaymentStatus.Splitted)
   })
 })
-

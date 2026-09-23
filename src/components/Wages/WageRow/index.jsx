@@ -22,8 +22,10 @@ const WageRow = ({ wage, isExpanded, onToggle }) => {
         <div className={styles.details}>
           <span className={styles.date}>{new Date(wage.createdAt).toLocaleString('ru-RU')}</span>
           <span className={styles.description}>{wage.description || '—'}</span>
-          { wage.score > 0 && <span className={styles.score}>{`Начислено личных единиц: ${wage.score}`}</span>}
-          { wage.groupScore > 0 && <span className={styles.score}>{`Начислено групповых единиц: ${wage.groupScore}`}</span>}
+          {wage.score > 0 && <span className={styles.score}>{`Начислено личных единиц: ${wage.score}`}</span>}
+          {wage.groupScore > 0 && (
+            <span className={styles.score}>{`Начислено групповых единиц: ${wage.groupScore}`}</span>
+          )}
         </div>
       )}
     </div>

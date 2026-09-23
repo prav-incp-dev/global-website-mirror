@@ -155,7 +155,6 @@ describe('calculateSplit', () => {
     ])
   })
 
-
   it('handles fractional percentages and amounts with two-decimal precision', async () => {
     const app = await createApp()
     const company = await createTestCompany(app)
@@ -289,4 +288,3 @@ describe('calculateSplit', () => {
     ])
   })
 })
-

@@ -124,11 +124,7 @@ const ClientsTableInner = () => {
           <FilterIcon className={styles.filterIcon} />
         </button>
         <Sorter sortBy={sortBy} onSortChange={handleSortChange} options={SORT_OPTIONS} />
-        <button
-          className={styles.downloadButton}
-          onClick={() => setExportModalOpen(true)}
-          title="Выгрузка"
-        >
+        <button className={styles.downloadButton} onClick={() => setExportModalOpen(true)} title="Выгрузка">
           <DownloadIcon className={styles.downloadIcon} />
         </button>
         <input

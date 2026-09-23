@@ -291,12 +291,7 @@ export default fp(async (fastify) => {
       toLevel = MAX_LEVEL,
     ) => {
       const baseParams = [user.company.id, fromLevel, toLevel, fromDate, toDate]
-      const whereParts = [
-        `u."role" <> 'Admin'`,
-        `u."companyId" = $1`,
-        `u."level" >= $2`,
-        `u."level" <= $3`,
-      ]
+      const whereParts = [`u."role" <> 'Admin'`, `u."companyId" = $1`, `u."level" >= $2`, `u."level" <= $3`]
       if (orphansOnly) whereParts.push(`u."orphant" = true`)
       if (query) {
         const likeStart = baseParams.length + 1
@@ -379,11 +374,16 @@ export default fp(async (fastify) => {
       let prevPercent = 0
       let currentUser = user
       while (currentUser.parentId && order.quantity > 0) {
-        const parent = ancestors.find(user => user.id == currentUser.parentId)
+        const parent = ancestors.find((user) => user.id == currentUser.parentId)
         const owner = parent.id == user.parentId
         const levelPercent = Number(setting?.levels?.[parent.level]?.percent) ?? 0
         const percent = levelPercent - prevPercent
-        distributedAmount += splitToUser(parent, percent > 0 ? (amount * percent) / 100 : 0, owner ? order.quantity : 0, owner ? 0 : order.quantity)
+        distributedAmount += splitToUser(
+          parent,
+          percent > 0 ? (amount * percent) / 100 : 0,
+          owner ? order.quantity : 0,
+          owner ? 0 : order.quantity,
+        )
         prevPercent = levelPercent
         currentUser = parent
       }

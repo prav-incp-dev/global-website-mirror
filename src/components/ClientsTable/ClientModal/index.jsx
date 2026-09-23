@@ -57,9 +57,7 @@ const ClientModal = ({ onClose }) => {
       {showUpdateScores && <UpdateScoresModal onClose={() => setShowUpdateScores(false)} />}
       {showUpdateLevel && <UpdateLevelModal onClose={() => setShowUpdateLevel(false)} />}
       {showAddWage && <AddWageModal onClose={() => setShowAddWage(false)} onSuccess={handleWageSuccess} />}
-      {notification && (
-        <div className={styles.notification}>{notification}</div>
-      )}
+      {notification && <div className={styles.notification}>{notification}</div>}
       {isConsultant && (
         <div className={styles.tabs}>
           <button

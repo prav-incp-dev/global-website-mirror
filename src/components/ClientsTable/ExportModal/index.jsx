@@ -37,12 +37,12 @@ const ExportModal = ({ onClose }) => {
   return (
     <Modal title="Выгрузка клиентов" onClose={onClose}>
       <div className={styles.container}>
-        <p className={styles.info}>
-          Будут выгружены все клиенты с учетом текущих фильтров.
-        </p>
+        <p className={styles.info}>Будут выгружены все клиенты с учетом текущих фильтров.</p>
 
         <div className={styles.fieldGroup}>
-          <label className={styles.label} htmlFor="fromDate">Единицы с</label>
+          <label className={styles.label} htmlFor="fromDate">
+            Единицы с
+          </label>
           <input
             id="fromDate"
             type="date"
@@ -53,7 +53,9 @@ const ExportModal = ({ onClose }) => {
         </div>
 
         <div className={styles.fieldGroup}>
-          <label className={styles.label} htmlFor="toDate">Единицы по</label>
+          <label className={styles.label} htmlFor="toDate">
+            Единицы по
+          </label>
           <input
             id="toDate"
             type="date"
@@ -64,11 +66,7 @@ const ExportModal = ({ onClose }) => {
         </div>
 
         <div className={styles.actions}>
-          <button
-            className={styles.actionButton}
-            disabled={!fromDate || !toDate}
-            onClick={handleConfirm}
-          >
+          <button className={styles.actionButton} disabled={!fromDate || !toDate} onClick={handleConfirm}>
             Сформировать
           </button>
         </div>

@@ -185,22 +185,29 @@ export default async (fastify) => {
 
       // Fetch all clients with level history date and wage scores in a single query
       const clients = await fastify.admin.exportClients(
-        user, fromDate, toDate, query, orphansOnly, sortBy, fromLevel, toLevel,
+        user,
+        fromDate,
+        toDate,
+        query,
+        orphansOnly,
+        sortBy,
+        fromLevel,
+        toLevel,
       )
 
       // Build CSV with BOM for Excel
       const csv = stringify(clients, {
         header: true,
         columns: [
-          { key: "name", header: "Имя" },
-          { key: "email", header: "Почта" },
-          { key: "memberId", header: "Номер пайщика" },
-          { key: "level", header: "Уровень" },
-          { key: "levelDate", header: "Дата получения уровня" },
-          { key: "wageScore", header: "Личные единицы за период" },
-          { key: "wageGroupScore", header: "Групповые единицы за период" },
+          { key: 'name', header: 'Имя' },
+          { key: 'email', header: 'Почта' },
+          { key: 'memberId', header: 'Номер пайщика' },
+          { key: 'level', header: 'Уровень' },
+          { key: 'levelDate', header: 'Дата получения уровня' },
+          { key: 'wageScore', header: 'Личные единицы за период' },
+          { key: 'wageGroupScore', header: 'Групповые единицы за период' },
         ],
-        bom: true
+        bom: true,
       })
 
       reply.header('Content-Type', 'text/csv; charset=utf-8')
@@ -278,7 +285,10 @@ export default async (fastify) => {
       })
 
       reply.header('Content-Type', 'text/csv; charset=utf-8')
-      reply.header('Content-Disposition', `attachment; filename="wages-${wallet.slice(0, 8)}-${fromDate}-${toDate}.csv"`)
+      reply.header(
+        'Content-Disposition',
+        `attachment; filename="wages-${wallet.slice(0, 8)}-${fromDate}-${toDate}.csv"`,
+      )
       return reply.send(csv)
     },
   })

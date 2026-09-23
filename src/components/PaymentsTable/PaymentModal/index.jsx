@@ -150,7 +150,7 @@ const PaymentModal = ({ onClose }) => {
             </button>
           )}
           {isCompleted && selectedPayment.finalized && (
-            <button 
+            <button
               className={styles.actionButton}
               onClick={async () => {
                 if (window.confirm(COMPLETE_SPLIT_TEXT)) await handleSplit()

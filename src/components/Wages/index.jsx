@@ -144,7 +144,6 @@ const Wages = ({ csrfToken }) => {
           </button>
         </div>
       )}
-
     </div>
   )
 }

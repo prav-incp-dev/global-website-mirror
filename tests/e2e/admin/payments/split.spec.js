@@ -187,7 +187,6 @@ test.describe('admin payments split', () => {
     expect(ancestorWage.userId).toBe(parent.id)
   })
 
-
   test('«Распределить платеж» opens SplitPaymentModal with calculated split and handles wallet rejection', async ({
     loginAs,
     page,
@@ -303,4 +302,3 @@ test.describe('admin payments split', () => {
     expect(unchanged.status).toBe('Completed')
   })
 })
-

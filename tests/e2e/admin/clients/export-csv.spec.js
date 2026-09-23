@@ -102,7 +102,9 @@ test.describe('admin clients export csv', () => {
 
     const csvLines = fileContent.replace('\uFEFF', '').split('\n').filter(Boolean)
 
-    expect(csvLines[0]).toBe('Имя,Почта,Номер пайщика,Уровень,Дата получения уровня,Личные единицы за период,Групповые единицы за период')
+    expect(csvLines[0]).toBe(
+      'Имя,Почта,Номер пайщика,Уровень,Дата получения уровня,Личные единицы за период,Групповые единицы за период',
+    )
 
     const consultantLine = csvLines.find((l) => l.includes('Export Consultant'))
     expect(consultantLine).toBeTruthy()

@@ -80,7 +80,7 @@ const SplitPaymentModal = ({ onClose }) => {
       '.\n\n' +
       'Проверьте статус платежа позже и, если он завершен успешно,\n' +
       "отмените его через кнопку 'Зачесть распределение.'\n" +
-      'Иначе сделайте еще одну попытку.\n' + 
+      'Иначе сделайте еще одну попытку.\n' +
       `Ошибка: ${errorMessage}`
     )
   }
@@ -100,9 +100,7 @@ const SplitPaymentModal = ({ onClose }) => {
     })
     const confirmResult = await confirmRes.json()
     if (!confirmRes.ok) {
-      throw new Error(
-        `Платеж распределен в сети, но не удалось сохранить данные: ${confirmResult.error}.`
-      )
+      throw new Error(`Платеж распределен в сети, но не удалось сохранить данные: ${confirmResult.error}.`)
     }
   }
 
@@ -195,7 +193,7 @@ const SplitPaymentModal = ({ onClose }) => {
       setLoaderText('')
     }
   }
-  
+
   return (
     <Modal title="Распределение платежа" onClose={onClose}>
       <div className={styles.content}>

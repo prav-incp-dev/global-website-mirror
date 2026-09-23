@@ -105,9 +105,7 @@ test.describe('admin clients add wage', () => {
 
     // Confirm the dialog
     page.once('dialog', (dialog) => {
-      expect(dialog.message()).toBe(
-        'Вы подтверждаете, что пользователю было выполнено начисление?',
-      )
+      expect(dialog.message()).toBe('Вы подтверждаете, что пользователю было выполнено начисление?')
       dialog.accept()
     })
     await creditButton.click()
@@ -196,4 +194,3 @@ test.describe('admin clients add wage', () => {
     await expect(page.getByRole('heading', { name: 'Добавить начисление' })).not.toBeVisible()
   })
 })
-

@@ -175,4 +175,3 @@ test.describe('consultant wages tab', () => {
     await expect(page.getByText('$10.00 USDT')).toBeVisible()
   })
 })
-
