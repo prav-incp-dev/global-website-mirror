@@ -197,7 +197,7 @@ describe('POST /api/admin/user/:id/wages', () => {
     const response = await app.inject({
       method: 'POST',
       url: `/api/admin/user/${targetUser.id}/wages`,
-      payload: { amount: 250.50, description: 'Monthly bonus' },
+      payload: { amount: 250.5, description: 'Monthly bonus' },
     })
 
     expect(response.statusCode).toBe(200)
@@ -207,7 +207,7 @@ describe('POST /api/admin/user/:id/wages', () => {
     expect(body.wage).toBeDefined()
     expect(body.wage.userId).toBe(targetUser.id)
     expect(body.wage.companyId).toBe(company.id)
-    expect(Number(body.wage.amount)).toBe(250.50)
+    expect(Number(body.wage.amount)).toBe(250.5)
     expect(body.wage.description).toBe('Monthly bonus')
     expect(body.wage.score).toBe(0)
     expect(body.wage.groupScore).toBe(0)
@@ -217,7 +217,7 @@ describe('POST /api/admin/user/:id/wages', () => {
     expect(wage).toBeDefined()
     expect(wage.userId).toBe(targetUser.id)
     expect(wage.companyId).toBe(company.id)
-    expect(Number(wage.amount)).toBe(250.50)
+    expect(Number(wage.amount)).toBe(250.5)
     expect(wage.description).toBe('Monthly bonus')
     expect(wage.score).toBe(0)
     expect(wage.groupScore).toBe(0)
@@ -239,4 +239,3 @@ describe('POST /api/admin/user/:id/wages', () => {
     expect(response.json()).toEqual({ error: 'Ошибка создания начисления' })
   })
 })
-

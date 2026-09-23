@@ -536,13 +536,13 @@ describe('getClients', () => {
     const company = await createTestCompany(app)
     const adminUser = { company: { id: company.id } }
 
-    const level2 = await createTestUser(app, company.id, {
+    const _level2 = await createTestUser(app, company.id, {
       email: 'fromLevel-2@test.com',
       firstName: 'FromLevel',
       lastName: 'Two',
       level: 2,
     })
-    const level4 = await createTestUser(app, company.id, {
+    const _level4 = await createTestUser(app, company.id, {
       email: 'fromLevel-4@test.com',
       firstName: 'FromLevel',
       lastName: 'Four',
@@ -585,13 +585,13 @@ describe('getClients', () => {
       lastName: 'Four',
       level: 4,
     })
-    const level6 = await createTestUser(app, company.id, {
+    const _level6 = await createTestUser(app, company.id, {
       email: 'toLevel-6@test.com',
       firstName: 'ToLevel',
       lastName: 'Six',
       level: 6,
     })
-    const level8 = await createTestUser(app, company.id, {
+    const _level8 = await createTestUser(app, company.id, {
       email: 'toLevel-8@test.com',
       firstName: 'ToLevel',
       lastName: 'Eight',
@@ -610,7 +610,7 @@ describe('getClients', () => {
     const company = await createTestCompany(app)
     const adminUser = { company: { id: company.id } }
 
-    const level1 = await createTestUser(app, company.id, {
+    const _level1 = await createTestUser(app, company.id, {
       email: 'range-1@test.com',
       firstName: 'Range',
       lastName: 'One',
@@ -634,7 +634,7 @@ describe('getClients', () => {
       lastName: 'Seven',
       level: 7,
     })
-    const level10 = await createTestUser(app, company.id, {
+    const _level10 = await createTestUser(app, company.id, {
       email: 'range-10@test.com',
       firstName: 'Range',
       lastName: 'Ten',
@@ -653,7 +653,7 @@ describe('getClients', () => {
     const company = await createTestCompany(app)
     const adminUser = { company: { id: company.id } }
 
-    const level2 = await createTestUser(app, company.id, {
+    const _level2 = await createTestUser(app, company.id, {
       email: 'outside-2@test.com',
       firstName: 'Outside',
       lastName: 'Low',
@@ -671,7 +671,7 @@ describe('getClients', () => {
       lastName: 'MidHigh',
       level: 8,
     })
-    const level11 = await createTestUser(app, company.id, {
+    const _level11 = await createTestUser(app, company.id, {
       email: 'outside-11@test.com',
       firstName: 'Outside',
       lastName: 'High',

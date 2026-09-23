@@ -55,11 +55,7 @@ describe('exportClients', () => {
       lastName: 'Export',
     })
 
-    const result = await app.admin.exportClients(
-      defaultUser(company.id),
-      '2024-01-01',
-      '2099-12-31',
-    )
+    const result = await app.admin.exportClients(defaultUser(company.id), '2024-01-01', '2099-12-31')
 
     expect(result).toHaveLength(2)
     expect(result.find((u) => u.firstName === 'Alice')).toBeTruthy()
@@ -82,12 +78,7 @@ describe('exportClients', () => {
       lastName: 'Query',
     })
 
-    const result = await app.admin.exportClients(
-      defaultUser(company.id),
-      '2024-01-01',
-      '2099-12-31',
-      'Alice',
-    )
+    const result = await app.admin.exportClients(defaultUser(company.id), '2024-01-01', '2099-12-31', 'Alice')
 
     expect(result).toHaveLength(1)
     expect(result[0].firstName).toBe('Alice')
@@ -108,13 +99,7 @@ describe('exportClients', () => {
       orphant: false,
     })
 
-    const result = await app.admin.exportClients(
-      defaultUser(company.id),
-      '2024-01-01',
-      '2099-12-31',
-      '',
-      true,
-    )
+    const result = await app.admin.exportClients(defaultUser(company.id), '2024-01-01', '2099-12-31', '', true)
 
     expect(result).toHaveLength(1)
     expect(result[0].firstName).toBe('Orphan')
@@ -197,11 +182,7 @@ describe('exportClients', () => {
       },
     })
 
-    const result = await app.admin.exportClients(
-      defaultUser(company.id),
-      '2025-06-01',
-      '2025-07-31',
-    )
+    const result = await app.admin.exportClients(defaultUser(company.id), '2025-06-01', '2025-07-31')
 
     expect(result).toHaveLength(1)
     expect(result[0].wageScore).toBe(15)
@@ -230,11 +211,7 @@ describe('exportClients', () => {
       },
     })
 
-    const result = await app.admin.exportClients(
-      defaultUser(company.id),
-      '2025-01-01',
-      '2025-12-31',
-    )
+    const result = await app.admin.exportClients(defaultUser(company.id), '2025-01-01', '2025-12-31')
 
     expect(result).toHaveLength(1)
     expect(result[0].wageScore).toBe(0)
@@ -270,11 +247,7 @@ describe('exportClients', () => {
       },
     })
 
-    const result = await app.admin.exportClients(
-      defaultUser(company.id),
-      '2024-01-01',
-      '2099-12-31',
-    )
+    const result = await app.admin.exportClients(defaultUser(company.id), '2024-01-01', '2099-12-31')
 
     expect(result).toHaveLength(1)
     expect(result[0].levelDate).toBe('10.05.2025')
@@ -291,11 +264,7 @@ describe('exportClients', () => {
       level: 1,
     })
 
-    const result = await app.admin.exportClients(
-      defaultUser(company.id),
-      '2024-01-01',
-      '2099-12-31',
-    )
+    const result = await app.admin.exportClients(defaultUser(company.id), '2024-01-01', '2099-12-31')
 
     expect(result).toHaveLength(1)
     expect(result[0].levelDate).toBe('')
@@ -325,4 +294,3 @@ describe('exportClients', () => {
     expect(result).toHaveLength(0)
   })
 })
-

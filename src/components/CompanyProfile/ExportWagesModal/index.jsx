@@ -31,7 +31,9 @@ const ExportWagesModal = ({ onClose, wallet, walletLabel }) => {
     <Modal title={`Выгрузка начислений на ${walletLabel}`} onClose={onClose}>
       <div className={styles.container}>
         <div className={styles.fieldGroup}>
-          <label className={styles.label} htmlFor="fromDate">С</label>
+          <label className={styles.label} htmlFor="fromDate">
+            С
+          </label>
           <input
             id="fromDate"
             type="date"
@@ -42,7 +44,9 @@ const ExportWagesModal = ({ onClose, wallet, walletLabel }) => {
         </div>
 
         <div className={styles.fieldGroup}>
-          <label className={styles.label} htmlFor="toDate">По</label>
+          <label className={styles.label} htmlFor="toDate">
+            По
+          </label>
           <input
             id="toDate"
             type="date"
@@ -53,11 +57,7 @@ const ExportWagesModal = ({ onClose, wallet, walletLabel }) => {
         </div>
 
         <div className={styles.actions}>
-          <button
-            className={styles.actionButton}
-            disabled={!fromDate || !toDate}
-            onClick={handleConfirm}
-          >
+          <button className={styles.actionButton} disabled={!fromDate || !toDate} onClick={handleConfirm}>
             Сформировать
           </button>
         </div>

@@ -95,10 +95,7 @@ export default fp(async (server) => {
           limit,
           skip,
         ),
-        server.prisma.$queryRawUnsafe(
-          `SELECT COUNT(*)::int AS "total" FROM "Wage" WHERE ${whereSql}`,
-          ...baseParams,
-        ),
+        server.prisma.$queryRawUnsafe(`SELECT COUNT(*)::int AS "total" FROM "Wage" WHERE ${whereSql}`, ...baseParams),
       ])
 
       const total = totalRows[0]?.total ?? 0

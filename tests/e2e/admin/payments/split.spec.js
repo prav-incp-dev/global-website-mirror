@@ -187,7 +187,6 @@ test.describe('admin payments split', () => {
     expect(ancestorWage.userId).toBe(parent.id)
   })
 
-
   test('«Распределить платеж» opens SplitPaymentModal with calculated split and handles wallet rejection', async ({
     loginAs,
     page,
@@ -290,7 +289,7 @@ test.describe('admin payments split', () => {
     await confirmButton.click()
 
     await expect(splitModalTitle).toBeVisible()
-    await expect(page.getByText('User rejected the request.')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('Ошибка сети: User rejected the request.')).toBeVisible({ timeout: 10000 })
 
     // Close the split modal
     const closeButtons = page.getByRole('button', { name: 'Закрыть' })
@@ -303,4 +302,3 @@ test.describe('admin payments split', () => {
     expect(unchanged.status).toBe('Completed')
   })
 })
-

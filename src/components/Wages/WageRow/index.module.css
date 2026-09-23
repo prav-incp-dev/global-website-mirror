@@ -3,7 +3,9 @@
   border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: 12px;
   background: rgba(212, 175, 55, 0.04);
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
 }
 
 .item:hover {

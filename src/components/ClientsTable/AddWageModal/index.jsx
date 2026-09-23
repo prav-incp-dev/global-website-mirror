@@ -6,8 +6,7 @@ import { getPublicClient, getWalletClient, ensureChain, usdtAddress, usdtDecimal
 import Modal from '../../Modal'
 import styles from './index.module.css'
 
-const CONFIRMATION_TEXT =
-  'Вы подтверждаете, что пользователю было выполнено начисление?'
+const CONFIRMATION_TEXT = 'Вы подтверждаете, что пользователю было выполнено начисление?'
 
 const AddWageModal = ({ onClose, onSuccess }) => {
   const { csrfToken, selectedUser, companyWallet } = useClientsContext()
@@ -31,7 +30,7 @@ const AddWageModal = ({ onClose, onSuccess }) => {
   const [amount, description] = useWatch({ control, name: ['amount', 'description'] })
   const canTransfer = amount > 0 && isValid
   const canCredit = isValid
-  
+
   const paymentErrorMessage = (txHash) => {
     return (
       'Произошла ошибка, но платеж был создан в сети. Хэш платежа:\n\n' +
@@ -57,9 +56,7 @@ const AddWageModal = ({ onClose, onSuccess }) => {
     })
     const result = await response.json()
     if (!response.ok) {
-      throw new Error(
-        `Не удалось сохранить данные: ${result.error}.`
-      )
+      throw new Error(`Не удалось сохранить данные: ${result.error}.`)
     }
   }
 
@@ -121,7 +118,7 @@ const AddWageModal = ({ onClose, onSuccess }) => {
       onSuccess()
     } catch (err) {
       if (txHash) setError(paymentErrorMessage(txHash))
-      else setError(err.shortMessage || err.message || 'Произошла ошибка. Оплата не прошла')
+      else setError(err.shortMessage ? `Ошибка сети: ${err.shortMessage}` : err.message)
     } finally {
       setSaving(false)
       setLoaderText('')
@@ -132,7 +129,9 @@ const AddWageModal = ({ onClose, onSuccess }) => {
     <Modal title="Добавить начисление" isStatic onClose={onClose}>
       <form onSubmit={handleSubmit(onSubmit)} className={styles.container}>
         <div className={styles.fieldGroup}>
-          <label className={styles.label} htmlFor="amount">Сумма (USDT)</label>
+          <label className={styles.label} htmlFor="amount">
+            Сумма (USDT)
+          </label>
           <input
             id="amount"
             type="number"
@@ -150,7 +149,9 @@ const AddWageModal = ({ onClose, onSuccess }) => {
         </div>
 
         <div className={styles.fieldGroup}>
-          <label className={styles.label} htmlFor="description">Описание</label>
+          <label className={styles.label} htmlFor="description">
+            Описание
+          </label>
           <select
             id="description"
             className={styles.select}
@@ -160,7 +161,9 @@ const AddWageModal = ({ onClose, onSuccess }) => {
               validate: (value) => value !== '' || 'Выберите назначение',
             })}
           >
-            <option value="" disabled>Выберите назначение</option>
+            <option value="" disabled>
+              Выберите назначение
+            </option>
             <option value="Лидерское вознаграждение">Лидерское вознаграждение</option>
             <option value="На офис">На офис</option>
             <option value="На путешествие">На путешествие</option>
@@ -171,12 +174,8 @@ const AddWageModal = ({ onClose, onSuccess }) => {
         {error && <p className={styles.error}>{error}</p>}
 
         <div className={styles.actions}>
-          <button
-            type="submit"
-            className={styles.actionButton}
-            disabled={!canTransfer || saving}
-          >
-            {saving ? (loaderText || 'Сохранение...') : 'Перевести'}
+          <button type="submit" className={styles.actionButton} disabled={!canTransfer || saving}>
+            {saving ? loaderText || 'Сохранение...' : 'Перевести'}
           </button>
           <button
             type="button"

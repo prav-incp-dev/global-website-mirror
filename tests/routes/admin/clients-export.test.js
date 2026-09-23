@@ -16,8 +16,24 @@ const nonAdminUser = {
 }
 
 const mockClients = [
-  { name: 'Alice Smith', email: 'alice@test.com', memberId: 'M-001', level: 2, levelDate: '10.05.2025', wageScore: 15, wageGroupScore: 35 },
-  { name: 'Bob Jones', email: 'bob@test.com', memberId: 'M-002', level: 1, levelDate: '', wageScore: 0, wageGroupScore: 0 },
+  {
+    name: 'Alice Smith',
+    email: 'alice@test.com',
+    memberId: 'M-001',
+    level: 2,
+    levelDate: '10.05.2025',
+    wageScore: 15,
+    wageGroupScore: 35,
+  },
+  {
+    name: 'Bob Jones',
+    email: 'bob@test.com',
+    memberId: 'M-002',
+    level: 1,
+    levelDate: '',
+    wageScore: 0,
+    wageGroupScore: 0,
+  },
 ]
 
 describe('GET /api/admin/clients/export', () => {
@@ -67,7 +83,9 @@ describe('GET /api/admin/clients/export', () => {
     expect(body.startsWith('\uFEFF')).toBe(true)
 
     const lines = body.replace('\uFEFF', '').split('\n')
-    expect(lines[0]).toBe('Имя,Почта,Номер пайщика,Уровень,Дата получения уровня,Личные единицы за период,Групповые единицы за период')
+    expect(lines[0]).toBe(
+      'Имя,Почта,Номер пайщика,Уровень,Дата получения уровня,Личные единицы за период,Групповые единицы за период',
+    )
     expect(lines[1]).toBe('Alice Smith,alice@test.com,M-001,2,10.05.2025,15,35')
     expect(lines[2]).toBe('Bob Jones,bob@test.com,M-002,1,,0,0')
     expect(lines[3]).toBe('')
@@ -113,7 +131,9 @@ describe('GET /api/admin/clients/export', () => {
     expect(body.startsWith('\uFEFF')).toBe(true)
 
     const lines = body.replace('\uFEFF', '').split('\n')
-    expect(lines[0]).toBe('Имя,Почта,Номер пайщика,Уровень,Дата получения уровня,Личные единицы за период,Групповые единицы за период')
+    expect(lines[0]).toBe(
+      'Имя,Почта,Номер пайщика,Уровень,Дата получения уровня,Личные единицы за период,Групповые единицы за период',
+    )
     expect(lines[1]).toBe('')
   })
 })

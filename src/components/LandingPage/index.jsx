@@ -11,7 +11,9 @@ const LandingPage = () => {
         <p className={styles.text}>на сайте INCP</p>
         <h1 className={styles.title}>International Club of Participants</h1>
         <h2 className={styles.subtitle}>Международный клуб участников</h2>
-        <button className={styles.button} onClick={() => navigate('/auth')}>ВОЙТИ</button>
+        <button className={styles.button} onClick={() => navigate('/auth')}>
+          ВОЙТИ
+        </button>
       </div>
     </div>
   )

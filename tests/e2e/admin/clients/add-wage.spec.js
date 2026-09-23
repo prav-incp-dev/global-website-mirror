@@ -105,9 +105,7 @@ test.describe('admin clients add wage', () => {
 
     // Confirm the dialog
     page.once('dialog', (dialog) => {
-      expect(dialog.message()).toBe(
-        'Вы подтверждаете, что пользователю было выполнено начисление?',
-      )
+      expect(dialog.message()).toBe('Вы подтверждаете, что пользователю было выполнено начисление?')
       dialog.accept()
     })
     await creditButton.click()
@@ -182,7 +180,7 @@ test.describe('admin clients add wage', () => {
 
     // The rejected wallet error appears in the modal
     await expect(page.getByRole('heading', { name: 'Добавить начисление' })).toBeVisible()
-    await expect(page.getByText('User rejected the request.')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('Ошибка сети: User rejected the request.')).toBeVisible({ timeout: 10000 })
 
     // No wage was created in the database
     const wages = await prisma.wage.findMany({
@@ -196,4 +194,3 @@ test.describe('admin clients add wage', () => {
     await expect(page.getByRole('heading', { name: 'Добавить начисление' })).not.toBeVisible()
   })
 })
-

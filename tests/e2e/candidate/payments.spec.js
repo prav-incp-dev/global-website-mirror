@@ -129,7 +129,7 @@ test.describe('candidate payment flow', () => {
     await page.getByRole('button', { name: 'Оплатить' }).click()
 
     // Error message is shown (viem translates code 4001 to 'User rejected the request.')
-    await expect(page.getByText('User rejected the request.')).toBeVisible()
+    await expect(page.getByText('Ошибка сети: User rejected the request.')).toBeVisible()
 
     // Close modal
     await page.getByRole('button', { name: 'Закрыть' }).click()

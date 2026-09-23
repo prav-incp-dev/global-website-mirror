@@ -601,9 +601,7 @@ describe('user routes', () => {
 
       const createdAt = new Date()
       const mockResult = {
-        wages: [
-          { id: 1, amount: 100, description: 'Test wage', score: 5, groupScore: 10, createdAt },
-        ],
+        wages: [{ id: 1, amount: 100, description: 'Test wage', score: 5, groupScore: 10, createdAt }],
         total: 1,
         page: 1,
         limit: 20,

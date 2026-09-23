@@ -29,7 +29,7 @@ test.describe('admin payments change uid', () => {
 
     // Two payments with uids. Default sort (id desc) shows the newer payment
     // (ON-1234-15) first, so that is the one the admin updates.
-    const firstOrder = await createTestOrder(company, candidate, 100, 'Completed', 'ON-1234-01')
+    const _firstOrder = await createTestOrder(company, candidate, 100, 'Completed', 'ON-1234-01')
     const secondOrder = await createTestOrder(company, candidate, 200, 'Completed', 'ON-1234-15')
 
     await loginAs(admin.id)

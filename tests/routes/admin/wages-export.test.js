@@ -176,7 +176,7 @@ describe('GET /api/admin/company/wages/export', () => {
       paymentId: payment.id,
       fromWallet: payment.fromWallet,
       toWallet: company.serviceWallet,
-      amount: 150.50,
+      amount: 150.5,
       createdAt: new Date('2025-06-15T10:00:00Z'),
     })
 
@@ -352,8 +352,6 @@ describe('GET /api/admin/company/wages/export', () => {
       company: { id: company.id },
     }
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
-
-    const user = await createUser(app, { companyId: company.id })
 
     await createWage(app, {
       companyId: company.id,
