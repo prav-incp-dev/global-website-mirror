@@ -361,5 +361,40 @@ describe('POST /api/admin/payments/:id/confirm-split', () => {
 
     const updated = await app.prisma.payment.findUnique({ where: { id: payment.id } })
     expect(updated.status).toBe(PaymentStatus.Splitted)
+
+    // Verify user who received a wage was flagged for level review
+    const updatedConsultant = await app.prisma.user.findUnique({ where: { id: consultant.id } })
+    expect(updatedConsultant.toReviewLevel).toBe(true)
+  })
+
+  it('does not flag users when split items have no userId', async () => {
+    const app = await createApp()
+    const company = await createCompany(app)
+    const consultant = await createConsultantWithWallet(app, company.id, '0xUnlinkedWallet')
+    const user = await createUser(app, company.id)
+    const { payment } = await createCompletedPayment(app, { user, company })
+
+    const adminUser = createAdminUser()
+    adminUser.company.id = company.id
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+
+    // Split items without userId (wallets only) — no one should be flagged
+    const splits = [
+      { wallet: company.serviceWallet, amount: 12 },
+      { wallet: '0xUnlinkedWallet', amount: 588 },
+      { wallet: company.cumulativeWallet, amount: 600 },
+    ]
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/admin/payments/${payment.id}/confirm-split`,
+      payload: { splits },
+    })
+
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ success: true, wagesCount: 3 })
+
+    const updatedConsultant = await app.prisma.user.findUnique({ where: { id: consultant.id } })
+    expect(updatedConsultant.toReviewLevel).toBe(false)
   })
 })

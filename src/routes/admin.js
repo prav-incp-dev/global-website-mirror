@@ -512,9 +512,16 @@ export default async (fastify) => {
           }),
         )
 
-        // Create all wages and update payment status in a transaction
+        // Collect userIds from split items to flag for level review
+        const userIds = splits.filter((item) => item.userId != null).map((item) => item.userId)
+
+        // Create all wages, flag users, and update payment status in a transaction
         await fastify.prisma.$transaction([
           ...wagesData,
+          fastify.prisma.user.updateMany({
+            where: { id: { in: userIds } },
+            data: { toReviewLevel: true },
+          }),
           fastify.prisma.payment.update({
             where: { id: payment.id },
             data: { status: PaymentStatus.Splitted },
