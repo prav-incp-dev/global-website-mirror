@@ -9,6 +9,7 @@ const Confirm = ({ csrfToken, token }) => {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: { code: '' },
@@ -61,6 +62,7 @@ const Confirm = ({ csrfToken, token }) => {
 
       if (result.success) {
         setInfo('Новый код подтверждения отправлен на ваш электронный адрес')
+        reset({ code: '' })
       } else {
         setError(result.error || 'Ошибка отправки кода')
       }

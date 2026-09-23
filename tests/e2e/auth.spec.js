@@ -117,6 +117,8 @@ test.describe('login flow with 2FA', () => {
     // Wait for the confirmation code step to appear
     await expect(page.getByRole('heading', { name: 'Подтверждение' })).toBeVisible()
 
+    const codeInput = page.locator('#code')
+
     // Get the first generated confirmation code
     const firstCode = await getConfirmationCode()
     expect(firstCode).toBeDefined()
@@ -127,12 +129,14 @@ test.describe('login flow with 2FA', () => {
     // Verify information text banner
     await expect(page.getByText('Новый код подтверждения отправлен на ваш электронный адрес')).toBeVisible()
 
+    // Verify code input was reset
+    await expect(codeInput).toHaveValue('')
+
     // Retrieve the newly updated / generated code
     const newCode = await getConfirmationCode()
     expect(newCode).toBeDefined()
 
     // Fill in the new Code and click confirm
-    const codeInput = page.locator('#code')
     await codeInput.fill(newCode)
     await page.getByRole('button', { name: 'Подтвердить' }).click()
 
