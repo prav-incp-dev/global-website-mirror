@@ -1,5 +1,7 @@
 import { test, expect } from '../fixtures.js'
-import { createTestCompany, createTestUser } from '../db.js'
+import { createTestCompany, createTestUser, getPrisma } from '../db.js'
+import fs from 'fs'
+import path from 'path'
 
 test.describe('admin manages company profile', () => {
   let admin
@@ -111,5 +113,113 @@ test.describe('admin manages company profile', () => {
 
     // Server-side validation error
     await expect(page.getByText('Такой счет на обслуживание уже есть в системе')).toBeVisible()
+  })
+})
+
+test.describe('admin company wages export', () => {
+  test('exports wages csv for service wallet', async ({ loginAs, page }) => {
+    const prisma = getPrisma()
+
+    const SERVICE_WALLET = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+    const CUMULATIVE_WALLET = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+    const company = await createTestCompany('Wages Export Company', {
+      wallet: '0xcccccccccccccccccccccccccccccccccccccccc',
+      serviceWallet: SERVICE_WALLET,
+      cumulativeWallet: CUMULATIVE_WALLET,
+    })
+
+    const adminUser = await createTestUser({ firstName: 'Wages', lastName: 'Admin', role: 'Admin', companyId: company.id })
+    const consultant = await createTestUser({
+      firstName: 'Wage',
+      lastName: 'Consultant',
+      role: 'Consultant',
+      companyId: company.id,
+    })
+
+    const order = await prisma.order.create({
+      data: { userId: consultant.id, quantity: 1, totalAmount: 500, status: 'Paid' },
+    })
+
+    const payment = await prisma.payment.create({
+      data: {
+        orderId: order.id,
+        userId: consultant.id,
+        companyId: company.id,
+        amount: 500,
+        tokenSymbol: 'USDT',
+        tokenContract: '0xTokenContract',
+        tokenDecimals: 18,
+        chainId: 56,
+        txHash: '0xTESTTXHASH1234567890abcdef1234567890abcdef',
+        fromWallet: consultant.wallet,
+        toWallet: company.wallet,
+        status: 'Completed',
+      },
+    })
+
+    await prisma.wage.create({
+      data: { companyId: company.id, userId: null, paymentId: payment.id, fromWallet: consultant.wallet, toWallet: SERVICE_WALLET, amount: 100, score: 0, groupScore: 0, createdAt: new Date('2025-06-15T10:00:00Z') },
+    })
+
+    await prisma.wage.create({
+      data: { companyId: company.id, userId: null, paymentId: payment.id, fromWallet: consultant.wallet, toWallet: SERVICE_WALLET, amount: 250.50, score: 0, groupScore: 0, description: 'Service fee', createdAt: new Date('2025-07-20T10:00:00Z') },
+    })
+
+    await loginAs(adminUser.id)
+    await page.goto('/admin')
+    await page.waitForLoadState('networkidle')
+    await page.getByRole('button', { name: 'Профиль компании' }).click()
+    await page.waitForLoadState('networkidle')
+
+    const serviceDownloadButton = page.locator('[title="Выгрузить начисления"]').first()
+    await expect(serviceDownloadButton).toBeVisible()
+    await serviceDownloadButton.click()
+
+    const modalTitle = page.getByRole('heading', { name: 'Выгрузка начислений на сервисный счет' })
+    await expect(modalTitle).toBeVisible()
+
+    await expect(page.getByLabel('С', { exact: true})).toBeVisible()
+    await expect(page.getByLabel('По', { exact: true})).toBeVisible()
+    const confirmButton = page.getByRole('button', { name: 'Сформировать' })
+    await expect(confirmButton).toBeVisible()
+    await expect(confirmButton).toBeEnabled()
+
+    await page.getByLabel('С', { exact: true}).fill('2025-01-01')
+    await page.getByLabel('По', { exact: true}).fill('2025-12-31')
+
+    const downloadPromise = page.waitForEvent('download')
+    await confirmButton.click()
+
+    const download = await downloadPromise
+    const fileName = download.suggestedFilename()
+    expect(fileName).toMatch(/^wages-.+\.csv$/)
+
+    const tempPath = path.join('tests/fixtures', fileName)
+    await download.saveAs(tempPath)
+
+    expect(fs.existsSync(tempPath)).toBeTruthy()
+    const fileStats = fs.statSync(tempPath)
+    expect(fileStats.size).toBeGreaterThan(0)
+
+    const fileContent = fs.readFileSync(tempPath, 'utf-8')
+    expect(fileContent.startsWith('\uFEFF')).toBeTruthy()
+
+    const csvLines = fileContent.replace('\uFEFF', '').split('\n').filter(Boolean)
+
+    expect(csvLines[0]).toBe('Дата,Сумма,Пользователь,Кошелек отправителя,Хэш транзакции')
+
+    const wage100Line = csvLines.find((l) => l.includes('100.00'))
+    expect(wage100Line).toBeTruthy()
+    expect(wage100Line).toContain(consultant.wallet)
+    expect(wage100Line).toContain('0xTESTTXHASH1234567890abcdef1234567890abcdef')
+
+    const wage250Line = csvLines.find((l) => l.includes('250.50'))
+    expect(wage250Line).toBeTruthy()
+    expect(wage250Line).toContain('Wage Consultant')
+    expect(wage250Line).toContain(consultant.wallet)
+
+    fs.unlinkSync(tempPath)
+
+    await expect(modalTitle).not.toBeVisible()
   })
 })

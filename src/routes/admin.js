@@ -2,6 +2,7 @@ import { stringify } from 'csv-stringify/sync'
 import { OrderStatus, PaymentStatus, UserRole } from '../generated/prisma/client'
 import { serializePayment } from '../lib/payment'
 import { PAGE_LIMIT, MIN_LEVEL, MAX_LEVEL } from '../lib/constants.js'
+import { userName } from '../../src/lib/user'
 import { uniqConstraintLabel } from '../lib/prismaHelpers.js'
 
 export default async (fastify) => {
@@ -204,6 +205,80 @@ export default async (fastify) => {
 
       reply.header('Content-Type', 'text/csv; charset=utf-8')
       reply.header('Content-Disposition', `attachment; filename="clients-${fromDate}-${toDate}.csv"`)
+      return reply.send(csv)
+    },
+  })
+
+  fastify.get('/api/admin/company/wages/export', {
+    schema: {
+      querystring: {
+        type: 'object',
+        required: ['fromDate', 'toDate', 'wallet'],
+        properties: {
+          fromDate: { type: 'string' },
+          toDate: { type: 'string' },
+          wallet: { type: 'string' },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      const { fromDate, toDate, wallet } = req.query
+
+      const wages = await fastify.prisma.wage.findMany({
+        where: {
+          companyId: user.company.id,
+          toWallet: wallet,
+          createdAt: {
+            gte: new Date(fromDate),
+            lte: new Date(toDate + 'T23:59:59.999Z'),
+          },
+        },
+        include: {
+          payment: {
+            select: {
+              txHash: true,
+              fromWallet: true,
+              user: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'asc',
+        },
+      })
+
+      const rows = wages.map((w) => ({
+        date: new Date(w.createdAt).toLocaleDateString('ru-RU'),
+        amount: Number(w.amount).toFixed(2),
+        userName: w.payment?.user ? userName(w.payment.user) : '—',
+        fromWallet: w.fromWallet || '—',
+        txHash: w.payment?.txHash || '—',
+      }))
+
+      const csv = stringify(rows, {
+        header: true,
+        columns: [
+          { key: 'date', header: 'Дата' },
+          { key: 'amount', header: 'Сумма' },
+          { key: 'userName', header: 'Пользователь' },
+          { key: 'fromWallet', header: 'Кошелек отправителя' },
+          { key: 'txHash', header: 'Хэш транзакции' },
+        ],
+        bom: true,
+      })
+
+      reply.header('Content-Type', 'text/csv; charset=utf-8')
+      reply.header('Content-Disposition', `attachment; filename="wages-${wallet.slice(0, 8)}-${fromDate}-${toDate}.csv"`)
       return reply.send(csv)
     },
   })
