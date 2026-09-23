@@ -142,7 +142,7 @@ const PurchaseModal = ({ onClose }) => {
       addPayment(verifyResult)
       onClose()
     } catch (err) {
-      setPayError(err.shortMessage || err.message || 'Ошибка оплаты')
+      setPayError(err.shortMessage ? `Ошибка сети: ${err.shortMessage}` : err.message)
       if (paymentId && !txHash) await cancelPayment(paymentId)
     } finally {
       setIsPaying(false)

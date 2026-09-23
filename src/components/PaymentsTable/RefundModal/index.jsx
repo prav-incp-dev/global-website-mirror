@@ -90,7 +90,7 @@ const RefundModal = ({ onClose }) => {
       onClose()
     } catch (err) {
       if (txHash) setPayError(paymentErrorMessage(txHash))
-      else setPayError(err.shortMessage || err.message || 'Произошла ошибка. Оплата не прошла')
+      else setPayError(err.shortMessage ? `Ошибка сети: ${err.shortMessage}` : err.message)
     } finally {
       setIsPaying(false)
       setLoaderText('')

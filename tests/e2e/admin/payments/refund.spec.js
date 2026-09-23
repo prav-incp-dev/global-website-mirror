@@ -160,7 +160,7 @@ test.describe('admin payments refund', () => {
     // Click «Оплатить» — the stubbed wallet rejects the transaction (code 4001).
     // No txHash was created, so the generic error message is shown.
     await payButton.click()
-    await expect(page.getByText('User rejected the request.')).toBeVisible()
+    await expect(page.getByText('Ошибка сети: User rejected the request.')).toBeVisible()
 
     // The RefundModal can be closed
     const closeButtons = page.getByRole('button', { name: 'Закрыть' })

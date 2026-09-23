@@ -187,7 +187,7 @@ const SplitPaymentModal = ({ onClose }) => {
       onClose()
     } catch (err) {
       if (splitTxHash) setPayError(paymentErrorMessage(splitTxHash, err.message))
-      else setPayError(err.shortMessage || err.message || 'Произошла ошибка. Оплата не прошла')
+      else setPayError(err.shortMessage ? `Ошибка сети: ${err.shortMessage}` : err.message)
     } finally {
       setIsPaying(false)
       setLoaderText('')
