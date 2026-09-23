@@ -342,7 +342,7 @@ describe('register routes', () => {
     expect(fs.existsSync(lastEmailFixturePath)).toBe(true)
     const emailContent = JSON.parse(fs.readFileSync(lastEmailFixturePath, 'utf-8'))
     expect(emailContent.to).toBe(payload.email)
-    expect(emailContent.subject).toBe('Добро пожаловать в Наш Дом!')
+    expect(emailContent.subject).toBe('Добро пожаловать в Международный клуб участников!')
     expect(emailContent.text).toContain(`Здравствуйте ${payload.firstName}!`)
     expect(emailContent.text).toContain('/auth')
   })
