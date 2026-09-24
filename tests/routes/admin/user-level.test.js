@@ -44,7 +44,7 @@ describe('PUT /api/admin/user/:id/level', () => {
     const response = await app.inject({ method: 'PUT', url: '/api/admin/user/1/level', payload: validPayload() })
     expect(response.statusCode).toBe(403)
     expect(response.json()).toEqual({
-      error: '\u0414\u043e\u0441\u0442\u0443\u043f \u0437\u0430\u043f\u0440\u0435\u0449\u0435\u043d',
+      error: 'Доступ запрещен',
     })
   })
 
@@ -59,7 +59,7 @@ describe('PUT /api/admin/user/:id/level', () => {
     const response = await app.inject({ method: 'PUT', url: '/api/admin/user/1/level', payload: validPayload() })
     expect(response.statusCode).toBe(403)
     expect(response.json()).toEqual({
-      error: '\u0414\u043e\u0441\u0442\u0443\u043f \u0437\u0430\u043f\u0440\u0435\u0449\u0435\u043d',
+      error: 'Доступ запрещен',
     })
   })
 
@@ -189,6 +189,42 @@ describe('PUT /api/admin/user/:id/level', () => {
     expect(response.json()).toEqual({ error: 'Обновлять уровень можно только консультантам' })
   })
 
+  it('returns 400 when the user already has a wage with non-zero amount', async () => {
+    const app = await createApp()
+    const company = await createCompany(app, 'Level NonZero Wage Company')
+
+    const targetUser = await createUser(app, { companyId: company.id })
+
+    // Simulate real sales: create a wage with non-zero amount and lock the user
+    await app.prisma.wage.create({
+      data: {
+        companyId: company.id,
+        userId: targetUser.id,
+        amount: 500,
+        score: 10,
+        groupScore: 20,
+        description: 'Sale payment',
+      },
+    })
+    await app.prisma.user.update({
+      where: { id: targetUser.id },
+      data: { isLocked: true },
+    })
+
+    const adminUser = createAdminUser()
+    adminUser.company.id = company.id
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: `/api/admin/user/${targetUser.id}/level`,
+      payload: { level: 3, levelConfirmed: true },
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(response.json()).toEqual({ error: 'У пользователя уже есть продажи' })
+  })
+
   it('successfully updates level and levelConfirmed and creates LevelHistory', async () => {
     const app = await createApp()
     const company = await createCompany(app, 'Level Update Company')
@@ -227,6 +263,47 @@ describe('PUT /api/admin/user/:id/level', () => {
     expect(levelHistory).toBeDefined()
     expect(levelHistory.oldLevel).toBe(1)
     expect(levelHistory.newLevel).toBe(3)
+  })
+
+  it('reuses the existing LevelHistory row instead of creating a new one on subsequent level changes', async () => {
+    const app = await createApp()
+    const company = await createCompany(app, 'Level Update Reuse Company')
+
+    const targetUser = await createUser(app, { companyId: company.id })
+
+    const adminUser = createAdminUser()
+    adminUser.company.id = company.id
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+
+    const setLevel = async (level) => {
+      const response = await app.inject({
+        method: 'PUT',
+        url: `/api/admin/user/${targetUser.id}/level`,
+        payload: { level, levelConfirmed: true },
+      })
+      expect(response.statusCode).toBe(200)
+    }
+
+    // First change creates a single history row
+    await setLevel(3)
+    const firstHistory = await app.prisma.levelHistory.findMany({ where: { userId: targetUser.id } })
+    expect(firstHistory).toHaveLength(1)
+    expect(firstHistory[0].oldLevel).toBe(1)
+    expect(firstHistory[0].newLevel).toBe(3)
+
+    // Second change to a different level reuses the same row (no new record)
+    await setLevel(2)
+    const allHistory = await app.prisma.levelHistory.findMany({
+      where: { userId: targetUser.id },
+      orderBy: { createdAt: 'asc' },
+    })
+    expect(allHistory).toHaveLength(1)
+    expect(allHistory[0].id).toBe(firstHistory[0].id)
+    expect(allHistory[0].oldLevel).toBe(3)
+    expect(allHistory[0].newLevel).toBe(2)
+
+    // createdAt is refreshed on update
+    expect(allHistory[0].createdAt.getTime()).toBeGreaterThan(firstHistory[0].createdAt.getTime())
   })
 
   it('returns 500 on unexpected database error', async () => {

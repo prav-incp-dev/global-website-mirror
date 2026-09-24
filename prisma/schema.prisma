@@ -68,6 +68,7 @@ model User {
   level                 Int           @default(0)
   levelConfirmed        Boolean       @default(true)
   toReviewLevel         Boolean       @default(false)
+  isLocked              Boolean       @default(false)
   memberId              String?       @unique
   parentId              Int?
   parent                User?         @relation("UserParent", fields: [parentId], references: [id])

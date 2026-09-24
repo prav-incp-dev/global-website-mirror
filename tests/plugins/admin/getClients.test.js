@@ -432,6 +432,12 @@ describe('getClients', () => {
       data: { companyId: company.id, userId: user.id, amount: 150, score: 5, groupScore: 10 },
     })
 
+    // Simulate what the production route does: set isLocked when wage with non-zero amount is created
+    await app.prisma.user.update({
+      where: { id: user.id },
+      data: { isLocked: true },
+    })
+
     const result = await app.admin.getClients(adminUser, 1, 20, '')
 
     const found = result.users.find((u) => u.email === 'isLocked-true@test.com')
