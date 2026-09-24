@@ -1,6 +1,6 @@
 import { UserRole } from '../generated/prisma/client'
 
-export async function checkLevel(prisma, log = console) {
+export async function reviewLevel(prisma, log = console) {
   const companies = await prisma.company.findMany({
     select: {
       id: true,

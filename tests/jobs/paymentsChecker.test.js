@@ -2,7 +2,8 @@ import { describe, it, vi, beforeEach } from 'vitest'
 import crypto from 'node:crypto'
 import { createApp } from '../helpers'
 import { checkPayments } from '../../src/jobs/paymentsChecker.js'
-import { HOURS24, MINUTES15, verifyPaymentOnChain } from '../../src/lib/payment.js'
+import { HOURS24, MINUTES15 } from '../../src/lib/constants.js'
+import { verifyPaymentOnChain } from '../../src/lib/payment.js'
 import { OrderStatus, PaymentStatus, UserRole } from '../../src/generated/prisma/client'
 
 // Mock only the on-chain verification; keep the other payment helpers intact.
@@ -241,12 +242,12 @@ describe('checkPayments', () => {
     expect(updatedUser.level).toBe(0)
   })
 
-  it('marks payment for quantity 1 as finalized without uid', async ({ expect }) => {
+  it('does not assign uid to a payment with zero quantity', async ({ expect }) => {
     const app = await createApp()
     const user = await createUser(app, { memberId: 'DOM-00000000-9876' })
     const oldPayment = await createPayment(app, user, {
       status: PaymentStatus.Completed,
-      quantity: 1,
+      quantity: 0,
       createdAt: new Date(Date.now() - 2 * HOURS24),
     })
 
@@ -259,6 +260,23 @@ describe('checkPayments', () => {
     expect(updated.uid).toBeNull()
     expect(updatedUser.role).toBe(UserRole.Consultant)
     expect(updatedUser.level).toBe(1)
+  })
+
+  it('assigns uid to a payment with single quantity', async ({ expect }) => {
+    const app = await createApp()
+    const user = await createUser(app, { memberId: 'DOM-00000000-5555' })
+    const oldPayment = await createPayment(app, user, {
+      status: PaymentStatus.Completed,
+      quantity: 1,
+      createdAt: new Date(Date.now() - 2 * HOURS24),
+    })
+
+    await checkPayments(app.prisma, silentLogger)
+
+    const updated = await app.prisma.payment.findUnique({ where: { id: oldPayment.id } })
+
+    expect(updated.finalized).toBe(true)
+    expect(updated.uid).toBe('ON-5555-01')
   })
 
   it('assigns uid to consultant payment without changing role or level', async ({ expect }) => {

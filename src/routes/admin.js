@@ -512,7 +512,7 @@ export default async (fastify) => {
           }),
         )
 
-        // Collect userIds from split items to flag for level review
+        // Collect userIds from split items to flag for level review and lock
         const userIds = splits.filter((item) => item.userId != null).map((item) => item.userId)
 
         // Create all wages, flag users, and update payment status in a transaction
@@ -520,7 +520,7 @@ export default async (fastify) => {
           ...wagesData,
           fastify.prisma.user.updateMany({
             where: { id: { in: userIds } },
-            data: { toReviewLevel: true },
+            data: { toReviewLevel: true, isLocked: true },
           }),
           fastify.prisma.payment.update({
             where: { id: payment.id },
@@ -795,7 +795,7 @@ export default async (fastify) => {
       try {
         const targetUser = await fastify.prisma.user.findUnique({
           where: { id: userId },
-          select: { id: true, companyId: true, role: true, level: true },
+          select: { id: true, companyId: true, role: true, level: true, isLocked: true },
         })
 
         if (!targetUser) {
@@ -810,6 +810,10 @@ export default async (fastify) => {
           return reply.code(400).send({ error: 'Обновлять уровень можно только консультантам' })
         }
 
+        if (targetUser.isLocked) {
+          return reply.code(400).send({ error: 'У пользователя уже есть продажи' })
+        }
+
         const updatedUser = await fastify.prisma.user.update({
           where: { id: userId },
           data: { level, levelConfirmed },
@@ -821,13 +825,29 @@ export default async (fastify) => {
         })
 
         if (targetUser.level !== level) {
-          await fastify.prisma.levelHistory.create({
-            data: {
-              oldLevel: targetUser.level,
-              newLevel: level,
-              userId,
-            },
+          const existingLevelHistory = await fastify.prisma.levelHistory.findFirst({
+            where: { userId },
+            orderBy: { createdAt: 'desc' },
           })
+
+          if (existingLevelHistory) {
+            await fastify.prisma.levelHistory.update({
+              where: { id: existingLevelHistory.id },
+              data: {
+                oldLevel: targetUser.level,
+                newLevel: level,
+                createdAt: new Date(),
+              },
+            })
+          } else {
+            await fastify.prisma.levelHistory.create({
+              data: {
+                oldLevel: targetUser.level,
+                newLevel: level,
+                userId,
+              },
+            })
+          }
         }
 
         return reply.send({ success: true, user: updatedUser })
@@ -905,7 +925,7 @@ export default async (fastify) => {
       try {
         const targetUser = await fastify.prisma.user.findUnique({
           where: { id: userId },
-          select: { id: true, companyId: true, role: true },
+          select: { id: true, companyId: true, role: true, isLocked: true },
         })
 
         if (!targetUser) {
@@ -988,6 +1008,13 @@ export default async (fastify) => {
             groupScore: 0,
           },
         })
+
+        if (!targetUser.isLocked) {
+          await fastify.prisma.user.update({
+            where: { id: targetUser.id },
+            data: { isLocked: true },
+          })
+        }
 
         return reply.send({ success: true, wage })
       } catch {

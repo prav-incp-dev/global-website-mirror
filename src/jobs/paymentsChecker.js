@@ -1,5 +1,6 @@
 import { OrderStatus, PaymentStatus, UserRole } from '../generated/prisma/client'
-import { HOURS24, MINUTES15, verifyPaymentOnChain } from '../lib/payment.js'
+import { HOURS24, MINUTES15 } from '../lib/constants.js'
+import { verifyPaymentOnChain } from '../lib/payment.js'
 
 async function cancelPayments(prisma, payments = []) {
   if (payments.length === 0) return
@@ -67,7 +68,7 @@ async function finalizePayments(prisma, payments = [], log = console) {
 
   for (const payment of payments) {
     const quantity = payment.order?.quantity ?? 0
-    const uid = quantity > 1 ? await getUID(prisma, payment) : null
+    const uid = quantity > 0 ? await getUID(prisma, payment) : null
 
     try {
       const updates = [

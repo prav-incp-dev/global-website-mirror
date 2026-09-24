@@ -42,7 +42,7 @@ describe('PUT /api/admin/user/:id/wages', () => {
     })
     expect(response.statusCode).toBe(403)
     expect(response.json()).toEqual({
-      error: '\u0414\u043e\u0441\u0442\u0443\u043f \u0437\u0430\u043f\u0440\u0435\u0449\u0435\u043d',
+      error: 'Доступ запрещен',
     })
   })
 
@@ -61,7 +61,7 @@ describe('PUT /api/admin/user/:id/wages', () => {
     })
     expect(response.statusCode).toBe(403)
     expect(response.json()).toEqual({
-      error: '\u0414\u043e\u0441\u0442\u0443\u043f \u0437\u0430\u043f\u0440\u0435\u0449\u0435\u043d',
+      error: 'Доступ запрещен',
     })
   })
 
@@ -236,8 +236,7 @@ describe('PUT /api/admin/user/:id/wages', () => {
     })
     expect(response.statusCode).toBe(500)
     expect(response.json()).toEqual({
-      error:
-        '\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u044f \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f',
+      error: 'Ошибка обновления пользователя',
     })
   })
 
@@ -253,8 +252,7 @@ describe('PUT /api/admin/user/:id/wages', () => {
     })
     expect(response.statusCode).toBe(500)
     expect(response.json()).toEqual({
-      error:
-        '\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u044f \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f',
+      error: 'Ошибка обновления пользователя',
     })
   })
 })

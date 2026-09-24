@@ -61,12 +61,7 @@ export default fp(async (fastify) => {
     },
 
     setScores: async (user, { score, groupScore }) => {
-      const nonZeroWage = await fastify.prisma.wage.findFirst({
-        where: { userId: user.id, amount: { not: 0 } },
-        select: { id: true },
-      })
-
-      if (nonZeroWage) {
+      if (user.isLocked) {
         return { error: 'У пользователя уже есть продажи' }
       }
 
@@ -132,10 +127,9 @@ export default fp(async (fastify) => {
       const selectSql = `
         SELECT
           u."id", u."firstName", u."lastName", u."level", u."levelConfirmed", u."role",
-          u."email", u."phone", u."memberId", u."nick", u."parentId", u."wallet",
+          u."email", u."phone", u."memberId", u."nick", u."parentId", u."wallet", u."isLocked",
           COALESCE(SUM(w."score"), 0)::int AS "score",
           COALESCE(SUM(w."groupScore"), 0)::int AS "groupScore",
-          COALESCE(SUM(w."amount"), 0)::numeric AS "totalAmount",
           p."firstName" AS "parentFirstName",
           p."lastName" AS "parentLastName"
         FROM "User" u
@@ -174,7 +168,7 @@ export default fp(async (fastify) => {
         wallet: row.wallet,
         score: row.score,
         groupScore: row.groupScore,
-        isLocked: row.totalAmount > 0,
+        isLocked: row.isLocked,
         parent: row.parentId != null ? { firstName: row.parentFirstName, lastName: row.parentLastName } : null,
       }))
 

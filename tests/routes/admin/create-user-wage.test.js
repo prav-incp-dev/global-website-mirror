@@ -42,7 +42,7 @@ describe('POST /api/admin/user/:id/wages', () => {
     })
     expect(response.statusCode).toBe(403)
     expect(response.json()).toEqual({
-      error: '\u0414\u043e\u0441\u0442\u0443\u043f \u0437\u0430\u043f\u0440\u0435\u0449\u0435\u043d',
+      error: 'Доступ запрещен',
     })
   })
 
@@ -61,7 +61,7 @@ describe('POST /api/admin/user/:id/wages', () => {
     })
     expect(response.statusCode).toBe(403)
     expect(response.json()).toEqual({
-      error: '\u0414\u043e\u0441\u0442\u0443\u043f \u0437\u0430\u043f\u0440\u0435\u0449\u0435\u043d',
+      error: 'Доступ запрещен',
     })
   })
 
@@ -221,6 +221,37 @@ describe('POST /api/admin/user/:id/wages', () => {
     expect(wage.description).toBe('Monthly bonus')
     expect(wage.score).toBe(0)
     expect(wage.groupScore).toBe(0)
+
+    // Verify the user was locked (isLocked set to true)
+    const updatedUser = await app.prisma.user.findUnique({ where: { id: targetUser.id } })
+    expect(updatedUser.isLocked).toBe(true)
+  })
+
+  it('successfully creates a wage with zero amount and still locks the user', async () => {
+    const app = await createApp()
+    const company = await createCompany(app, 'Wage Create Zero Amount Company')
+
+    const targetUser = await createUser(app, { companyId: company.id })
+
+    const adminUser = createAdminUser()
+    adminUser.company.id = company.id
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/api/admin/user/${targetUser.id}/wages`,
+      payload: { amount: 0, description: 'Zero amount wage' },
+    })
+
+    expect(response.statusCode).toBe(200)
+
+    const body = response.json()
+    expect(body.success).toBe(true)
+    expect(Number(body.wage.amount)).toBe(0)
+
+    // Even with zero amount, the user should be locked
+    const updatedUser = await app.prisma.user.findUnique({ where: { id: targetUser.id } })
+    expect(updatedUser.isLocked).toBe(true)
   })
 
   it('returns 500 on unexpected database error', async () => {

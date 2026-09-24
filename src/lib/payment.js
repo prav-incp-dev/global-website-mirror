@@ -1,9 +1,6 @@
 import { getAddress, parseUnits, parseEventLogs } from 'viem'
 import { getPublicClient } from './chain.js'
 
-const HOURS24 = 24 * 60 * 60 * 1000
-const MINUTES15 = 15 * 60 * 1000
-
 const PAYMENT_STATUSES = {
   Pending: 'В обработке',
   Completed: 'Оплачен',
@@ -84,4 +81,4 @@ const serializePayment = (payment) => {
   }
 }
 
-export { HOURS24, MINUTES15, PAYMENT_STATUSES, serializePayment, verifyPaymentOnChain }
+export { PAYMENT_STATUSES, serializePayment, verifyPaymentOnChain }

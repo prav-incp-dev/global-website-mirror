@@ -194,6 +194,12 @@ test.describe('update client achievements flow', () => {
       },
     })
 
+    // Set isLocked on the user (as the production routes would do)
+    await prisma.user.update({
+      where: { id: consultingUser.id },
+      data: { isLocked: true },
+    })
+
     // 1. Login as admin and navigate to clients page
     await loginAs(admin.id)
     await page.goto('/admin')

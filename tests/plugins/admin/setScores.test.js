@@ -100,27 +100,18 @@ describe('setScores', () => {
     expect(wages[1].groupScore).toBe(6)
   })
 
-  it('returns an error when the user already has a wage with non-zero amount', async () => {
+  it('returns an error when the user is already locked (has non-zero wage amount)', async () => {
     const app = await createApp()
     const company = await createTestCompany(app)
-    const user = await createTestUser(app, company.id)
-    const existingWage = await createTestWage(app, company.id, user.id, {
-      score: 100,
-      groupScore: 100,
-      amount: 500,
-    })
+    const user = await createTestUser(app, company.id, { isLocked: true })
 
     const result = await app.admin.setScores(user, { score: 10, groupScore: 20 })
 
     expect(result).toEqual({ error: 'У пользователя уже есть продажи' })
 
-    // No changes were made
+    // No changes were made (no wages created)
     const wages = await app.prisma.wage.findMany({ where: { userId: user.id } })
-    expect(wages).toHaveLength(1)
-    expect(wages[0].id).toBe(existingWage.id)
-    expect(wages[0].score).toBe(100)
-    expect(wages[0].groupScore).toBe(100)
-    expect(wages[0].amount.toString()).toBe('500')
+    expect(wages).toHaveLength(0)
   })
 
   it('handles setting scores back to zero', async () => {
