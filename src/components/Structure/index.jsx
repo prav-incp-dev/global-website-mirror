@@ -2,7 +2,7 @@ import React, { useMemo } from 'react'
 import TreeNode from './TreeNode'
 import { useDescendantsContext } from './DescendantsContext'
 import styles from './index.module.css'
-import { HOURS24 } from '@/lib/payment'
+import { HOURS24 } from '@/lib/constants'
 
 // 1. Helper to build a tree from a flat array in O(N)
 const buildTree = (users) => {

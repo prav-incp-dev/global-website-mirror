@@ -1006,7 +1006,8 @@ export default async (fastify) => {
             description,
             score: 0,
             groupScore: 0,
-          }})
+          },
+        })
 
         if (!targetUser.isLocked) {
           await fastify.prisma.user.update({

@@ -1,9 +1,9 @@
 import { describe, it, vi } from 'vitest'
 import { createApp } from '../helpers'
-import { checkLevel } from '../../src/jobs/levelReviewer.js'
+import { reviewLevel } from '../../src/jobs/levelReviewer.js'
 import { UserRole } from '../../src/generated/prisma/client'
 
-describe('checkLevel', () => {
+describe('reviewLevel', () => {
   const silentLogger = { info: vi.fn() }
 
   const createCompanyWithLevels = async (app, levels) => {
@@ -68,7 +68,7 @@ describe('checkLevel', () => {
       await createWage(app, user, { score: 60, createdAt: new Date(Date.now() + 1000) })
       await createWage(app, user, { score: 40, groupScore: 80, createdAt: new Date(Date.now() + 2000) })
 
-      await checkLevel(app.prisma, silentLogger)
+      await reviewLevel(app.prisma, silentLogger)
 
       const updated = await app.prisma.user.findUnique({ where: { id: user.id } })
       expect(updated.level).toBe(2)
@@ -88,7 +88,7 @@ describe('checkLevel', () => {
       // personal = 30 < 50 ✗, general = 30 + 100 = 130 >= 100 ✓
       await createWage(app, user, { score: 30, groupScore: 100 })
 
-      await checkLevel(app.prisma, silentLogger)
+      await reviewLevel(app.prisma, silentLogger)
 
       const updated = await app.prisma.user.findUnique({ where: { id: user.id } })
       expect(updated.level).toBe(1)
@@ -108,7 +108,7 @@ describe('checkLevel', () => {
       // personal = 60 >= 50 ✓, general = 60 + 20 = 80 < 100 ✗
       await createWage(app, user, { score: 60, groupScore: 20 })
 
-      await checkLevel(app.prisma, silentLogger)
+      await reviewLevel(app.prisma, silentLogger)
 
       const updated = await app.prisma.user.findUnique({ where: { id: user.id } })
       expect(updated.level).toBe(1)
@@ -126,7 +126,7 @@ describe('checkLevel', () => {
 
       await createWage(app, user, { score: 100, groupScore: 200 })
 
-      await checkLevel(app.prisma, silentLogger)
+      await reviewLevel(app.prisma, silentLogger)
 
       const updated = await app.prisma.user.findUnique({ where: { id: user.id } })
       expect(updated.level).toBe(1)
@@ -144,7 +144,7 @@ describe('checkLevel', () => {
 
       await createWage(app, user, { score: 100, groupScore: 200 })
 
-      await checkLevel(app.prisma, silentLogger)
+      await reviewLevel(app.prisma, silentLogger)
 
       const updated = await app.prisma.user.findUnique({ where: { id: user.id } })
       expect(updated.level).toBe(1)
@@ -162,7 +162,7 @@ describe('checkLevel', () => {
 
       await createWage(app, maxUser, { score: 200, groupScore: 500 })
 
-      await checkLevel(app.prisma, silentLogger)
+      await reviewLevel(app.prisma, silentLogger)
 
       const updated = await app.prisma.user.findUnique({ where: { id: maxUser.id } })
       expect(updated.level).toBe(2)
@@ -194,7 +194,7 @@ describe('checkLevel', () => {
         createdAt: new Date(Date.now() + 1000),
       })
 
-      await checkLevel(app.prisma, silentLogger)
+      await reviewLevel(app.prisma, silentLogger)
 
       const updated = await app.prisma.user.findUnique({ where: { id: user.id } })
       // general = 50 + 100 + 30 + 40 = 220 >= 200 ✓, personal = 30 >= 10 ✓
@@ -226,7 +226,7 @@ describe('checkLevel', () => {
         createdAt: new Date(Date.now() + 1000),
       })
 
-      await checkLevel(app.prisma, silentLogger)
+      await reviewLevel(app.prisma, silentLogger)
 
       const updated = await app.prisma.user.findUnique({ where: { id: user.id } })
       // personal = 120 >= 100 ✓, general = 100 + 100 + 120 = 320 >= 150 ✓
@@ -265,7 +265,7 @@ describe('checkLevel', () => {
       await createWage(app, user, { score: 1 })
       await createWage(app, user, { groupScore: 9 })
 
-      await checkLevel(app.prisma, silentLogger)
+      await reviewLevel(app.prisma, silentLogger)
 
       const updated = await app.prisma.user.findUnique({ where: { id: user.id } })
       // personal = 1 < 3 ✗ (level-1 score of 3 not counted), general = 3 + 1 + 9 = 13 >= 10 ✓
@@ -286,7 +286,7 @@ describe('checkLevel', () => {
 
       await createWage(app, user, { score: 60, groupScore: 60 })
 
-      await checkLevel(app.prisma, silentLogger)
+      await reviewLevel(app.prisma, silentLogger)
 
       const history = await app.prisma.levelHistory.findFirst({
         where: { userId: user.id },
@@ -321,7 +321,7 @@ describe('checkLevel', () => {
       const userB = await createConsultant(app, companyB, { level: 1 })
       await createWage(app, userB, { score: 15 })
 
-      await checkLevel(app.prisma, silentLogger)
+      await reviewLevel(app.prisma, silentLogger)
 
       const updatedA = await app.prisma.user.findUnique({ where: { id: userA.id } })
       const updatedB = await app.prisma.user.findUnique({ where: { id: userB.id } })
@@ -344,7 +344,7 @@ describe('checkLevel', () => {
       await createWage(app, user, { score: 20 })
 
       const logSpy = vi.fn()
-      await checkLevel(app.prisma, { info: logSpy })
+      await reviewLevel(app.prisma, { info: logSpy })
 
       expect(logSpy).toHaveBeenCalledWith(expect.stringMatching(/^\d+ users promoted to the next level$/))
 

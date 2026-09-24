@@ -1,5 +1,6 @@
 import { OrderStatus, PaymentStatus, UserRole } from '../generated/prisma/client'
-import { HOURS24, MINUTES15, verifyPaymentOnChain } from '../lib/payment.js'
+import { HOURS24, MINUTES15 } from '../lib/constants.js'
+import { verifyPaymentOnChain } from '../lib/payment.js'
 
 async function cancelPayments(prisma, payments = []) {
   if (payments.length === 0) return

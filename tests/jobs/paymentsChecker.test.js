@@ -2,7 +2,8 @@ import { describe, it, vi, beforeEach } from 'vitest'
 import crypto from 'node:crypto'
 import { createApp } from '../helpers'
 import { checkPayments } from '../../src/jobs/paymentsChecker.js'
-import { HOURS24, MINUTES15, verifyPaymentOnChain } from '../../src/lib/payment.js'
+import { HOURS24, MINUTES15 } from '../../src/lib/constants.js'
+import { verifyPaymentOnChain } from '../../src/lib/payment.js'
 import { OrderStatus, PaymentStatus, UserRole } from '../../src/generated/prisma/client'
 
 // Mock only the on-chain verification; keep the other payment helpers intact.

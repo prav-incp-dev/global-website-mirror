@@ -5,7 +5,8 @@ import { buildBackendApp } from './backend.js'
 import { checkUpcomingInteractions } from './src/jobs/interactionReminder.js'
 import { orphantUsers } from './src/jobs/inactivityChecker.js'
 import { checkPayments } from './src/jobs/paymentsChecker.js'
-import { checkLevel } from './src/jobs/levelReviewer.js'
+import { reviewLevel } from './src/jobs/levelReviewer.js'
+import { checkLevel } from './src/jobs/levelConfirmer.js'
 
 const server = await buildBackendApp({ logger: true })
 
@@ -49,6 +50,16 @@ await server.register(fastifyCron, {
     {
       name: 'level-reviewer',
       cronTime: '0 0 * * *',
+      timeZone: 'Europe/Moscow',
+      onTick: async (server) => {
+        await reviewLevel(server.prisma, server.log)
+      },
+    },
+    {
+      name: 'level-confirmer',
+      // Runs on the 1st of each month; the job evaluates the just-finished
+      // (previous) month's personal sales for level confirmation.
+      cronTime: '0 0 1 * *',
       timeZone: 'Europe/Moscow',
       onTick: async (server) => {
         await checkLevel(server.prisma, server.log)
