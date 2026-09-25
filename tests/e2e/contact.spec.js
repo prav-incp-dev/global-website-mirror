@@ -65,8 +65,13 @@ test.describe('Форма "Contact Us" (Проверка через last-email.j
     // 4. Отправляем форму
     await page.getByRole('button', { name: 'Отправить' }).click()
 
-    // 5. Ожидаем инлайн-уведомление об успехе (alert реализован флешем)
+    // 5. Модальное окно остаётся открытым и показывает успех внутри себя;
+    //    форма (textarea, прикрепление файла, кнопка отправки) скрыта
+    await expect(page.getByRole('heading', { name: 'Связаться с нами' })).toBeVisible()
     await expect(page.getByText('Запрос отправлен. Вам ответят в ближайшее время.')).toBeVisible()
+    await expect(page.locator('#contact-message')).not.toBeVisible()
+    await expect(page.getByRole('button', { name: 'Прикрепить файл' })).not.toBeVisible()
+    await expect(page.getByRole('button', { name: 'Отправить' })).not.toBeVisible()
 
     // 6. Ждем асинхронную запись фикстуры на диск и читаем её
     const mailData = await readLastEmail()

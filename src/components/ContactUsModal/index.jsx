@@ -5,10 +5,11 @@ import CloseIcon from '@/assets/icons/CloseIcon.svg?react'
 import { MAX_FILE_SIZE } from '@/lib/constants'
 import styles from './index.module.css'
 
-const ContactUsModal = ({ onClose, csrfToken, onSent }) => {
+const ContactUsModal = ({ onClose, csrfToken }) => {
   const [file, setFile] = useState(null)
   const [fileError, setFileError] = useState('')
   const [serverError, setServerError] = useState('')
+  const [sent, setSent] = useState(false)
   const fileInputRef = useRef(null)
 
   const {
@@ -56,7 +57,7 @@ const ContactUsModal = ({ onClose, csrfToken, onSent }) => {
       const data = await res.json()
 
       if (data.success) {
-        onSent()
+        setSent(true)
       } else {
         setServerError(data.error || 'Ошибка отправки запроса')
       }
@@ -67,55 +68,63 @@ const ContactUsModal = ({ onClose, csrfToken, onSent }) => {
 
   return (
     <Modal onClose={onClose} isStatic title="Связаться с нами">
-      <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-        <p className={styles.prompt}>Оставьте свое сообщение. Мы ответим вам в ближайшее время.</p>
+      <div className={styles.body}>
+        {sent ? (
+          <div className={styles.success} role="status">
+            Запрос отправлен. Вам ответят в ближайшее время.
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+            <p className={styles.prompt}>Оставьте свое сообщение. Мы ответим вам в ближайшее время.</p>
 
-        <label className={styles.label} htmlFor="contact-message">
-          Сообщение
-        </label>
-        <textarea
-          id="contact-message"
-          className={styles.textarea}
-          rows={5}
-          placeholder="Опишите ваш вопрос или обращение..."
-          maxLength={2000}
-          {...register('message', {
-            required: 'Введите сообщение',
-            validate: (value) => value.trim().length > 0 || 'Введите сообщение',
-          })}
-        />
-        {errors.message && <span className={styles.fieldError}>{errors.message.message}</span>}
+            <label className={styles.label} htmlFor="contact-message">
+              Сообщение
+            </label>
+            <textarea
+              id="contact-message"
+              className={styles.textarea}
+              rows={5}
+              placeholder="Опишите ваш вопрос или обращение..."
+              maxLength={2000}
+              {...register('message', {
+                required: 'Введите сообщение',
+                validate: (value) => value.trim().length > 0 || 'Введите сообщение',
+              })}
+            />
+            {errors.message && <span className={styles.fieldError}>{errors.message.message}</span>}
 
-        <div className={styles.fileSection}>
-          <button type="button" className={styles.fileButton} onClick={() => fileInputRef.current?.click()}>
-            {file ? 'Заменить файл' : 'Прикрепить файл'}
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            className={styles.hiddenInput}
-            accept="*/*"
-            onChange={handleFileChange}
-          />
-
-          {file && (
-            <div className={styles.fileRow}>
-              <span className={styles.fileName}>{file.name}</span>
-              <button type="button" className={styles.removeFile} onClick={removeFile} aria-label="Удалить файл">
-                <CloseIcon />
+            <div className={styles.fileSection}>
+              <button type="button" className={styles.fileButton} onClick={() => fileInputRef.current?.click()}>
+                {file ? 'Заменить файл' : 'Прикрепить файл'}
               </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                className={styles.hiddenInput}
+                accept="*/*"
+                onChange={handleFileChange}
+              />
+
+              {file && (
+                <div className={styles.fileRow}>
+                  <span className={styles.fileName}>{file.name}</span>
+                  <button type="button" className={styles.removeFile} onClick={removeFile} aria-label="Удалить файл">
+                    <CloseIcon />
+                  </button>
+                </div>
+              )}
+              {fileError && <p className={styles.errorText}>{fileError}</p>}
+              <p className={styles.hint}>Можно прикрепить один файл размером до 1,5 МБ</p>
             </div>
-          )}
-          {fileError && <p className={styles.errorText}>{fileError}</p>}
-          <p className={styles.hint}>Можно прикрепить один файл размером до 1,5 МБ</p>
-        </div>
 
-        {serverError && <p className={styles.errorText}>{serverError}</p>}
+            {serverError && <p className={styles.errorText}>{serverError}</p>}
 
-        <button type="submit" className={styles.sendButton} disabled={isSubmitting}>
-          {isSubmitting ? 'Отправка...' : 'Отправить'}
-        </button>
-      </form>
+            <button type="submit" className={styles.sendButton} disabled={isSubmitting}>
+              {isSubmitting ? 'Отправка...' : 'Отправить'}
+            </button>
+          </form>
+        )}
+      </div>
     </Modal>
   )
 }

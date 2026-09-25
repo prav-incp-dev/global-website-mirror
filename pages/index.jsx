@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import classNames from 'classnames'
 import { useRouteContext } from '@fastify/react/client'
 import { UserRole } from '@/generated/prisma/enums'
@@ -97,8 +97,6 @@ const Index = () => {
   const [invitationOpen, setInvitationOpen] = useState(false)
   const [profileData, setProfileData] = useState(profile)
   const [contactOpen, setContactOpen] = useState(false)
-  const [flash, setFlash] = useState('')
-  const flashTimer = useRef(null)
 
   const handleLogout = async (e) => {
     e.preventDefault()
@@ -110,20 +108,6 @@ const Index = () => {
     })
     const result = await res.json()
     if (result.success) window.location.href = result.redirect
-  }
-
-  const showFlash = (message) => {
-    if (flashTimer.current) clearTimeout(flashTimer.current)
-    setFlash(message)
-    flashTimer.current = setTimeout(() => {
-      setFlash('')
-      flashTimer.current = null
-    }, 2500)
-  }
-
-  const handleContactSent = () => {
-    setContactOpen(false)
-    showFlash('Запрос отправлен. Вам ответят в ближайшее время.')
   }
 
   const handleUpdateProfile = (updatedProfile) => {
@@ -151,10 +135,8 @@ const Index = () => {
           </div>
         </div>
 
-        {flash && <div className={styles.flash}>{flash}</div>}
-
         {contactOpen && (
-          <ContactUsModal onClose={() => setContactOpen(false)} csrfToken={csrfToken} onSent={handleContactSent} />
+          <ContactUsModal onClose={() => setContactOpen(false)} csrfToken={csrfToken} />
         )}
 
         {profileData.role === UserRole.Consultant && (

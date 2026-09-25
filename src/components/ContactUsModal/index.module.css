@@ -1,7 +1,30 @@
+.body {
+  min-height: 340px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.success {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  min-height: 96px;
+  background: rgba(0, 184, 148, 0.08);
+  border: 1px solid rgba(0, 184, 148, 0.35);
+  border-radius: 8px;
+  color: #00b894;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
 .form {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  justify-content: center;
 }
 
 .prompt {

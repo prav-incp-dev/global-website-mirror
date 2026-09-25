@@ -73,16 +73,6 @@
   flex-shrink: 0;
 }
 
-.flash {
-  margin-bottom: 16px;
-  padding: 12px 16px;
-  background: rgba(0, 184, 148, 0.1);
-  border: 1px solid rgba(0, 184, 148, 0.4);
-  border-radius: 8px;
-  color: #00b894;
-  font-size: 0.875rem;
-}
-
 .inviteButton {
   display: block;
   width: 100%;
