@@ -1,0 +1,164 @@
+.body {
+  min-height: 340px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.success {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  min-height: 96px;
+  background: rgba(0, 184, 148, 0.08);
+  border: 1px solid rgba(0, 184, 148, 0.35);
+  border-radius: 8px;
+  color: #00b894;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-content: center;
+}
+
+.prompt {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #aaa;
+  line-height: 1.5;
+}
+
+.label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #eee;
+}
+
+.textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  background: #121212;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 8px;
+  color: #eee;
+  font-size: 0.875rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #d4af37;
+}
+
+.fileSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fileButton {
+  align-self: flex-start;
+  padding: 8px 16px;
+  background: transparent;
+  color: #d4af37;
+  border: 1px solid #d4af37;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.fileButton:hover {
+  background: #d4af37;
+  color: #0d0d0d;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.fileRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 8px;
+}
+
+.fileName {
+  font-size: 0.8125rem;
+  color: #eee;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.removeFile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.removeFile:hover {
+  color: #ff6b6b;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #777;
+}
+
+.errorText {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #ff6b6b;
+}
+
+.fieldError {
+  font-size: 0.8125rem;
+  color: #ff6b6b;
+}
+
+.sendButton {
+  margin-top: 4px;
+  padding: 12px;
+  background: #d4af37;
+  color: #0d0d0d;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sendButton:hover:not(:disabled) {
+  background: #e5c45a;
+}
+
+.sendButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { userName } from '../lib/user.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -37,6 +38,7 @@ const processMailResult = (info, user) => {
       to: user.email,
       subject: parsed.subject || info.envelope?.subject,
       text: parsed.text,
+      attachments: parsed.attachments,
     }
     fs.writeFileSync(fixturePath, JSON.stringify(emailContent, null, 2), 'utf-8')
   }
@@ -125,6 +127,38 @@ export const sendInteractionReminder = async (initiator, targetName) => {
   })
 
   processMailResult(info, initiator)
+
+  return info
+}
+
+/**
+ * Sends a contact request from a user to all admins of their company.
+ * `attachment` is optional and, when present, is attached to the email.
+ */
+export const sendContactRequestEmail = async ({ user, message, adminEmails, attachment }) => {
+  const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@ourhouse.app'
+  const transport = createTransport()
+
+  const mailOptions = {
+    from: `"INCP PK ND" <${fromEmail}>`,
+    to: Array.isArray(adminEmails) ? adminEmails.join(', ') : adminEmails,
+    subject: 'Запрос от пользователя',
+    text: `Пользователь ${userName(user)} <${user.email}> отправил запрос:\n\n"${message}"`,
+  }
+
+  if (attachment) {
+    mailOptions.attachments = [
+      {
+        filename: attachment.filename,
+        path: attachment.path,
+        contentType: attachment.mimetype,
+      },
+    ]
+  }
+
+  const info = await transport.sendMail(mailOptions)
+
+  processMailResult(info, user)
 
   return info
 }
