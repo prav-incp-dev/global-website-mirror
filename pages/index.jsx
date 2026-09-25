@@ -1,14 +1,16 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import classNames from 'classnames'
 import { useRouteContext } from '@fastify/react/client'
 import { UserRole } from '@/generated/prisma/enums'
 import UserProfile from '@/components/UserProfile'
 import InvitationModal from '@/components/InvitationModal'
+import ContactUsModal from '@/components/ContactUsModal'
 import Payments from '@/components/Payments'
 import StatsDashboard from '@/components/StatsDashboard'
 import Structure from '@/components/Structure'
 import Wage from '@/components/Wages'
 import LandingPage from '@/components/LandingPage'
+import ContactIcon from '@/assets/icons/ContactIcon.svg?react'
 import ProfileIcon from '@/assets/icons/ProfileIcon.svg?react'
 import PaymentsIcon from '@/assets/icons/PaymentsIcon.svg?react'
 import StatsIcon from '@/assets/icons/StatsIcon.svg?react'
@@ -94,8 +96,9 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState('profile')
   const [invitationOpen, setInvitationOpen] = useState(false)
   const [profileData, setProfileData] = useState(profile)
-
-  if (isLanding) return <LandingPage />
+  const [contactOpen, setContactOpen] = useState(false)
+  const [flash, setFlash] = useState('')
+  const flashTimer = useRef(null)
 
   const handleLogout = async (e) => {
     e.preventDefault()
@@ -109,19 +112,51 @@ const Index = () => {
     if (result.success) window.location.href = result.redirect
   }
 
+  const showFlash = (message) => {
+    if (flashTimer.current) clearTimeout(flashTimer.current)
+    setFlash(message)
+    flashTimer.current = setTimeout(() => {
+      setFlash('')
+      flashTimer.current = null
+    }, 2500)
+  }
+
+  const handleContactSent = () => {
+    setContactOpen(false)
+    showFlash('Запрос отправлен. Вам ответят в ближайшее время.')
+  }
+
   const handleUpdateProfile = (updatedProfile) => {
     setProfileData({ ...profileData, ...updatedProfile })
   }
+
+  if (isLanding) return <LandingPage />
 
   return (
     <DescendantsProvider descendants={descendants} staleDays={staleDays} currentUserId={currentUserId}>
       <div className={styles.container}>
         <div className={styles.header}>
           <h1 className={styles.headerTitle}>Профиль</h1>
-          <button className={styles.logoutButton} onClick={handleLogout}>
-            Выйти
-          </button>
+          <div className={styles.headerActions}>
+            <button
+              className={styles.contactButton}
+              onClick={() => setContactOpen(true)}
+              title="Связаться с администрацией"
+            >
+              <ContactIcon className={styles.contactIcon} />
+            </button>
+            <button className={styles.logoutButton} onClick={handleLogout}>
+              Выйти
+            </button>
+          </div>
         </div>
+
+        {flash && <div className={styles.flash}>{flash}</div>}
+
+        {contactOpen && (
+          <ContactUsModal onClose={() => setContactOpen(false)} csrfToken={csrfToken} onSent={handleContactSent} />
+        )}
+
         {profileData.role === UserRole.Consultant && (
           <>
             <button className={styles.inviteButton} onClick={() => setInvitationOpen(true)}>

@@ -38,6 +38,51 @@
   box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.contactButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 5px 12px;
+  background: transparent;
+  color: #00b894;
+  border: 1px solid #00b894;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.02em;
+}
+
+.contactButton:hover {
+  background: #00b894;
+  color: #0d0d0d;
+  box-shadow: 0 0 20px rgba(0, 184, 148, 0.3);
+}
+
+.contactIcon {
+  width: 24px;
+  height: 24px;
+  color: currentColor;
+  flex-shrink: 0;
+}
+
+.flash {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: rgba(0, 184, 148, 0.1);
+  border: 1px solid rgba(0, 184, 148, 0.4);
+  border-radius: 8px;
+  color: #00b894;
+  font-size: 0.875rem;
+}
+
 .inviteButton {
   display: block;
   width: 100%;
