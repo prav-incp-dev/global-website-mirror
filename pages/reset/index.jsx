@@ -8,7 +8,7 @@ import InfoIcon from '@/assets/icons/InfoIcon.svg?react'
 
 export const getData = async ({ server, req, reply }) => {
   const user = await server.auth.getUser(req)
-  if (user) return reply.redirect('/')
+  if (user) return reply.redirect('/home')
 
   const { token } = req.query
 

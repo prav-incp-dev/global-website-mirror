@@ -45,7 +45,7 @@ test.describe('Форма "Contact Us" (Проверка через last-email.j
 
   test('отправляет обращение и создает фикстуру письма для админов', async ({ loginAs, page }) => {
     await loginAs(consultant.id)
-    await page.goto('/')
+    await page.goto('/home')
     await page.waitForLoadState('networkidle')
 
     // 1. Открываем модальное окно "Contact Us"
@@ -93,7 +93,7 @@ test.describe('Форма "Contact Us" (Проверка через last-email.j
 
   test('показывает ошибку валидации при пустом сообщении', async ({ loginAs, page }) => {
     await loginAs(consultant.id)
-    await page.goto('/')
+    await page.goto('/home')
     await page.waitForLoadState('networkidle')
 
     await page.locator('button[title="Связаться с администрацией"]').click()

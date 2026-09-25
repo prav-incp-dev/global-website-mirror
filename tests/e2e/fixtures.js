@@ -33,7 +33,7 @@ export const test = base.extend({
           sameSite: 'Lax',
         },
       ])
-      await page.goto('/')
+      await page.goto('/home')
       await page.waitForLoadState('networkidle')
     }
 

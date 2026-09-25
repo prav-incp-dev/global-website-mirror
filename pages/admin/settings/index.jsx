@@ -17,7 +17,7 @@ const SCREENS = [
 export const getData = async ({ server, req, reply }) => {
   const user = await server.auth.getUser(req)
   if (!user) return reply.redirect('/auth')
-  if (user.role !== UserRole.Admin) return reply.redirect('/')
+  if (user.role !== UserRole.Admin) return reply.redirect('/home')
 
   const csrfToken = reply.generateCsrf()
   const setting = await server.admin.getSetting(user)

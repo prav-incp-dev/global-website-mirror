@@ -8,7 +8,7 @@ import styles from './index.module.css'
 export const preHandler = [
   async (req, reply) => {
     const user = await req.server.auth.getUser(req)
-    if (user) return reply.redirect('/')
+    if (user) return reply.redirect('/home')
 
     const { token } = req.query
 
