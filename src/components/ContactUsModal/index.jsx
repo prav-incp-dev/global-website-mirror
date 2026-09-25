@@ -2,9 +2,8 @@ import { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import Modal from '../Modal'
 import CloseIcon from '@/assets/icons/CloseIcon.svg?react'
+import { MAX_FILE_SIZE } from '@/lib/constants'
 import styles from './index.module.css'
-
-const MAX_FILE_SIZE = 1.5 * 1024 * 1024
 
 const ContactUsModal = ({ onClose, csrfToken, onSent }) => {
   const [file, setFile] = useState(null)

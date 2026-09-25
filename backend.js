@@ -15,6 +15,7 @@ import paymentRoutes from './src/routes/payment'
 import interactionRoutes from './src/routes/interaction'
 import contactRoutes from './src/routes/contact'
 import { WALLET_REGEXP, PHONE_REGEXP, MEMBER_REGEXP, UID_REGEXP } from './src/lib/regexps.js'
+import { MAX_FILE_SIZE } from './src/lib/constants.js'
 
 export const buildBackendApp = async (opts = {}) => {
   const { auth: authOpts, ...fastifyOpts } = opts
@@ -38,7 +39,7 @@ export const buildBackendApp = async (opts = {}) => {
   await backend.register(authPlugin, authOpts)
   await backend.register(fastifyMultipart, {
     limits: {
-      fileSize: 1.5 * 1024 * 1024, // 1.5 MB per file
+      fileSize: MAX_FILE_SIZE, // 1.5 MB per file
       files: 1, // at most one attached file
       fields: 5,
     },
