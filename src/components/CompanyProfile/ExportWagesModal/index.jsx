@@ -17,19 +17,16 @@ const ExportWagesModal = ({ onClose, wallet, walletLabel }) => {
   const [fromDate, setFromDate] = useState(oneMonthAgo)
   const [toDate, setToDate] = useState(today)
 
-  const handleConfirm = () => {
-    const params = new URLSearchParams({
-      fromDate,
-      toDate,
-      wallet,
-    })
-    window.open(`/api/admin/company/wages/export?${params}`, '_blank')
-    onClose()
-  }
-
   return (
     <Modal title={`Выгрузка начислений на ${walletLabel}`} onClose={onClose}>
-      <div className={styles.container}>
+      <form
+        className={styles.container}
+        action="/api/admin/company/wages/export"
+        method="get"
+        onSubmit={() => setTimeout(onClose, 0)}
+      >
+        <input type="hidden" name="wallet" value={wallet} />
+
         <div className={styles.fieldGroup}>
           <label className={styles.label} htmlFor="fromDate">
             С
@@ -38,6 +35,7 @@ const ExportWagesModal = ({ onClose, wallet, walletLabel }) => {
             id="fromDate"
             type="date"
             className={styles.input}
+            name="fromDate"
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
           />
@@ -51,17 +49,18 @@ const ExportWagesModal = ({ onClose, wallet, walletLabel }) => {
             id="toDate"
             type="date"
             className={styles.input}
+            name="toDate"
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
           />
         </div>
 
         <div className={styles.actions}>
-          <button className={styles.actionButton} disabled={!fromDate || !toDate} onClick={handleConfirm}>
+          <button className={styles.actionButton} type="submit" disabled={!fromDate || !toDate}>
             Сформировать
           </button>
         </div>
-      </div>
+      </form>
     </Modal>
   )
 }
