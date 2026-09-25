@@ -149,7 +149,7 @@ describe('auth routes', () => {
     expect(response.statusCode).toBe(200)
     expect(response.json()).toEqual({
       success: true,
-      redirect: '/',
+      redirect: '/home',
     })
     expect(app.auth.verifyTwoFactorCode).toHaveBeenCalledWith(1, '123456')
     expect(app.auth.setSession).toHaveBeenCalledTimes(1)

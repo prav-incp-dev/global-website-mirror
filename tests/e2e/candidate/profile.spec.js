@@ -20,7 +20,7 @@ test.describe('consultant manages own profile', () => {
   test('views profile with inviter, edits data, and verifies email persists', async ({ loginAs, page }) => {
     // Log in as consultant
     await loginAs(candidate.id)
-    await page.goto('/')
+    await page.goto('/home')
     await page.waitForLoadState('networkidle')
 
     await expect(page.getByRole('button', { name: 'Сгенерировать пригласительную ссылку' })).not.toBeVisible()

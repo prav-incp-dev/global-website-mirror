@@ -61,7 +61,7 @@ export default async (fastify) => {
 
       return reply.send({
         success: true,
-        redirect: '/',
+        redirect: '/home',
       })
     },
   })
