@@ -1,0 +1,103 @@
+.notification {
+  color: #00b894;
+  background-color: rgba(0, 184, 148, 0.1);
+  border: 1px solid rgba(0, 184, 148, 0.25);
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.wagesList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wageRecord {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 18px;
+  background: rgba(212, 175, 55, 0.04);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 8px;
+}
+
+.wageRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.wageDescription {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  color: #dfdfdf;
+  width: 100%;
+}
+
+.wageAmount {
+  flex-shrink: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #d4af37;
+}
+
+.wageDate {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.wagesEmpty {
+  padding: 20px 0;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #999;
+}
+
+.wagesLoading {
+  padding: 20px 0;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #999;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.actionButton {
+  width: 100%;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #d4af37 0%, #c9a832 100%);
+  color: #0d0d0d;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.02em;
+}
+
+.actionButton:hover {
+  background: linear-gradient(135deg, #f0d060 0%, #d4af37 100%);
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+  transform: translateY(-1px);
+}
+
+.actionButton:active {
+  transform: translateY(0);
+}

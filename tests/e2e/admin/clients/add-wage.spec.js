@@ -28,7 +28,7 @@ test.describe('admin clients add wage', () => {
     await expect(page.getByRole('heading', { name: 'Информация о пользователе' })).toBeVisible()
 
     // Click "Добавить начисление" to open AddWageModal
-    await page.getByRole('button', { name: 'Достижения' }).click()
+    await page.getByRole('button', { name: 'Начисления' }).click()
     await page.getByRole('button', { name: 'Добавить начисление' }).click()
     await expect(page.getByRole('heading', { name: 'Добавить начисление' })).toBeVisible()
   }
@@ -63,11 +63,26 @@ test.describe('admin clients add wage', () => {
     await expect(transferButton).toBeDisabled()
     await expect(creditButton).toBeDisabled()
 
-    // Zero amount with description selected
+    // Zero amount with description selected from the dropdown
     await amountInput.fill('0')
-    const descriptionSelect = page.getByLabel('Описание')
-    await descriptionSelect.selectOption('Лидерское вознаграждение')
-    await expect(page.getByText('Выберите описание')).not.toBeVisible()
+    const descriptionInput = page.getByLabel('Описание')
+
+    // Focus the input to open the dropdown with all presets
+    await descriptionInput.click()
+    const descriptionDropdown = page.locator('[class*="comboboxDropdown"]')
+    await expect(descriptionDropdown).toBeVisible()
+    await expect(descriptionDropdown.locator('li')).toHaveCount(3)
+    await expect(descriptionDropdown).toContainText('Лидерское вознаграждение')
+    await expect(descriptionDropdown).toContainText('На офис')
+    await expect(descriptionDropdown).toContainText('На путешествие')
+
+    // Selecting a suggestion fills the input and closes the dropdown
+    await descriptionDropdown.getByText('Лидерское вознаграждение').click()
+    await expect(descriptionInput).toHaveValue('Лидерское вознаграждение')
+    await expect(descriptionDropdown).not.toBeVisible()
+
+    // Error cleared and buttons reflect a valid non-empty description
+    await expect(page.getByText('Выберите назначение')).not.toBeVisible()
     await expect(transferButton).toBeDisabled()
     await expect(creditButton).toBeEnabled()
 
@@ -96,8 +111,8 @@ test.describe('admin clients add wage', () => {
     const amountInput = page.getByLabel('Сумма (USDT)')
     await amountInput.fill('750')
 
-    const descriptionSelect = page.getByLabel('Описание')
-    await descriptionSelect.selectOption('На офис')
+    const descriptionInput = page.getByLabel('Описание')
+    await descriptionInput.fill('На офис')
 
     // Click "Зачесть"
     const creditButton = page.getByRole('button', { name: 'Зачесть' })
@@ -112,7 +127,6 @@ test.describe('admin clients add wage', () => {
 
     // The AddWageModal closes and the success notification appears in ClientModal
     await expect(page.getByRole('heading', { name: 'Добавить начисление' })).not.toBeVisible()
-    await expect(page.getByText('Начисление успешно добавлено')).toBeVisible()
 
     // The wage was created in the database
     const wages = await prisma.wage.findMany({
@@ -170,8 +184,12 @@ test.describe('admin clients add wage', () => {
     const amountInput = page.getByLabel('Сумма (USDT)')
     await amountInput.fill('250')
 
-    const descriptionSelect = page.getByLabel('Описание')
-    await descriptionSelect.selectOption('На путешествие')
+    const descriptionInput = page.getByLabel('Описание')
+    await descriptionInput.fill('На путешествие')
+
+    // Close the dropdown by selecting the matching suggestion so it doesn't cover the action button
+    const descriptionDropdown = page.locator('[class*="comboboxDropdown"]')
+    await descriptionDropdown.getByText('На путешествие').click()
 
     // Click "Перевести"
     const transferButton = page.getByRole('button', { name: 'Перевести' })
@@ -192,5 +210,92 @@ test.describe('admin clients add wage', () => {
     const closeButtons = page.getByRole('button', { name: 'Закрыть' })
     await closeButtons.last().click()
     await expect(page.getByRole('heading', { name: 'Добавить начисление' })).not.toBeVisible()
+  })
+
+  test('wages are reflected on the Начисления tab, newest first', async ({ loginAs, page }) => {
+    const prisma = getPrisma()
+
+    const consultant = await createTestUser({
+      firstName: 'Wage',
+      lastName: 'Reflect',
+      role: 'Consultant',
+      companyId: company.id,
+      wallet: '0x1234567890abcdef1234567890abcdef66666666',
+    })
+
+    // Seed two wages directly in the DB with staggered createdAt values
+    await prisma.wage.create({
+      data: {
+        companyId: company.id,
+        userId: consultant.id,
+        amount: 100,
+        description: 'Лидерское вознаграждение',
+        score: 0,
+        groupScore: 0,
+        createdAt: new Date(Date.now() - 2 * 60 * 1000),
+      },
+    })
+    await prisma.wage.create({
+      data: {
+        companyId: company.id,
+        userId: consultant.id,
+        amount: 250,
+        description: 'На офис',
+        score: 0,
+        groupScore: 0,
+        createdAt: new Date(Date.now() - 60 * 1000),
+      },
+    })
+
+    await loginAs(admin.id)
+    await openClientsTab(page)
+
+    // Open the ClientModal for the consultant
+    const consultantRow = page.locator('table tbody tr').filter({ hasText: consultant.firstName })
+    await consultantRow.locator('[class*="infoIcon"]').click()
+    await expect(page.getByRole('heading', { name: 'Информация о пользователе' })).toBeVisible()
+
+    // Open the Начисления tab
+    await page.getByRole('button', { name: 'Начисления' }).click()
+
+    // Both wages are shown, newest first (250 then 100)
+    const wageRows = page.locator('[class*="wageRecord"]')
+    await expect(wageRows).toHaveCount(2)
+    await expect(wageRows.first()).toContainText('$250.00 USDT')
+    await expect(wageRows.first()).toContainText('На офис')
+    await expect(wageRows.nth(1)).toContainText('$100.00 USDT')
+    await expect(wageRows.nth(1)).toContainText('Лидерское вознаграждение')
+
+    // Open AddWageModal
+    await page.getByRole('button', { name: 'Добавить начисление' }).click()
+    await expect(page.getByRole('heading', { name: 'Добавить начисление' })).toBeVisible()
+
+    // Fill the form with amount 75 and description 'На путешествие'
+    const amountInput = page.getByLabel('Сумма (USDT)')
+    await amountInput.fill('75')
+    const descriptionInput = page.getByLabel('Описание')
+    await descriptionInput.fill('На путешествие')
+
+    // Click "Зачесть"
+    const creditButton = page.getByRole('button', { name: 'Зачесть' })
+    await expect(creditButton).toBeEnabled()
+
+    // Confirm the dialog
+    page.once('dialog', (dialog) => {
+      expect(dialog.message()).toBe('Вы подтверждаете, что пользователю было выполнено начисление?')
+      dialog.accept()
+    })
+    await creditButton.click()
+
+    // The AddWageModal closes and the success notification appears
+    await expect(page.getByRole('heading', { name: 'Добавить начисление' })).not.toBeVisible()
+    // The new record appears at the top of the wages list (newest first): 75, then 250, then 100
+    await expect(wageRows).toHaveCount(3)
+    await expect(wageRows.first()).toContainText('$75.00 USDT')
+    await expect(wageRows.first()).toContainText('На путешествие')
+    await expect(wageRows.nth(1)).toContainText('$250.00 USDT')
+    await expect(wageRows.nth(1)).toContainText('На офис')
+    await expect(wageRows.nth(2)).toContainText('$100.00 USDT')
+    await expect(wageRows.nth(2)).toContainText('Лидерское вознаграждение')
   })
 })

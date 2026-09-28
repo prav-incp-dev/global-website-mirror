@@ -1,7 +1,7 @@
 import { stringify } from 'csv-stringify/sync'
 import { OrderStatus, PaymentStatus, UserRole } from '../generated/prisma/client'
 import { serializePayment } from '../lib/payment'
-import { PAGE_LIMIT, MIN_LEVEL, MAX_LEVEL } from '../lib/constants.js'
+import { PAGE_LIMIT, MIN_LEVEL, MAX_LEVEL, CLIENT_WAGES_LIMIT } from '../lib/constants.js'
 import { userName } from '../../src/lib/user'
 import { uniqConstraintLabel } from '../lib/prismaHelpers.js'
 
@@ -1019,6 +1019,60 @@ export default async (fastify) => {
         return reply.send({ success: true, wage })
       } catch {
         return reply.code(500).send({ error: 'Ошибка создания начисления' })
+      }
+    },
+  })
+
+  fastify.get('/api/admin/user/:id/wages', {
+    schema: {
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'integer', minimum: 1 },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      const { id: userId } = req.params
+      const limit = CLIENT_WAGES_LIMIT
+
+      try {
+        const targetUser = await fastify.prisma.user.findUnique({
+          where: { id: userId },
+          select: { id: true, companyId: true },
+        })
+
+        if (!targetUser) {
+          return reply.code(404).send({ error: 'Пользователь не найден' })
+        }
+
+        if (targetUser.companyId !== user.company.id) {
+          return reply.code(403).send({ error: 'Доступ запрещен' })
+        }
+
+        const wages = await fastify.prisma.wage.findMany({
+          where: { userId: userId },
+          orderBy: { createdAt: 'desc' },
+          take: limit,
+          select: {
+            id: true,
+            amount: true,
+            description: true,
+            createdAt: true,
+          },
+        })
+
+        return reply.send({
+          wages: wages.map((w) => ({ ...w, amount: Number(w.amount) })),
+        })
+      } catch {
+        return reply.code(500).send({ error: 'Ошибка получения начислений' })
       }
     },
   })
