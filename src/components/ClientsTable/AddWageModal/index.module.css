@@ -34,35 +34,44 @@
   border-color: #d4af37;
 }
 
-.select {
+.combobox {
+  position: relative;
   width: 100%;
-  padding: 12px 14px;
-  padding-right: 36px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(212, 175, 55, 0.15);
-  border-radius: 8px;
-  color: #f5f5f5;
-  font-size: 1rem;
-  outline: none;
-  transition: border-color 0.2s ease;
-  box-sizing: border-box;
-  font-family: inherit;
-  cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='%23999'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
 }
 
-.select:focus {
-  border-color: #d4af37;
-}
-
-.select option {
+.comboboxDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 200px;
+  overflow-y: auto;
   background: #1a1a1a;
-  color: #f5f5f5;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
+  padding: 4px;
+  margin: 0;
+  list-style: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.comboboxOption {
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #e0e0e0;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.comboboxOption:hover {
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.comboboxOptionActive {
+  color: #d4af37;
+  font-weight: 500;
 }
 
 .fieldError,

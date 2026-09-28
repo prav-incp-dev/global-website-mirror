@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import classNames from 'classnames'
 import { useForm, useWatch } from 'react-hook-form'
 import { getAddress, parseUnits } from 'viem'
 import { useClientsContext } from '../ClientsContext'
@@ -8,6 +9,8 @@ import styles from './index.module.css'
 
 const CONFIRMATION_TEXT = 'Вы подтверждаете, что пользователю было выполнено начисление?'
 
+const WAGE_DESCRIPTIONS = ['Лидерское вознаграждение', 'На офис', 'На путешествие']
+
 const AddWageModal = ({ onClose, onSuccess }) => {
   const { csrfToken, selectedUser, companyWallet } = useClientsContext()
 
@@ -15,6 +18,7 @@ const AddWageModal = ({ onClose, onSuccess }) => {
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors, isValid },
   } = useForm({
     defaultValues: {
@@ -26,10 +30,35 @@ const AddWageModal = ({ onClose, onSuccess }) => {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [loaderText, setLoaderText] = useState('')
+  const [descriptionOpen, setDescriptionOpen] = useState(false)
+  const descriptionWrapRef = useRef(null)
 
   const [amount, description] = useWatch({ control, name: ['amount', 'description'] })
   const canTransfer = amount > 0 && isValid
   const canCredit = isValid
+
+  const handleSelectDescription = (value) => {
+    setValue('description', value, { shouldValidate: true })
+    setDescriptionOpen(false)
+  }
+
+  // Suggestions filtered by what the admin has already typed (or all presets when empty)
+  const suggestions = WAGE_DESCRIPTIONS.filter((item) => {
+    const query = (description || '').trim().toLowerCase()
+    return query === '' || item.toLowerCase().includes(query)
+  })
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (descriptionWrapRef.current && !descriptionWrapRef.current.contains(e.target)) {
+        setDescriptionOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const paymentErrorMessage = (txHash) => {
     return (
@@ -152,22 +181,38 @@ const AddWageModal = ({ onClose, onSuccess }) => {
           <label className={styles.label} htmlFor="description">
             Описание
           </label>
-          <select
-            id="description"
-            className={styles.select}
-            disabled={saving}
-            {...register('description', {
-              required: 'Обязательное поле',
-              validate: (value) => value !== '' || 'Выберите назначение',
-            })}
-          >
-            <option value="" disabled>
-              Выберите назначение
-            </option>
-            <option value="Лидерское вознаграждение">Лидерское вознаграждение</option>
-            <option value="На офис">На офис</option>
-            <option value="На путешествие">На путешествие</option>
-          </select>
+          <div className={styles.combobox} ref={descriptionWrapRef}>
+            <input
+              id="description"
+              className={styles.input}
+              placeholder="Выберите или введите назначение"
+              disabled={saving}
+              autoComplete="off"
+              onFocus={() => setDescriptionOpen(true)}
+              {...register('description', {
+                required: 'Обязательное поле',
+                validate: (value) => (value && value.trim() !== '') || 'Выберите назначение',
+              })}
+            />
+            {descriptionOpen && suggestions.length > 0 && (
+              <ul className={styles.comboboxDropdown}>
+                {suggestions.map((item) => (
+                  <li
+                    key={item}
+                    className={classNames(styles.comboboxOption, {
+                      [styles.comboboxOptionActive]: description === item,
+                    })}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      handleSelectDescription(item)
+                    }}
+                  >
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           {errors.description && <p className={styles.fieldError}>{errors.description.message}</p>}
         </div>
 

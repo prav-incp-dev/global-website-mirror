@@ -63,11 +63,26 @@ test.describe('admin clients add wage', () => {
     await expect(transferButton).toBeDisabled()
     await expect(creditButton).toBeDisabled()
 
-    // Zero amount with description selected
+    // Zero amount with description selected from the dropdown
     await amountInput.fill('0')
-    const descriptionSelect = page.getByLabel('Описание')
-    await descriptionSelect.selectOption('Лидерское вознаграждение')
-    await expect(page.getByText('Выберите описание')).not.toBeVisible()
+    const descriptionInput = page.getByLabel('Описание')
+
+    // Focus the input to open the dropdown with all presets
+    await descriptionInput.click()
+    const descriptionDropdown = page.locator('[class*="comboboxDropdown"]')
+    await expect(descriptionDropdown).toBeVisible()
+    await expect(descriptionDropdown.locator('li')).toHaveCount(3)
+    await expect(descriptionDropdown).toContainText('Лидерское вознаграждение')
+    await expect(descriptionDropdown).toContainText('На офис')
+    await expect(descriptionDropdown).toContainText('На путешествие')
+
+    // Selecting a suggestion fills the input and closes the dropdown
+    await descriptionDropdown.getByText('Лидерское вознаграждение').click()
+    await expect(descriptionInput).toHaveValue('Лидерское вознаграждение')
+    await expect(descriptionDropdown).not.toBeVisible()
+
+    // Error cleared and buttons reflect a valid non-empty description
+    await expect(page.getByText('Выберите назначение')).not.toBeVisible()
     await expect(transferButton).toBeDisabled()
     await expect(creditButton).toBeEnabled()
 
@@ -96,8 +111,8 @@ test.describe('admin clients add wage', () => {
     const amountInput = page.getByLabel('Сумма (USDT)')
     await amountInput.fill('750')
 
-    const descriptionSelect = page.getByLabel('Описание')
-    await descriptionSelect.selectOption('На офис')
+    const descriptionInput = page.getByLabel('Описание')
+    await descriptionInput.fill('На офис')
 
     // Click "Зачесть"
     const creditButton = page.getByRole('button', { name: 'Зачесть' })
@@ -169,8 +184,12 @@ test.describe('admin clients add wage', () => {
     const amountInput = page.getByLabel('Сумма (USDT)')
     await amountInput.fill('250')
 
-    const descriptionSelect = page.getByLabel('Описание')
-    await descriptionSelect.selectOption('На путешествие')
+    const descriptionInput = page.getByLabel('Описание')
+    await descriptionInput.fill('На путешествие')
+
+    // Close the dropdown by selecting the matching suggestion so it doesn't cover the action button
+    const descriptionDropdown = page.locator('[class*="comboboxDropdown"]')
+    await descriptionDropdown.getByText('На путешествие').click()
 
     // Click "Перевести"
     const transferButton = page.getByRole('button', { name: 'Перевести' })
@@ -254,8 +273,8 @@ test.describe('admin clients add wage', () => {
     // Fill the form with amount 75 and description 'На путешествие'
     const amountInput = page.getByLabel('Сумма (USDT)')
     await amountInput.fill('75')
-    const descriptionSelect = page.getByLabel('Описание')
-    await descriptionSelect.selectOption('На путешествие')
+    const descriptionInput = page.getByLabel('Описание')
+    await descriptionInput.fill('На путешествие')
 
     // Click "Зачесть"
     const creditButton = page.getByRole('button', { name: 'Зачесть' })
