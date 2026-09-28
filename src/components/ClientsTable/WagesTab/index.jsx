@@ -4,18 +4,14 @@ import AddWageModal from '../AddWageModal'
 import styles from './index.module.css'
 
 const WagesTab = ({ active }) => {
-  const { selectedUser, csrfToken } = useClientsContext()
+  const { selectedUser } = useClientsContext()
   const [wages, setWages] = useState()
   const [loading, setLoading] = useState(true)
   const [showAddWage, setShowAddWage] = useState(false)
 
   const fetchWages = async () => {
     try {
-      const res = await fetch(`/api/admin/user/${selectedUser.id}/wages`, {
-        headers: {
-          'x-csrf-token': csrfToken,
-        },
-      })
+      const res = await fetch(`/api/admin/user/${selectedUser.id}/wages`)
       const result = await res.json()
       if (result.wages) setWages(result.wages)
     } finally {
@@ -42,17 +38,19 @@ const WagesTab = ({ active }) => {
   }
 
   const renderWages = () => {
-    return <div className={styles.wagesList}>
-      {wages.map((wage) => (
-        <div key={wage.id} className={styles.wageRecord}>
-          <div className={styles.wageRow}>
-            <span className={styles.wageAmount}>${Number(wage.amount).toFixed(2)} USDT</span>
-            <span className={styles.wageDate}>{new Date(wage.createdAt).toLocaleString('ru-RU')}</span>
+    return (
+      <div className={styles.wagesList}>
+        {wages.map((wage) => (
+          <div key={wage.id} className={styles.wageRecord}>
+            <div className={styles.wageRow}>
+              <span className={styles.wageAmount}>${Number(wage.amount).toFixed(2)} USDT</span>
+              <span className={styles.wageDate}>{new Date(wage.createdAt).toLocaleString('ru-RU')}</span>
+            </div>
+            <span className={styles.wageDescription}>{wage.description || '—'}</span>
           </div>
-          <span className={styles.wageDescription}>{wage.description || '—'}</span>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    )
   }
 
   const renderContent = () => {
