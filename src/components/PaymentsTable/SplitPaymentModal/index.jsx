@@ -206,7 +206,7 @@ const SplitPaymentModal = ({ onClose }) => {
             <div className={styles.splitList}>
               {split.map((item) => (
                 <div key={item.wallet} className={styles.splitRow}>
-                  <span className={styles.amount}>${Number(item.amount).toFixed(2)}</span>
+                  <span className={styles.amount}>{`${Number(item.amount).toFixed(2)} USDT`}</span>
                   <span className={styles.separator}>→</span>
                   <span className={styles.address}>{walletPreview(item.wallet)}</span>
                 </div>

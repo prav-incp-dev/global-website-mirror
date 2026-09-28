@@ -15,6 +15,12 @@
   gap: 8px;
 }
 
+.wagesTitle {
+  font-size: 0.875rem;
+  color: #dfdfdf;
+  text-align: center;
+}
+
 .wageRecord {
   display: flex;
   flex-direction: column;

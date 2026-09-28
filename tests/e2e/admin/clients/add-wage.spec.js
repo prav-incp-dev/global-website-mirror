@@ -261,9 +261,9 @@ test.describe('admin clients add wage', () => {
     // Both wages are shown, newest first (250 then 100)
     const wageRows = page.locator('[class*="wageRecord"]')
     await expect(wageRows).toHaveCount(2)
-    await expect(wageRows.first()).toContainText('$250.00 USDT')
+    await expect(wageRows.first()).toContainText('250.00 USDT')
     await expect(wageRows.first()).toContainText('На офис')
-    await expect(wageRows.nth(1)).toContainText('$100.00 USDT')
+    await expect(wageRows.nth(1)).toContainText('100.00 USDT')
     await expect(wageRows.nth(1)).toContainText('Лидерское вознаграждение')
 
     // Open AddWageModal
@@ -291,11 +291,11 @@ test.describe('admin clients add wage', () => {
     await expect(page.getByRole('heading', { name: 'Добавить начисление' })).not.toBeVisible()
     // The new record appears at the top of the wages list (newest first): 75, then 250, then 100
     await expect(wageRows).toHaveCount(3)
-    await expect(wageRows.first()).toContainText('$75.00 USDT')
+    await expect(wageRows.first()).toContainText('75.00 USDT')
     await expect(wageRows.first()).toContainText('На путешествие')
-    await expect(wageRows.nth(1)).toContainText('$250.00 USDT')
+    await expect(wageRows.nth(1)).toContainText('250.00 USDT')
     await expect(wageRows.nth(1)).toContainText('На офис')
-    await expect(wageRows.nth(2)).toContainText('$100.00 USDT')
+    await expect(wageRows.nth(2)).toContainText('100.00 USDT')
     await expect(wageRows.nth(2)).toContainText('Лидерское вознаграждение')
   })
 })

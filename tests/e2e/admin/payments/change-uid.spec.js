@@ -48,7 +48,7 @@ test.describe('admin payments change uid', () => {
     await expect(paymentModalTitle).toBeVisible()
 
     // The payment modal shows the current uid
-    const uidRow = page.getByText('Номер платежа:', { exact: true }).locator('..')
+    const uidRow = page.getByText('Номер программы:', { exact: true }).locator('..')
     await expect(uidRow).toContainText('ON-1234-15')
 
     // Open the change-uid modal

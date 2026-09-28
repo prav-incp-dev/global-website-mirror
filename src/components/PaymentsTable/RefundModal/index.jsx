@@ -16,7 +16,7 @@ const RefundModal = ({ onClose }) => {
   if (!selectedPayment) return null
 
   const refundAmount = selectedPayment.amount * (1 - refundFee / 100)
-  const formattedRefundAmount = `$${refundAmount.toFixed(2)}`
+  const formattedRefundAmount = `${refundAmount.toFixed(2)} USDT`
 
   const paymentErrorMessage = (txHash) => {
     return (

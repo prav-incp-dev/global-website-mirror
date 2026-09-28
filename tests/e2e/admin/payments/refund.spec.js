@@ -151,7 +151,7 @@ test.describe('admin payments refund', () => {
 
     // The modal shows the from wallet and the amount minus the refund fee (200 − 5% = 190)
     await expect(page.getByText(`Деньги будут отправлены на счет`)).toBeVisible()
-    await expect(page.getByText('Сумма к отправке: $190.00')).toBeVisible()
+    await expect(page.getByText('Сумма к отправке: 190.00 USDT')).toBeVisible()
 
     // The «Оплатить» button is present
     const payButton = page.getByRole('button', { name: 'Оплатить' })

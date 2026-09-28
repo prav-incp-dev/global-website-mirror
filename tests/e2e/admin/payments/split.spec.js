@@ -269,15 +269,15 @@ test.describe('admin payments split', () => {
     const splitRows = page.locator('[class*="splitRow"]')
 
     // $12.00 → 0xbbbbbbbb...bbbbbbbb (company serviceWallet)
-    const serviceRow = splitRows.filter({ hasText: '$12.00' })
+    const serviceRow = splitRows.filter({ hasText: '12.00 USDT' })
     await expect(serviceRow).toContainText(walletPreview(MOCK_SERVICE_WALLET))
 
     // $360.00 → 0xeeeeeeee...eeeeeeee (parent wallet)
-    const userRow = splitRows.filter({ hasText: '$360.00' })
+    const userRow = splitRows.filter({ hasText: '360.00 USDT' })
     await expect(userRow).toContainText(walletPreview('0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'))
 
     // $828.00 → 0xcccccccc...cccccccc (cumulative wallet)
-    const cumulativeRow = splitRows.filter({ hasText: '$828.00' })
+    const cumulativeRow = splitRows.filter({ hasText: '828.00 USDT' })
     await expect(cumulativeRow).toContainText(walletPreview(MOCK_CUMULATIVE_WALLET))
 
     // The confirm button is present
