@@ -20,24 +20,16 @@ const ExportModal = ({ onClose }) => {
   const [fromDate, setFromDate] = useState(oneMonthAgo)
   const [toDate, setToDate] = useState(today)
 
-  const handleConfirm = () => {
-    const params = new URLSearchParams({
-      fromDate,
-      toDate,
-      query,
-      orphansOnly: String(orphansOnly),
-      sortBy,
-      fromLevel: String(fromLevel),
-      toLevel: String(toLevel),
-    })
-    window.open(`/api/admin/clients/export?${params}`, '_blank')
-    onClose()
-  }
-
   return (
     <Modal title="Выгрузка клиентов" onClose={onClose}>
-      <div className={styles.container}>
+      <form className={styles.container} action="/api/admin/clients/export" method="get" onSubmit={() => setTimeout(onClose, 0)}>
         <p className={styles.info}>Будут выгружены все клиенты с учетом текущих фильтров.</p>
+
+        <input type="hidden" name="query" value={query} />
+        <input type="hidden" name="orphansOnly" value={String(orphansOnly)} />
+        <input type="hidden" name="sortBy" value={sortBy} />
+        <input type="hidden" name="fromLevel" value={String(fromLevel)} />
+        <input type="hidden" name="toLevel" value={String(toLevel)} />
 
         <div className={styles.fieldGroup}>
           <label className={styles.label} htmlFor="fromDate">
@@ -47,6 +39,7 @@ const ExportModal = ({ onClose }) => {
             id="fromDate"
             type="date"
             className={styles.input}
+            name="fromDate"
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
           />
@@ -60,17 +53,18 @@ const ExportModal = ({ onClose }) => {
             id="toDate"
             type="date"
             className={styles.input}
+            name="toDate"
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
           />
         </div>
 
         <div className={styles.actions}>
-          <button className={styles.actionButton} disabled={!fromDate || !toDate} onClick={handleConfirm}>
+          <button className={styles.actionButton} type="submit" disabled={!fromDate || !toDate}>
             Сформировать
           </button>
         </div>
-      </div>
+      </form>
     </Modal>
   )
 }
