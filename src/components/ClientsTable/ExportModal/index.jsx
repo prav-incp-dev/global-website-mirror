@@ -22,7 +22,12 @@ const ExportModal = ({ onClose }) => {
 
   return (
     <Modal title="Выгрузка клиентов" onClose={onClose}>
-      <form className={styles.container} action="/api/admin/clients/export" method="get" onSubmit={() => setTimeout(onClose, 0)}>
+      <form
+        className={styles.container}
+        action="/api/admin/clients/export"
+        method="get"
+        onSubmit={() => setTimeout(onClose, 0)}
+      >
         <p className={styles.info}>Будут выгружены все клиенты с учетом текущих фильтров.</p>
 
         <input type="hidden" name="query" value={query} />

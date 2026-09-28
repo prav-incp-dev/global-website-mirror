@@ -9,7 +9,7 @@ import DownloadIcon from '@/assets/icons/DownloadIcon.svg?react'
 import ClientModal from './ClientModal'
 import FilterModal from './FilterModal'
 import ExportModal from './ExportModal'
-import { ClientsProvider, useClientsContext } from './ClientsContext'
+import { useClientsContext } from './ClientsContext'
 import { userName } from '@/lib/user'
 import Sorter from '../Sorter'
 
@@ -21,7 +21,7 @@ const SORT_OPTIONS = [
   { value: 'score', label: 'Лидеры продаж' },
 ]
 
-const ClientsTableInner = () => {
+const ClientsTable = () => {
   const {
     users,
     pagination,
@@ -189,20 +189,6 @@ const ClientsTableInner = () => {
       {exportModalOpen && <ExportModal onClose={() => setExportModalOpen(false)} />}
       {selectedUser && <ClientModal onClose={() => setSelectedUser(null)} />}
     </div>
-  )
-}
-
-const ClientsTable = ({ initialUsers, initialPagination, initialOrphansCount = 0, csrfToken, companyWallet }) => {
-  return (
-    <ClientsProvider
-      initialUsers={initialUsers}
-      initialPagination={initialPagination}
-      initialOrphansCount={initialOrphansCount}
-      csrfToken={csrfToken}
-      companyWallet={companyWallet}
-    >
-      <ClientsTableInner />
-    </ClientsProvider>
   )
 }
 

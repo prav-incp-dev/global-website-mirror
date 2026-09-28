@@ -1076,4 +1076,49 @@ export default async (fastify) => {
       }
     },
   })
+
+  fastify.delete('/api/admin/user/:id', {
+    schema: {
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'integer', minimum: 1 },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const admin = await fastify.auth.getUser(req)
+      if (!admin || admin.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      const { id: userId } = req.params
+
+      try {
+        const target = await fastify.prisma.user.findUnique({
+          where: { id: userId },
+          select: { id: true, companyId: true, role: true },
+        })
+
+        if (!target) {
+          return reply.code(404).send({ error: 'Пользователь не найден' })
+        }
+
+        if (target.companyId !== admin.company.id) {
+          return reply.code(403).send({ error: 'Доступ запрещен' })
+        }
+
+        if (target.role !== UserRole.Candidate) {
+          return reply.code(400).send({ error: 'Пользователя можно удалить только в статусе кандидата' })
+        }
+
+        await fastify.prisma.user.delete({ where: { id: userId } })
+
+        return reply.send({ success: true })
+      } catch {
+        return reply.code(500).send({ error: 'Не удалось удалить пользователя' })
+      }
+    },
+  })
 }
