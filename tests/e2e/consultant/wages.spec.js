@@ -53,10 +53,10 @@ test.describe('consultant wages tab', () => {
     await page.getByRole('button', { name: 'Начисления' }).click()
 
     // Verify the wage row is visible
-    await expect(page.getByText('$150.50 USDT')).toBeVisible()
+    await expect(page.getByText('150.50 USDT')).toBeVisible()
 
     // Click the row header (chevron area) to expand
-    await page.getByText('$150.50 USDT').click()
+    await page.getByText('150.50 USDT').click()
 
     // Verify expanded details are shown
     await expect(page.getByText('Test wage payment')).toBeVisible()
@@ -64,7 +64,7 @@ test.describe('consultant wages tab', () => {
     await expect(page.getByText('Начислено групповых единиц: 25')).toBeVisible()
 
     // Click again to collapse
-    await page.getByText('$150.50 USDT').click()
+    await page.getByText('150.50 USDT').click()
 
     // Verify details are hidden
     await expect(page.getByText('Test wage payment')).not.toBeVisible()
@@ -102,11 +102,11 @@ test.describe('consultant wages tab', () => {
     await page.getByRole('button', { name: 'Начисления' }).click()
 
     // Expand first row
-    await page.getByText('$100.00 USDT').click()
+    await page.getByText('100.00 USDT').click()
     await expect(page.getByText('First wage')).toBeVisible()
 
     // Expand second row (both should be open)
-    await page.getByText('$200.00 USDT').click()
+    await page.getByText('200.00 USDT').click()
     await expect(page.getByText('Second wage')).toBeVisible()
 
     // Verify first one is still expanded
@@ -138,32 +138,32 @@ test.describe('consultant wages tab', () => {
     await page.getByRole('button', { name: 'Начисления' }).click()
 
     // The first wage on page 1 should be the last created one (highest id, highest amount)
-    await expect(page.getByText('$110.00 USDT').first()).toBeVisible()
-    await expect(page.getByText('$10.00 USDT').first()).not.toBeVisible()
+    await expect(page.getByText('110.00 USDT').first()).toBeVisible()
+    await expect(page.getByText('10.00 USDT', { exact: true }).first()).not.toBeVisible()
 
     await page.locator('[title="Сортировка"]').click()
     await page.getByText('По возрастанию суммы').click()
 
-    await expect(page.getByText('$10.00 USDT').first()).toBeVisible()
-    await expect(page.getByText('$110.00 USDT').first()).not.toBeVisible()
+    await expect(page.getByText('10.00 USDT').first()).toBeVisible()
+    await expect(page.getByText('110.00 USDT').first()).not.toBeVisible()
 
     // --- Sort by descending amount ---
     await page.locator('[title="Сортировка"]').click()
     await page.getByText('По убыванию суммы').click()
     // The first wage should now be the largest amount again
-    await expect(page.getByText('$110.00 USDT').first()).toBeVisible()
-    await expect(page.getByText('$10.00 USDT').first()).not.toBeVisible()
+    await expect(page.getByText('110.00 USDT').first()).toBeVisible()
+    await expect(page.getByText('10.00 USDT', { exact: true }).first()).not.toBeVisible()
 
     // --- Search by amount ---
     await page.getByPlaceholder('Поиск').fill('50')
-    await expect(page.getByText('$110.00 USDT').first()).not.toBeVisible()
-    await expect(page.getByText('$50.00 USDT')).toBeVisible()
+    await expect(page.getByText('110.00 USDT').first()).not.toBeVisible()
+    await expect(page.getByText('50.00 USDT')).toBeVisible()
     // Pagination should disappear since filtered results fit on one page
     await expect(page.getByText('1 из 2')).not.toBeVisible()
 
     // --- Clear search ---
     await page.getByPlaceholder('Поиск').fill('')
-    await expect(page.getByText('$110.00 USDT')).toBeVisible()
+    await expect(page.getByText('110.00 USDT')).toBeVisible()
     await expect(page.getByText('1 из 2')).toBeVisible()
 
     // --- Navigate to page 2 ---
@@ -171,7 +171,7 @@ test.describe('consultant wages tab', () => {
     await expect(page.getByText('2 из 2')).toBeVisible()
 
     // Verify first wage from page 1 is NOT visible
-    await expect(page.getByText('$110.00 USDT')).not.toBeVisible()
-    await expect(page.getByText('$10.00 USDT')).toBeVisible()
+    await expect(page.getByText('110.00 USDT')).not.toBeVisible()
+    await expect(page.getByText('10.00 USDT')).toBeVisible()
   })
 })

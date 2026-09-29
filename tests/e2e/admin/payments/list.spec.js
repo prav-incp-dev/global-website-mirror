@@ -74,7 +74,7 @@ test.describe('admin payments filters and details', () => {
     const infoTable = page.locator('[class*="infoTable"]')
     await expect(infoTable.getByText('Сумма:')).toBeVisible()
     await expect(infoTable.getByText('444', { exact: true })).toBeVisible()
-    await expect(infoTable.getByText('Номер платежа:')).toBeVisible()
+    await expect(infoTable.getByText('Номер программы:')).toBeVisible()
     await expect(infoTable.getByText('Статус:')).toBeVisible()
     await expect(infoTable.getByText('В обработке')).toBeVisible()
     await expect(infoTable.getByText('Дата:')).toBeVisible()

@@ -12,7 +12,7 @@ const WageRow = ({ wage, isExpanded, onToggle }) => {
         aria-expanded={isExpanded}
         onClick={() => onToggle(wage.id)}
       >
-        <span className={styles.amount}>{`$${wage.amount.toFixed(2)}`} USDT</span>
+        <span className={styles.amount}>{`${wage.amount.toFixed(2)}`} USDT</span>
         <span className={classNames(styles.chevron, { [styles.chevronOpen]: isExpanded })}>
           <ChevronIcon className={styles.chevronIcon} />
         </span>

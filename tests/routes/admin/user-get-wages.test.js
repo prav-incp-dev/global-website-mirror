@@ -174,14 +174,7 @@ describe('GET /api/admin/user/:id/wages', () => {
     const created = []
     for (let i = 0; i < total; i++) {
       created.push(
-        await createWage(
-          app,
-          company.id,
-          targetUser.id,
-          i + 1,
-          `Wage ${i + 1}`,
-          new Date(Date.UTC(2024, 0, i + 1)),
-        ),
+        await createWage(app, company.id, targetUser.id, i + 1, `Wage ${i + 1}`, new Date(Date.UTC(2024, 0, i + 1))),
       )
     }
 
@@ -195,7 +188,10 @@ describe('GET /api/admin/user/:id/wages', () => {
     const body = response.json()
     expect(body.wages).toHaveLength(CLIENT_WAGES_LIMIT)
     // Newest first: the last created wage should be first, and the oldest should be excluded
-    const expectedNewest = created.slice(-CLIENT_WAGES_LIMIT).reverse().map((w) => w.id)
+    const expectedNewest = created
+      .slice(-CLIENT_WAGES_LIMIT)
+      .reverse()
+      .map((w) => w.id)
     expect(body.wages.map((w) => w.id)).toEqual(expectedNewest)
   })
 

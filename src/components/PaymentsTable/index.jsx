@@ -3,7 +3,7 @@ import classNames from 'classnames'
 import styles from './index.module.css'
 import InfoIcon from '@/assets/icons/InfoIcon.svg?react'
 import PaymentModal from './PaymentModal'
-import { PaymentsProvider, usePaymentsContext } from './PaymentsContext'
+import { usePaymentsContext } from './PaymentsContext'
 import { PAYMENT_STATUSES } from '@/lib/payment'
 import Sorter from '../Sorter'
 
@@ -13,7 +13,7 @@ const SORT_OPTIONS = [
   { value: 'amount', label: 'По сумме' },
 ]
 
-const PaymentsTableInner = () => {
+const PaymentsTable = () => {
   const {
     payments,
     pagination,
@@ -158,28 +158,6 @@ const PaymentsTableInner = () => {
 
       {selectedPayment && <PaymentModal onClose={() => setSelectedPayment(null)} />}
     </div>
-  )
-}
-
-const PaymentsTable = ({
-  initialPayments,
-  initialPagination,
-  initialToRefundCount = 0,
-  refundFee,
-  csrfToken,
-  companyWallet,
-}) => {
-  return (
-    <PaymentsProvider
-      initialPayments={initialPayments}
-      initialPagination={initialPagination}
-      initialToRefundCount={initialToRefundCount}
-      refundFee={refundFee}
-      csrfToken={csrfToken}
-      companyWallet={companyWallet}
-    >
-      <PaymentsTableInner />
-    </PaymentsProvider>
   )
 }
 

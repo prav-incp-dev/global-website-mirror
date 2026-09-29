@@ -48,7 +48,7 @@ test.describe('admin payments change uid', () => {
     await expect(paymentModalTitle).toBeVisible()
 
     // The payment modal shows the current uid
-    const uidRow = page.getByText('Номер платежа:', { exact: true }).locator('..')
+    const uidRow = page.getByText('Номер программы:', { exact: true }).locator('..')
     await expect(uidRow).toContainText('ON-1234-15')
 
     // Open the change-uid modal
@@ -91,5 +91,10 @@ test.describe('admin payments change uid', () => {
     // The database was updated too
     const updated = await prisma.payment.findUnique({ where: { id: secondOrder.payment.id } })
     expect(updated.uid).toBe('ON-1234-03')
+
+    await page.getByTitle("Клиенты").click()
+    await page.waitForLoadState("networkidle")
+    await page.getByTitle("Платежи").click()
+    await expect(page.getByText('ON-1234-03')).toBeVisible()
   })
 })

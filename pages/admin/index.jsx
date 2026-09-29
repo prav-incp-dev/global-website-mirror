@@ -7,6 +7,8 @@ import AdminProfile from '@/components/AdminProfile'
 import CompanyProfile from '@/components/CompanyProfile'
 import ClientsTable from '@/components/ClientsTable'
 import PaymentsTable from '@/components/PaymentsTable'
+import { ClientsProvider } from '@/components/ClientsTable/ClientsContext'
+import { PaymentsProvider } from '@/components/PaymentsTable/PaymentsContext'
 import InvitationModal from '@/components/InvitationModal'
 import GearIcon from '@/assets/icons/GearIcon.svg?react'
 import ProfileIcon from '@/assets/icons/ProfileIcon.svg?react'
@@ -138,28 +140,19 @@ const Admin = () => {
       </div>
 
       <div className={styles.content}>
-        {activeTab === 'admin' && (
-          <AdminProfile profile={profileData} csrfToken={csrfToken} onUpdate={handleUpdateProfile} />
-        )}
-        {activeTab === 'company' && (
-          <CompanyProfile company={companyData} csrfToken={csrfToken} onUpdate={handleUpdateCompany} />
-        )}
-        {activeTab === 'clients' && clients && (
-          <ClientsTable
-            initialUsers={clients.users}
-            initialPagination={{
-              total: clients.total,
-              page: clients.page,
-              limit: clients.limit,
-              totalPages: clients.totalPages,
-            }}
-            initialOrphansCount={orphansCount}
-            csrfToken={csrfToken}
-            companyWallet={companyData?.wallet}
-          />
-        )}
-        {activeTab === 'payments' && payments && (
-          <PaymentsTable
+        <ClientsProvider
+          initialUsers={clients.users}
+          initialPagination={{
+            total: clients.total,
+            page: clients.page,
+            limit: clients.limit,
+            totalPages: clients.totalPages,
+          }}
+          initialOrphansCount={orphansCount}
+          csrfToken={csrfToken}
+          companyWallet={companyData?.wallet}
+        >
+          <PaymentsProvider
             initialPayments={payments.payments}
             initialPagination={{
               total: payments.total,
@@ -171,8 +164,17 @@ const Admin = () => {
             refundFee={refundFee}
             csrfToken={csrfToken}
             companyWallet={company?.wallet}
-          />
-        )}
+          >
+            {activeTab === 'admin' && (
+              <AdminProfile profile={profileData} csrfToken={csrfToken} onUpdate={handleUpdateProfile} />
+            )}
+            {activeTab === 'company' && (
+              <CompanyProfile company={companyData} csrfToken={csrfToken} onUpdate={handleUpdateCompany} />
+            )}
+            {activeTab === 'clients' && clients && <ClientsTable />}
+            {activeTab === 'payments' && payments && <PaymentsTable />}
+          </PaymentsProvider>
+        </ClientsProvider>
       </div>
     </div>
   )

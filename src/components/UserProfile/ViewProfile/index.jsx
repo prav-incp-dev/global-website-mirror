@@ -74,7 +74,7 @@ const ViewProfile = ({ profile, onEdit }) => {
             <button className={styles.balanceButton} disabled={balanceLoading} onClick={handleCheckBalance}>
               {balanceLoading ? 'Загрузка...' : 'Проверить баланс'}
             </button>
-            {balance !== null && <span className={styles.balanceValue}>{balance} USDT</span>}
+            {balance !== null && <span className={styles.balanceValue}>{Number(balance).toFixed(2)} USDT</span>}
             {balanceError && <span className={styles.balanceError}>{balanceError}</span>}
           </div>
         </div>

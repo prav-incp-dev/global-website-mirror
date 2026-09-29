@@ -117,7 +117,7 @@ const PaymentModal = ({ onClose }) => {
           <span className={styles.value}>{selectedPayment.amount}</span>
         </div>
         <div className={styles.infoRow}>
-          <span className={styles.label}>Номер платежа:</span>
+          <span className={styles.label}>Номер программы:</span>
           <span className={styles.value}>{selectedPayment.uid || '—'}</span>
         </div>
         <div className={styles.infoRow}>

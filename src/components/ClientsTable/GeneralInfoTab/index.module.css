@@ -60,3 +60,40 @@
 .actionButton:active {
   transform: translateY(0);
 }
+
+.fieldError {
+  margin: 0;
+  color: #ff8b8b;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.dangerButton {
+  width: 100%;
+  padding: 12px 24px;
+  background: rgba(255, 82, 82, 0.12);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 82, 82, 0.35);
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.02em;
+}
+
+.dangerButton:hover {
+  background: rgba(255, 82, 82, 0.22);
+  border-color: #ff6b6b;
+  transform: translateY(-1px);
+}
+
+.dangerButton:active {
+  transform: translateY(0);
+}
+
+.dangerButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}

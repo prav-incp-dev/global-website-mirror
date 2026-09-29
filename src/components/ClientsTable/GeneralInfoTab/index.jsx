@@ -7,8 +7,10 @@ import UpdateParentModal from '../UpdateParentModal'
 import styles from './index.module.css'
 
 const GeneralInfoTab = () => {
-  const { selectedUser } = useClientsContext()
+  const { selectedUser, csrfToken, setSelectedUser, fetchClients } = useClientsContext()
   const [showChangeParent, setShowChangeParent] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
   const isConsultant = selectedUser.role === UserRole.Consultant
 
@@ -16,6 +18,32 @@ const GeneralInfoTab = () => {
     if (!selectedUser.parentId) return 'Нет родителя'
 
     return userName(selectedUser.parent)
+  }
+
+  const handleDelete = async () => {
+    if (!window.confirm('Вы уверены, что хотите удалить пользователя? Действие необратимо.')) return
+
+    setDeleting(true)
+    setDeleteError('')
+
+    try {
+      const res = await fetch(`/api/admin/user/${selectedUser.id}`, {
+        method: 'DELETE',
+        headers: {
+          'x-csrf-token': csrfToken,
+        },
+      })
+      const result = await res.json()
+
+      if (!res.ok) return setDeleteError(result.error || 'Не удалось удалить пользователя')
+
+      setSelectedUser(null)
+      await fetchClients()
+    } catch {
+      setDeleteError('Не удалось удалить пользователя')
+    } finally {
+      setDeleting(false)
+    }
   }
 
   return (
@@ -65,6 +93,14 @@ const GeneralInfoTab = () => {
         <button className={styles.actionButton} onClick={() => setShowChangeParent(true)}>
           Изменить родителя
         </button>
+
+        {!isConsultant && (
+          <button className={styles.dangerButton} onClick={handleDelete} disabled={deleting}>
+            {deleting ? 'Удаление...' : 'Удалить пользователя'}
+          </button>
+        )}
+
+        {deleteError && <p className={styles.fieldError}>{deleteError}</p>}
       </div>
     </>
   )

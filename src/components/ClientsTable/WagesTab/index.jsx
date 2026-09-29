@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useClientsContext } from '../ClientsContext'
+import { CLIENT_WAGES_LIMIT } from '@/lib/constants'
 import AddWageModal from '../AddWageModal'
 import styles from './index.module.css'
 
@@ -40,10 +41,11 @@ const WagesTab = ({ active }) => {
   const renderWages = () => {
     return (
       <div className={styles.wagesList}>
+        <p className={styles.wagesTitle}>{`До ${CLIENT_WAGES_LIMIT} последних начислений пользователю`}</p>
         {wages.map((wage) => (
           <div key={wage.id} className={styles.wageRecord}>
             <div className={styles.wageRow}>
-              <span className={styles.wageAmount}>${Number(wage.amount).toFixed(2)} USDT</span>
+              <span className={styles.wageAmount}>{Number(wage.amount).toFixed(2)} USDT</span>
               <span className={styles.wageDate}>{new Date(wage.createdAt).toLocaleString('ru-RU')}</span>
             </div>
             <span className={styles.wageDescription}>{wage.description || '—'}</span>
