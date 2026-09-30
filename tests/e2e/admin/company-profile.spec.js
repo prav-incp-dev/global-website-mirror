@@ -122,6 +122,8 @@ test.describe('admin company wages export', () => {
 
     const SERVICE_WALLET = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
     const CUMULATIVE_WALLET = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+    const PAYMENT_TX_HASH = '0xTESTTXHASHPAYMENT11111111111111111111111'
+    const WAGE_TX_HASH = '0xTESTTXHASHWAGE11111111111111111111111111'
     const company = await createTestCompany('Wages Export Company', {
       wallet: '0xcccccccccccccccccccccccccccccccccccccccc',
       serviceWallet: SERVICE_WALLET,
@@ -155,7 +157,7 @@ test.describe('admin company wages export', () => {
         tokenContract: '0xTokenContract',
         tokenDecimals: 18,
         chainId: 56,
-        txHash: '0xTESTTXHASH1234567890abcdef1234567890abcdef',
+        txHash: PAYMENT_TX_HASH,
         fromWallet: consultant.wallet,
         toWallet: company.wallet,
         status: 'Completed',
@@ -167,6 +169,7 @@ test.describe('admin company wages export', () => {
         companyId: company.id,
         userId: null,
         paymentId: payment.id,
+        txHash: WAGE_TX_HASH,
         fromWallet: consultant.wallet,
         toWallet: SERVICE_WALLET,
         amount: 100,
@@ -181,6 +184,7 @@ test.describe('admin company wages export', () => {
         companyId: company.id,
         userId: null,
         paymentId: payment.id,
+        txHash: WAGE_TX_HASH,
         fromWallet: consultant.wallet,
         toWallet: SERVICE_WALLET,
         amount: 250.5,
@@ -237,12 +241,13 @@ test.describe('admin company wages export', () => {
     const wage100Line = csvLines.find((l) => l.includes('100.00'))
     expect(wage100Line).toBeTruthy()
     expect(wage100Line).toContain(consultant.wallet)
-    expect(wage100Line).toContain('0xTESTTXHASH1234567890abcdef1234567890abcdef')
+    expect(wage100Line).toContain(WAGE_TX_HASH)
 
     const wage250Line = csvLines.find((l) => l.includes('250.50'))
     expect(wage250Line).toBeTruthy()
     expect(wage250Line).toContain('Wage Consultant')
     expect(wage250Line).toContain(consultant.wallet)
+    expect(wage250Line).toContain(WAGE_TX_HASH)
 
     fs.unlinkSync(tempPath)
 

@@ -86,7 +86,7 @@ test.describe('admin clients delete user', () => {
     await expect(deleteButton).toBeVisible()
     confirmDelete(page, 'Вы уверены, что хотите удалить пользователя? Действие необратимо.')
     await deleteButton.click()
-    await expect(page.getByText('Не удалось удалить пользователя')).toBeVisible()
+    await expect(page.getByText('Ошибка удаления пользователя')).toBeVisible()
     await expect(page.locator('table tbody tr').filter({ hasText: candidateWithPayment.firstName })).toHaveCount(1)
     await closeUserModal(page)
 

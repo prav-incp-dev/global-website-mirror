@@ -107,6 +107,7 @@ model Wage {
   user            User?          @relation(fields: [userId], references: [id])
   paymentId       Int?
   payment         Payment?       @relation(fields: [paymentId], references: [id])
+  txHash          String?
   fromWallet      String?
   toWallet        String?
   description     String?

@@ -269,7 +269,7 @@ export default async (fastify) => {
         amount: Number(w.amount).toFixed(2),
         userName: w.payment?.user ? userName(w.payment.user) : '—',
         fromWallet: w.fromWallet || '—',
-        txHash: w.payment?.txHash || '—',
+        txHash: w.txHash || '—',
       }))
 
       const csv = stringify(rows, {
@@ -438,6 +438,7 @@ export default async (fastify) => {
         type: 'object',
         required: ['splits'],
         properties: {
+          txHash: { type: 'string', minLength: 1 },
           splits: {
             type: 'array',
             items: {
@@ -492,15 +493,17 @@ export default async (fastify) => {
           return reply.code(400).send({ error: 'Не задан распределительный счет' })
         }
 
-        const { splits } = req.body
+        const { splits, txHash = null } = req.body
         const company = payment.company
 
         // Create wages from split items (array of { wallet, amount, userId?, score?, groupScore? })
+        // All wages share the same on-chain tx hash of the splitPayment transaction.
         const wagesData = splits.map((item) =>
           fastify.prisma.wage.create({
             data: {
               companyId: company.id,
               paymentId: payment.id,
+              txHash,
               fromWallet: company.wallet,
               toWallet: item.wallet,
               amount: item.amount,
@@ -1116,8 +1119,8 @@ export default async (fastify) => {
         await fastify.prisma.user.delete({ where: { id: userId } })
 
         return reply.send({ success: true })
-      } catch {
-        return reply.code(500).send({ error: 'Не удалось удалить пользователя' })
+      } catch (err) {
+        return reply.code(500).send({ error: `Ошибка удаления пользователя: ${err.message}` })
       }
     },
   })
