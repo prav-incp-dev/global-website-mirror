@@ -5,7 +5,7 @@ import { PrismaClient } from '../src/generated/prisma/client'
 import { UserRole } from '../src/generated/prisma/enums'
 import { OrderStatus } from '../src/generated/prisma/enums'
 import { PaymentStatus } from '../src/generated/prisma/enums'
-import { HOURS24 } from '../src/lib/constants.js'
+import { HOURS24_IN_MINUTES } from '../src/lib/constants.js'
 
 
 const connectionString = process.env.DATABASE_URL
@@ -40,7 +40,7 @@ try {
     update: {},
     create: {
       companyId: company.id,
-      general: { staleDays: 30, orphantDays: 40, refundMinutes: HOURS24, refundFee: 5 },
+      general: { staleDays: 30, orphantDays: 40, refundMinutes: HOURS24_IN_MINUTES, refundFee: 5 },
       levels: {
         1: { percent: 20.0, personal: 3, general: 3, confirm: 0 },
         2: { percent: 30.0, personal: 3, general: 10, confirm: 2 },

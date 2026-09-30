@@ -6,6 +6,7 @@ import { UserRole } from '@/generated/prisma/enums'
 import GeneralSettings from '@/components/Settings/GeneralSettings'
 import LevelSettings from '@/components/Settings/LevelSettings'
 import PriceSettings from '@/components/Settings/PriceSettings'
+import { HOURS24_IN_MINUTES } from '@/lib/constants'
 import styles from './index.module.css'
 
 const SCREENS = [
@@ -54,7 +55,7 @@ const AdminSettings = () => {
   const [generalForm, setGeneralForm] = useState({
     staleDays: setting?.general?.staleDays ?? 0,
     orphantDays: setting?.general?.orphantDays ?? 0,
-    refundMinutes: setting?.general?.refundMinutes ?? 1440,
+    refundMinutes: setting?.general?.refundMinutes ?? HOURS24_IN_MINUTES,
     refundFee: setting?.general?.refundFee ?? 0,
   })
 
