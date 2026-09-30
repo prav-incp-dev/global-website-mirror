@@ -1119,8 +1119,8 @@ export default async (fastify) => {
         await fastify.prisma.user.delete({ where: { id: userId } })
 
         return reply.send({ success: true })
-      } catch {
-        return reply.code(500).send({ error: 'Не удалось удалить пользователя' })
+      } catch (err) {
+        return reply.code(500).send({ error: `Ошибка удаления пользователя: ${err.message}` })
       }
     },
   })

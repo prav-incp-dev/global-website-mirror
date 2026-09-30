@@ -203,7 +203,7 @@ describe('DELETE /api/admin/user/:id', () => {
     })
 
     expect(response.statusCode).toBe(500)
-    expect(response.json()).toEqual({ error: 'Не удалось удалить пользователя' })
+    expect(response.json().error).toMatch('Ошибка удаления пользователя')
 
     const remaining = await app.prisma.user.count({ where: { id: candidate.id } })
     expect(remaining).toBe(1)
