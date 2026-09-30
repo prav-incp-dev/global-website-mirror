@@ -269,7 +269,7 @@ export default async (fastify) => {
         amount: Number(w.amount).toFixed(2),
         userName: w.payment?.user ? userName(w.payment.user) : '—',
         fromWallet: w.fromWallet || '—',
-        txHash: w.payment?.txHash || '—',
+        txHash: w.txHash || '—',
       }))
 
       const csv = stringify(rows, {

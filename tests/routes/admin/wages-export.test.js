@@ -71,6 +71,10 @@ const createWage = async (app, overrides = {}) => {
   })
 }
 
+// A distinct on-chain tx hash stored directly on the wage. Kept different from
+// the payment.txHash so exports prove they read from the wage, not the payment.
+const WAGE_TX_HASH = '0xWageSplitTxHash'
+
 describe('GET /api/admin/company/wages/export', () => {
   it('returns 403 when user is not authenticated', async () => {
     const app = await createApp()
@@ -170,13 +174,14 @@ describe('GET /api/admin/company/wages/export', () => {
     })
 
     // Company wallet wages have null userId — user comes from payment.user
-    await createWage(app, {
+    const wage = await createWage(app, {
       companyId: company.id,
       userId: null,
       paymentId: payment.id,
       fromWallet: payment.fromWallet,
       toWallet: company.serviceWallet,
       amount: 150.5,
+      txHash: WAGE_TX_HASH,
       createdAt: new Date('2025-06-15T10:00:00Z'),
     })
 
@@ -196,7 +201,7 @@ describe('GET /api/admin/company/wages/export', () => {
 
     const lines = body.replace('\uFEFF', '').split('\n')
     expect(lines[0]).toBe('Дата,Сумма,Пользователь,Кошелек отправителя,Хэш транзакции')
-    expect(lines[1]).toBe(`15.06.2025,150.50,Test User,${payment.fromWallet},${payment.txHash}`)
+    expect(lines[1]).toBe(`15.06.2025,150.50,Test User,${wage.fromWallet},${wage.txHash}`)
     expect(lines[2]).toBe('')
   })
 
@@ -220,6 +225,7 @@ describe('GET /api/admin/company/wages/export', () => {
       companyId: company.id,
       userId: user.id,
       paymentId: payment.id,
+      txHash: WAGE_TX_HASH,
       fromWallet: payment.fromWallet,
       toWallet: '0xffffffffffffffffffffffffffffffffffffffff',
     })
@@ -257,13 +263,14 @@ describe('GET /api/admin/company/wages/export', () => {
       companyId: company.id,
     })
 
-    await createWage(app, {
+    const wage = await createWage(app, {
       companyId: company.id,
       userId: null,
       paymentId: payment.id,
       fromWallet: payment.fromWallet,
       toWallet: company.serviceWallet,
       amount: 100,
+      txHash: WAGE_TX_HASH,
       createdAt: new Date('2025-06-15T10:00:00Z'),
     })
 
@@ -271,6 +278,7 @@ describe('GET /api/admin/company/wages/export', () => {
       companyId: company.id,
       userId: null,
       paymentId: payment.id,
+      txHash: WAGE_TX_HASH,
       fromWallet: payment.fromWallet,
       toWallet: company.serviceWallet,
       amount: 200,
@@ -281,6 +289,7 @@ describe('GET /api/admin/company/wages/export', () => {
       companyId: company.id,
       userId: null,
       paymentId: payment.id,
+      txHash: WAGE_TX_HASH,
       fromWallet: payment.fromWallet,
       toWallet: company.serviceWallet,
       amount: 300,
@@ -296,7 +305,7 @@ describe('GET /api/admin/company/wages/export', () => {
 
     const lines = response.body.replace('\uFEFF', '').split('\n')
     expect(lines[0]).toBe('Дата,Сумма,Пользователь,Кошелек отправителя,Хэш транзакции')
-    expect(lines[1]).toBe(`15.06.2025,100.00,Test User,${payment.fromWallet},${payment.txHash}`)
+    expect(lines[1]).toBe(`15.06.2025,100.00,Test User,${wage.fromWallet},${wage.txHash}`)
     expect(lines[2]).toBe('')
   })
 
@@ -319,13 +328,14 @@ describe('GET /api/admin/company/wages/export', () => {
 
     // Create a wage with null userId (no wage user) but valid paymentId
     // The user name should come from payment.user
-    await createWage(app, {
+    const wage = await createWage(app, {
       companyId: company.id,
       userId: null,
       paymentId: payment.id,
       fromWallet: payment.fromWallet,
       toWallet: company.serviceWallet,
       amount: 75,
+      txHash: WAGE_TX_HASH,
       createdAt: new Date('2025-06-15T10:00:00Z'),
     })
 
@@ -338,7 +348,7 @@ describe('GET /api/admin/company/wages/export', () => {
 
     const lines = response.body.replace('\uFEFF', '').split('\n')
     expect(lines[0]).toBe('Дата,Сумма,Пользователь,Кошелек отправителя,Хэш транзакции')
-    expect(lines[1]).toBe(`15.06.2025,75.00,Test User,${payment.fromWallet},${payment.txHash}`)
+    expect(lines[1]).toBe(`15.06.2025,75.00,Test User,${wage.fromWallet},${wage.txHash}`)
     expect(lines[2]).toBe('')
   })
 
@@ -353,13 +363,14 @@ describe('GET /api/admin/company/wages/export', () => {
     }
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
 
-    await createWage(app, {
+    const wage = await createWage(app, {
       companyId: company.id,
       userId: null,
       paymentId: null,
       fromWallet: '0xUserWallet',
       toWallet: company.serviceWallet,
       amount: 50,
+      txHash: WAGE_TX_HASH,
       createdAt: new Date('2025-06-15T10:00:00Z'),
     })
 
@@ -372,7 +383,7 @@ describe('GET /api/admin/company/wages/export', () => {
 
     const lines = response.body.replace('\uFEFF', '').split('\n')
     expect(lines[0]).toBe('Дата,Сумма,Пользователь,Кошелек отправителя,Хэш транзакции')
-    expect(lines[1]).toBe(`15.06.2025,50.00,—,0xUserWallet,—`)
+    expect(lines[1]).toBe(`15.06.2025,50.00,—,${wage.fromWallet},${wage.txHash}`)
     expect(lines[2]).toBe('')
   })
 })
