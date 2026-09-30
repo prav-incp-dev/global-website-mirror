@@ -24,6 +24,16 @@ const GeneralSettings = ({ form, onChange }) => {
         />
       </label>
       <label className={styles.field}>
+        <span className={styles.fieldLabel}>Время пользователю на отмену платежа (минут)</span>
+        <input
+          type="number"
+          className={styles.input}
+          value={form.refundMinutes}
+          onChange={(e) => onChange('refundMinutes', Number(e.target.value))}
+          min={0}
+        />
+      </label>
+      <label className={styles.field}>
         <span className={styles.fieldLabel}>Комиссия за отмену платежа (%)</span>
         <input
           type="number"

@@ -54,7 +54,7 @@ export const createTestCompany = async (name, overrides = {}) => {
   await prisma.setting.create({
     data: {
       companyId: company.id,
-      general: { staleDays: 30, orphantDays: 40, refundFee: 5 },
+      general: { staleDays: 30, orphantDays: 40, refundMinutes: 1440, refundFee: 5 },
       levels: {
         1: { percent: 20.0, personal: 3, general: 3, confirm: 0 },
         2: { percent: 30.0, personal: 3, general: 10, confirm: 2 },

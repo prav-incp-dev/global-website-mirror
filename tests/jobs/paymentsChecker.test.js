@@ -242,6 +242,37 @@ describe('checkPayments', () => {
     expect(updatedUser.level).toBe(0)
   })
 
+  it('finalizes a paid payment using the company refundMinutes setting', async ({ expect }) => {
+    const app = await createApp()
+    const user = await createUser(app, { memberId: 'DOM-00000000-1212' })
+
+    // Configure a short 5-minute refund window for this company.
+    await app.prisma.setting.create({
+      data: {
+        companyId: user.companyId,
+        general: { refundMinutes: 5 },
+        levels: {},
+        prices: {},
+      },
+    })
+
+    // Created 10 minutes ago — older than the 5-minute company window but
+    // well within 24 hours, so it is finalized only because of the setting.
+    const payment = await createPayment(app, user, {
+      status: PaymentStatus.Completed,
+      quantity: 2,
+      createdAt: new Date(Date.now() - 10 * 60 * 1000),
+    })
+
+    await checkPayments(app.prisma, silentLogger)
+
+    const updated = await app.prisma.payment.findUnique({ where: { id: payment.id } })
+    const updatedUser = await app.prisma.user.findUnique({ where: { id: user.id } })
+
+    expect(updated.uid).toBe('ON-1212-01')
+    expect(updatedUser.role).toBe(UserRole.Consultant)
+  })
+
   it('does not assign uid to a payment with zero quantity', async ({ expect }) => {
     const app = await createApp()
     const user = await createUser(app, { memberId: 'DOM-00000000-9876' })

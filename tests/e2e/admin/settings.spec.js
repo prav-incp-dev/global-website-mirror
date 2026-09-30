@@ -33,9 +33,16 @@ test.describe('admin manages company settings', () => {
     await loginAs(admin.id)
     await openSettings(page)
 
+    // Verify initial values for general settings
+    await expect(page.getByLabel('Срок бездействия для предупреждения (дней)')).toHaveValue('30')
+    await expect(page.getByLabel('Срок бездействия для открепления (дней)')).toHaveValue('40')
+    await expect(page.getByLabel('Время пользователю на отмену платежа (минут)')).toHaveValue('1440')
+    await expect(page.getByLabel('Комиссия за отмену платежа (%)')).toHaveValue('5')
+
     // Default tab: Общие настройки — update Stale Days
     await page.getByLabel('Срок бездействия для предупреждения (дней)').fill('45')
     await page.getByLabel('Срок бездействия для открепления (дней)').fill('50')
+    await page.getByLabel('Время пользователю на отмену платежа (минут)').fill('15')
     await page.getByLabel('Комиссия за отмену платежа (%)').fill('7')
     await saveSettings(page)
 
@@ -53,7 +60,7 @@ test.describe('admin manages company settings', () => {
 
     // Verify all changes persisted in the database
     const setting = await getPrisma().setting.findUnique({ where: { companyId: company.id } })
-    expect(setting.general).toEqual({ staleDays: 45, orphantDays: 50, refundFee: 7 })
+    expect(setting.general).toEqual({ staleDays: 45, orphantDays: 50, refundMinutes: 15, refundFee: 7 })
     expect(setting.levels[1].percent).toBe(25)
     expect(setting.levels[2].personal).toBe(12)
     expect(setting.prices[0]).toBe(150)
