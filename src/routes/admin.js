@@ -438,6 +438,7 @@ export default async (fastify) => {
         type: 'object',
         required: ['splits'],
         properties: {
+          txHash: { type: 'string', minLength: 1 },
           splits: {
             type: 'array',
             items: {
@@ -492,15 +493,17 @@ export default async (fastify) => {
           return reply.code(400).send({ error: 'Не задан распределительный счет' })
         }
 
-        const { splits } = req.body
+        const { splits, txHash = null } = req.body
         const company = payment.company
 
         // Create wages from split items (array of { wallet, amount, userId?, score?, groupScore? })
+        // All wages share the same on-chain tx hash of the splitPayment transaction.
         const wagesData = splits.map((item) =>
           fastify.prisma.wage.create({
             data: {
               companyId: company.id,
               paymentId: payment.id,
+              txHash,
               fromWallet: company.wallet,
               toWallet: item.wallet,
               amount: item.amount,

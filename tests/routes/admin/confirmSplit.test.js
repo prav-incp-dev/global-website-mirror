@@ -88,6 +88,8 @@ describe('POST /api/admin/payments/:id/confirm-split', () => {
     company: { id: 1 },
   })
 
+  const SPLIT_TX_HASH = '0xsplitTransactionHash1234567890abcdef'
+
   it('returns 403 when user is not authenticated', async () => {
     const app = await createApp()
     vi.spyOn(app.auth, 'getUser').mockResolvedValue(null)
@@ -298,7 +300,7 @@ describe('POST /api/admin/payments/:id/confirm-split', () => {
     expect(response.json()).toEqual({ error: 'Не задан распределительный счет' })
   })
 
-  it('returns 200 and creates wages with userId, score and groupScore', async () => {
+  it('returns 200 and creates wages with userId, score and groupScore; accept txHash', async () => {
     const app = await createApp()
     const company = await createCompany(app)
     const user = await createUser(app, company.id)
@@ -319,7 +321,7 @@ describe('POST /api/admin/payments/:id/confirm-split', () => {
     const res = await app.inject({
       method: 'POST',
       url: `/api/admin/payments/${payment.id}/confirm-split`,
-      payload: { splits },
+      payload: { splits, txHash: SPLIT_TX_HASH },
     })
 
     expect(res.statusCode).toBe(200)
@@ -331,6 +333,11 @@ describe('POST /api/admin/payments/:id/confirm-split', () => {
     })
 
     expect(wages).toHaveLength(3)
+
+    // All created wages share the same on-chain split transaction hash
+    expect(wages[0].txHash).toBe(SPLIT_TX_HASH)
+    expect(wages[1].txHash).toBe(SPLIT_TX_HASH)
+    expect(wages[2].txHash).toBe(SPLIT_TX_HASH)
 
     // Service wallet — no user, no scores
     expect(wages[0].toWallet).toBe(company.serviceWallet)

@@ -202,6 +202,7 @@ npm run test:e2e
 | `companyId`  | Int (FK → `Company`)         | Привязка к компании              |
 | `userId`     | Int? (FK → `User`)           | Пользователь, которому начислено |
 | `paymentId`  | Int? (FK → `Payment`)        | Оплата, по которой начислено     |
+| `txHash`     | String?                      | Хэш транзакции                   |
 | `fromWallet` | String?                      | Кошелёк отправителя              |
 | `toWallet`   | String?                      | Кошелёк получателя               |
 | `score`      | Int (default 0)              | Личные единицы                   |

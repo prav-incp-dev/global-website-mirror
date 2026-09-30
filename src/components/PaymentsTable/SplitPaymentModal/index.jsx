@@ -89,14 +89,14 @@ const SplitPaymentModal = ({ onClose }) => {
     return `Подключенный кошелек (${account}) не совпадает с кошельком компании (${companyWallet}). Подключите кошелек компании.`
   }
 
-  const confirmSplit = async () => {
+  const confirmSplit = async (txHash) => {
     const confirmRes = await fetch(`/api/admin/payments/${selectedPayment.id}/confirm-split`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-csrf-token': csrfToken,
       },
-      body: JSON.stringify({ splits: split }),
+      body: JSON.stringify({ splits: split, txHash }),
     })
     const confirmResult = await confirmRes.json()
     if (!confirmRes.ok) {
@@ -182,7 +182,7 @@ const SplitPaymentModal = ({ onClose }) => {
       if (receipt.status !== 'success') throw new Error('Транзакция не была подтверждена сетью')
 
       setLoaderText('Сохранение информации о выплатах...')
-      await confirmSplit()
+      await confirmSplit(splitTxHash)
       updateSelectedPayment({ id: selectedPayment.id, status: PaymentStatus.Splitted })
       onClose()
     } catch (err) {
