@@ -130,22 +130,40 @@ export async function checkPayments(prisma, log = console) {
 
   await verifyPayments(prisma, paymentsToVerify)
 
-  const twentyFourHoursAgo = new Date(Date.now() - HOURS24)
-
-  const paymentsToFinalize = await prisma.payment.findMany({
-    where: {
-      status: PaymentStatus.Completed,
-      uid: null,
-      createdAt: { lt: twentyFourHoursAgo },
-    },
-    orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-    include: {
-      user: true,
-      order: {
-        select: { quantity: true },
+  const companies = await prisma.company.findMany({
+    select: {
+      id: true,
+      settings: {
+        select: { general: true },
+        take: 1,
       },
     },
   })
+
+  const paymentsToFinalize = []
+  for (const company of companies) {
+    const refundMinutes = Number(company.settings[0]?.general?.refundMinutes || 0)
+    const intervalMs = refundMinutes > 0 ? refundMinutes * 60 * 1000 : HOURS24
+    const cutoff = new Date(Date.now() - intervalMs)
+
+    const companyPayments = await prisma.payment.findMany({
+      where: {
+        companyId: company.id,
+        status: PaymentStatus.Completed,
+        uid: null,
+        createdAt: { lt: cutoff },
+      },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      include: {
+        user: true,
+        order: {
+          select: { quantity: true },
+        },
+      },
+    })
+
+    paymentsToFinalize.push(...companyPayments)
+  }
 
   await finalizePayments(prisma, paymentsToFinalize, log)
 

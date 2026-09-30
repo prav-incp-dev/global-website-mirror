@@ -161,6 +161,46 @@ describe('DELETE /api/admin/user/:id', () => {
     expect(remaining).toBe(0)
   })
 
+  it('successfully deletes a candidate along with their Registration interaction', async () => {
+    const adminUser = { id: 1, email: 'admin@test.com', role: 'Admin', company: { id: 1 } }
+
+    const app = await createApp()
+    const company = await createCompany(app, 'Delete Candidate With Interaction Company')
+
+    const candidate = await createUser(app, company)
+
+    // Candidates are registered as the target of a 'Registration' interaction
+    await app.prisma.interaction.create({
+      data: {
+        status: 'Closed',
+        plannedAt: new Date(),
+        completedAt: new Date(),
+        description: 'Registration',
+        initiatorId: null,
+        targetId: candidate.id,
+      },
+    })
+
+    adminUser.company.id = company.id
+    vi.spyOn(app.auth, 'getUser').mockResolvedValue(adminUser)
+
+    const response = await app.inject({
+      method: 'DELETE',
+      url: `/api/admin/user/${candidate.id}`,
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual({ success: true })
+
+    const remainingUser = await app.prisma.user.count({ where: { id: candidate.id } })
+    expect(remainingUser).toBe(0)
+
+    const remainingInteractions = await app.prisma.interaction.count({
+      where: { targetId: candidate.id },
+    })
+    expect(remainingInteractions).toBe(0)
+  })
+
   it('returns 500 when candidate has a payment', async () => {
     const adminUser = { id: 1, email: 'admin@test.com', role: 'Admin', company: { id: 1 } }
 

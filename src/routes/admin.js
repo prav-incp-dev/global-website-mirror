@@ -1116,7 +1116,12 @@ export default async (fastify) => {
           return reply.code(400).send({ error: 'Пользователя можно удалить только в статусе кандидата' })
         }
 
-        await fastify.prisma.user.delete({ where: { id: userId } })
+        // Delete the candidate's interactions (they are only ever a target) and the
+        // candidate itself atomically, so no orphaned or FK-blocked records remain.
+        await fastify.prisma.$transaction([
+          fastify.prisma.interaction.deleteMany({ where: { targetId: userId } }),
+          fastify.prisma.user.delete({ where: { id: userId } }),
+        ])
 
         return reply.send({ success: true })
       } catch (err) {
