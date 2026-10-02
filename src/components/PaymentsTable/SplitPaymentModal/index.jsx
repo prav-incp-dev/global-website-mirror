@@ -137,21 +137,23 @@ const SplitPaymentModal = ({ onClose }) => {
 
       const recipients = []
       const parsedAmounts = []
+      let calculatedTotalAmount = BigInt(0)
 
       for (const item of items) {
         if (item.amount === 0) continue
         try {
           const normalized = getAddress(item.wallet)
+          const amountStr = item.amount.toFixed(usdtDecimals)
+          const parsedAmount = parseUnits(amountStr, usdtDecimals)
           recipients.push(normalized)
-          parsedAmounts.push(parseUnits(String(Number(item.amount).toFixed(usdtDecimals)), usdtDecimals))
+          parsedAmounts.push(parsedAmount)
+          calculatedTotalAmount += parsedAmount
         } catch {
           continue
         }
       }
 
       if (recipients.length === 0) throw new Error('Нет валидных адресов для распределения')
-
-      const totalAmount = parseUnits(String(selectedPayment.amount), usdtDecimals)
 
       // Step 1: Approve the SplitPayment contract to spend USDT
       setLoaderText('Ожидание подтверждения Approve...')
@@ -160,7 +162,7 @@ const SplitPaymentModal = ({ onClose }) => {
         address: tokenAddress,
         abi: USDT_ABI,
         functionName: 'approve',
-        args: [contractAddress, totalAmount],
+        args: [contractAddress, calculatedTotalAmount],
       })
 
       setLoaderText('Транзакция Approve отправлена. Ожидание включения в блок...')
