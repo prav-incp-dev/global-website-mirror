@@ -436,23 +436,42 @@ export default async (fastify) => {
       },
       body: {
         type: 'object',
-        required: ['splits'],
+        required: ['split'],
         properties: {
           txHash: { type: 'string', minLength: 1 },
-          splits: {
-            type: 'array',
-            items: {
-              type: 'object',
-              required: ['wallet', 'amount'],
-              properties: {
-                wallet: { type: 'string' },
-                amount: { type: 'number' },
-                userId: { type: 'integer' },
-                score: { type: 'integer' },
-                groupScore: { type: 'integer' },
+          split: {
+            type: 'object',
+            required: ['wages', 'promotions'],
+            properties: {
+              wages: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  required: ['wallet', 'amount'],
+                  properties: {
+                    wallet: { type: 'string' },
+                    amount: { type: 'number' },
+                    userId: { type: 'integer' },
+                    score: { type: 'integer' },
+                    groupScore: { type: 'integer' },
+                    onLevel: { type: 'integer', minimum: MIN_LEVEL, maximum: MAX_LEVEL },
+                  },
+                },
+                minItems: 1,
+              },
+              promotions: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  required: ['userId', 'oldLevel', 'newLevel'],
+                  properties: {
+                    userId: { type: 'integer' },
+                    oldLevel: { type: 'integer', minimum: MIN_LEVEL, maximum: MAX_LEVEL },
+                    newLevel: { type: 'integer', minimum: MIN_LEVEL, maximum: MAX_LEVEL },
+                  },
+                },
               },
             },
-            minItems: 1,
           },
         },
       },
@@ -493,12 +512,12 @@ export default async (fastify) => {
           return reply.code(400).send({ error: 'Не задан распределительный счет' })
         }
 
-        const { splits, txHash = null } = req.body
+        const { split: { wages, promotions = [] }, txHash = null } = req.body
         const company = payment.company
 
         // Create wages from split items (array of { wallet, amount, userId?, score?, groupScore? })
         // All wages share the same on-chain tx hash of the splitPayment transaction.
-        const wagesData = splits.map((item) =>
+        const wagesData = wages.map((item) =>
           fastify.prisma.wage.create({
             data: {
               companyId: company.id,
@@ -506,6 +525,7 @@ export default async (fastify) => {
               txHash,
               fromWallet: company.wallet,
               toWallet: item.wallet,
+              onLevel: item.onLevel ?? 0,
               amount: item.amount,
               score: item.score ?? 0,
               groupScore: item.groupScore ?? 0,
@@ -514,16 +534,27 @@ export default async (fastify) => {
             },
           }),
         )
+        const promotionsHistoryData = promotions.map((item) =>
+          fastify.prisma.levelHistory.create({ data: { ...item } }),
+        )
+        const promotedUsersData = promotions.map((item) =>
+          fastify.prisma.user.update({
+            where: { id: item.userId },
+            data: { level: item.newLevel },
+          }),
+        )
 
         // Collect userIds from split items to flag for level review and lock
-        const userIds = splits.filter((item) => item.userId != null).map((item) => item.userId)
+        const userIds = wages.filter((item) => item.userId != null).map((item) => item.userId)
 
         // Create all wages, flag users, and update payment status in a transaction
         await fastify.prisma.$transaction([
           ...wagesData,
+          ...promotionsHistoryData,
+          ...promotedUsersData,
           fastify.prisma.user.updateMany({
             where: { id: { in: userIds } },
-            data: { toReviewLevel: true, isLocked: true },
+            data: { isLocked: true },
           }),
           fastify.prisma.payment.update({
             where: { id: payment.id },
@@ -531,7 +562,7 @@ export default async (fastify) => {
           }),
         ])
 
-        return reply.send({ success: true, wagesCount: wagesData.length })
+        return reply.send({ success: true })
       } catch {
         return reply.code(500).send({ error: 'Ошибка подтверждения сплита' })
       }

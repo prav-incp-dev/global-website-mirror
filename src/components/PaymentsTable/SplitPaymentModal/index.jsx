@@ -73,6 +73,17 @@ const SplitPaymentModal = ({ onClose }) => {
     fetchSplit()
   }, [selectedPayment.id, csrfToken])
 
+  const groupedWages = () => {
+    if (!split.wages) return []
+
+    return split.wages.reduce((acc, item) => {
+      const existing = acc.find((w) => w.wallet === item.wallet)
+      if (existing) existing.amount += item.amount
+      else acc.push({ ...item })
+      return acc
+    }, [])
+  }
+
   const paymentErrorMessage = (txHash, errorMessage) => {
     return (
       'Произошла ошибка, но платеж был создан в сети. Хэш платежа:\n\n' +
@@ -96,7 +107,7 @@ const SplitPaymentModal = ({ onClose }) => {
         'Content-Type': 'application/json',
         'x-csrf-token': csrfToken,
       },
-      body: JSON.stringify({ splits: split, txHash }),
+      body: JSON.stringify({ split: split, txHash }),
     })
     const confirmResult = await confirmRes.json()
     if (!confirmRes.ok) {
@@ -132,7 +143,7 @@ const SplitPaymentModal = ({ onClose }) => {
 
       // Derive recipients and amounts from split data
       // Split is an array of { wallet, amount, userId?, score?, groupScore? }
-      const items = split?.wages || []
+      const items = groupedWages()
       if (items.length === 0) throw new Error('Нет адресов для распределения')
 
       const recipients = []
@@ -206,7 +217,8 @@ const SplitPaymentModal = ({ onClose }) => {
           <>
             <p className={styles.info}>Платеж будет распределен по следующим адресам:</p>
             <div className={styles.splitList}>
-              {split.wages.map((item) => (
+              {/* Group wages by wallet so same wallet shows one row with combined amount */}
+              {groupedWages().map((item) => (
                 <div key={item.wallet} className={styles.splitRow}>
                   <span className={styles.amount}>{`${Number(item.amount).toFixed(2)} USDT`}</span>
                   <span className={styles.separator}>→</span>
