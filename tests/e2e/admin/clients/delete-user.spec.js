@@ -102,9 +102,9 @@ test.describe('admin clients delete user', () => {
     await expect(page.getByText(userName(candidateWithPayment))).toBeVisible()
 
     // 4. Navigate to payments tab and back - deleted user stays absent (context persisted)
-    await page.getByTitle("Платежи").click()
-    await page.waitForLoadState("networkidle")
-    await page.getByTitle("Клиенты").click()
+    await page.getByTitle('Платежи').click()
+    await page.waitForLoadState('networkidle')
+    await page.getByTitle('Клиенты').click()
     await expect(page.getByText(userName(candidateClean))).not.toBeVisible()
     await expect(page.getByText(userName(consultant))).toBeVisible()
     await expect(page.getByText(userName(candidateWithPayment))).toBeVisible()

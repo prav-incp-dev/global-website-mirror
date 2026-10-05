@@ -172,7 +172,6 @@ npm run test:e2e
 | `phone`            | String (уникальный)                      | Телефон                                      |
 | `level`            | Int (default 0)                          | Уровень (для консультантов)                  |
 | `levelConfirmed`   | Boolean (default true)                   | Подтверждён ли уровень                       |
-| `toReviewLevel`    | Boolean (default false)                  | Требует ли уровень пересмотра                |
 | `isLocked`         | Boolean (default false)                  | Признак наличия у пользователя продаж        |
 | `memberId`         | String? (уникальный)                     | Номер пайщика                                |
 | `parentId`         | Int? (FK → `User`)                       | Родительский пользователь (реферал)          |

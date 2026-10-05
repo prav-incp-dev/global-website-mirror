@@ -67,7 +67,6 @@ model User {
   phone                 String        @unique
   level                 Int           @default(0)
   levelConfirmed        Boolean       @default(true)
-  toReviewLevel         Boolean       @default(false)
   isLocked              Boolean       @default(false)
   memberId              String?       @unique
   parentId              Int?
@@ -110,6 +109,7 @@ model Wage {
   txHash          String?
   fromWallet      String?
   toWallet        String?
+  onLevel         Int            @default(0)
   description     String?
   score           Int            @default(0)
   groupScore      Int            @default(0)
