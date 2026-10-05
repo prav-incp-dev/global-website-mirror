@@ -132,7 +132,7 @@ const SplitPaymentModal = ({ onClose }) => {
 
       // Derive recipients and amounts from split data
       // Split is an array of { wallet, amount, userId?, score?, groupScore? }
-      const items = split || []
+      const items = split?.wages || []
       if (items.length === 0) throw new Error('Нет адресов для распределения')
 
       const recipients = []
@@ -206,7 +206,7 @@ const SplitPaymentModal = ({ onClose }) => {
           <>
             <p className={styles.info}>Платеж будет распределен по следующим адресам:</p>
             <div className={styles.splitList}>
-              {split.map((item) => (
+              {split.wages.map((item) => (
                 <div key={item.wallet} className={styles.splitRow}>
                   <span className={styles.amount}>{`${Number(item.amount).toFixed(2)} USDT`}</span>
                   <span className={styles.separator}>→</span>

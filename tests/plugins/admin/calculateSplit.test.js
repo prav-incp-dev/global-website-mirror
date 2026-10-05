@@ -79,6 +79,16 @@ describe('calculateSplit', () => {
     })
   }
 
+  const createTestWage = async (app, userId, companyId, overrides = {}) => {
+    return await app.prisma.wage.create({
+      data: {
+        userId,
+        companyId,
+        ...overrides,
+      },
+    })
+  }
+
   it('distributes a payment to ancestors and company wallets', async () => {
     const app = await createApp()
     const company = await createTestCompany(app)
@@ -96,10 +106,10 @@ describe('calculateSplit', () => {
 
     const result = await app.admin.calculateSplit(payment)
 
-    expect(result).toEqual([
+    expect(result.wages).toEqual([
       { wallet: '0xServiceWallet', amount: 12 },
-      { wallet: '0xJohnWallet', amount: 360, userId: john.id, score: 1, groupScore: 0 },
-      { wallet: '0xBobWallet', amount: 336, userId: bob.id, score: 0, groupScore: 1 },
+      { wallet: '0xJohnWallet', amount: 360, userId: john.id, score: 1, groupScore: 0, onLevel: 2 },
+      { wallet: '0xBobWallet', amount: 336, userId: bob.id, score: 0, groupScore: 1, onLevel: 7 },
       { wallet: '0xCumulativeWallet', amount: 492 },
     ])
   })
@@ -119,7 +129,7 @@ describe('calculateSplit', () => {
 
     const result = await app.admin.calculateSplit(payment)
 
-    expect(result).toEqual([
+    expect(result.wages).toEqual([
       { wallet: '0xServiceWallet', amount: 12 },
       { wallet: '0xCumulativeWallet', amount: 1188 },
     ])
@@ -148,9 +158,9 @@ describe('calculateSplit', () => {
     // Bob (level 1, 20%) would get 20% - 30% = -10% → amount 0, but since he has no wallet, he's skipped
     // Wait — Bob is the parent of John, so after John, currentUser=John, parentId=Bob
     // But Bob has no wallet, so splitToUser returns 0 and nothing is pushed
-    expect(result).toEqual([
+    expect(result.wages).toEqual([
       { wallet: '0xServiceWallet', amount: 12 },
-      { wallet: '0xJohnWallet', amount: 360, userId: john.id, score: 1, groupScore: 0 },
+      { wallet: '0xJohnWallet', amount: 360, userId: john.id, score: 1, groupScore: 0, onLevel: 2 },
       { wallet: '0xCumulativeWallet', amount: 828 },
     ])
   })
@@ -176,10 +186,10 @@ describe('calculateSplit', () => {
     // Bob (level 2, 15.5%) gets 15.5% - 0% = 15.5 → 15.5, immediate parent → score 1
     // Charlie (level 5, 30%) gets 30% - 15.5% = 14.5% → 14.5, groupScore 1
     // Cumulative: 100 - 1 - 15.5 - 14.5 = 69
-    expect(result).toEqual([
+    expect(result.wages).toEqual([
       { wallet: '0xServiceWallet', amount: 1 },
-      { wallet: '0xBobWallet', amount: 15.5, userId: bob.id, score: 1, groupScore: 0 },
-      { wallet: '0xCharlieWallet', amount: 14.5, userId: charlie.id, score: 0, groupScore: 1 },
+      { wallet: '0xBobWallet', amount: 15.5, userId: bob.id, score: 1, groupScore: 0, onLevel: 2 },
+      { wallet: '0xCharlieWallet', amount: 14.5, userId: charlie.id, score: 0, groupScore: 1, onLevel: 5 },
       { wallet: '0xCumulativeWallet', amount: 69 },
     ])
   })
@@ -226,7 +236,7 @@ describe('calculateSplit', () => {
 
     const result = await app.admin.calculateSplit(paymentWithIncludes)
 
-    expect(result).toEqual([
+    expect(result.wages).toEqual([
       { wallet: '0xServiceWallet', amount: 12 },
       { wallet: '0xCumulativeWallet', amount: 1188 },
     ])
@@ -254,10 +264,10 @@ describe('calculateSplit', () => {
     // Bob (level 9, 59.5%) gets 59.5% - 0% = 59.5% → 714, immediate parent → score 1
     // Charlie (level 3, 39%) gets 39% - 59.5% = -20.5% → amount 0, groupScore 1
     // Cumulative: 1200 - 12 - 714 - 0 = 474
-    expect(result).toEqual([
+    expect(result.wages).toEqual([
       { wallet: '0xServiceWallet', amount: 12 },
-      { wallet: '0xBobWallet', amount: 714, userId: bob.id, score: 1, groupScore: 0 },
-      { wallet: '0xCharlieWallet', amount: 0, userId: charlie.id, score: 0, groupScore: 1 },
+      { wallet: '0xBobWallet', amount: 714, userId: bob.id, score: 1, groupScore: 0, onLevel: 9 },
+      { wallet: '0xCharlieWallet', amount: 0, userId: charlie.id, score: 0, groupScore: 1, onLevel: 3 },
       { wallet: '0xCumulativeWallet', amount: 474 },
     ])
   })
@@ -280,11 +290,95 @@ describe('calculateSplit', () => {
 
     const result = await app.admin.calculateSplit(payment)
 
-    expect(result).toEqual([
+    expect(result.wages).toEqual([
       { wallet: '0xServiceWallet', amount: 12 },
-      { wallet: '0xJohnWallet', amount: 360, userId: john.id, score: 5, groupScore: 0 },
-      { wallet: '0xBobWallet', amount: 336, userId: bob.id, score: 0, groupScore: 5 },
+      { wallet: '0xJohnWallet', amount: 360, userId: john.id, score: 5, groupScore: 0, onLevel: 2 },
+      { wallet: '0xBobWallet', amount: 336, userId: bob.id, score: 0, groupScore: 5, onLevel: 7 },
       { wallet: '0xCumulativeWallet', amount: 492 },
     ])
+  })
+
+  it('processes payment by units, re-calculate levels on-fly', async () => {
+    const app = await createApp()
+    const company = await createTestCompany(app)
+    await createTestSetting(app, company.id, {
+      1: { percent: 20, personal: 3, general: 3, confirm: 0 },
+      2: { percent: 30, personal: 3, general: 10, confirm: 2 },
+      7: { percent: 58, personal: 0, general: 750, confirm: 7 },
+    })
+
+    const bob = await createTestUser(app, company.id, { level: 7, wallet: '0xBobWallet' })
+    const john = await createTestUser(app, company.id, { level: 1, parentId: bob.id, wallet: '0xJohnWallet' })
+    const mary = await createTestUser(app, company.id, { level: 1, parentId: john.id, wallet: '0xMaryWallet' })
+
+    const payment = await createTestPayment(app, mary.id, company.id, { amount: 2400 }, { quantity: 2 })
+    await createTestWage(app, john.id, company.id, { paymentId: payment.id, onLevel: 1, score: 2 })
+
+    const result = await app.admin.calculateSplit(payment)
+
+    expect(result.wages).toEqual([
+      { wallet: '0xServiceWallet', amount: 24 },
+      { wallet: '0xJohnWallet', amount: 240, userId: john.id, onLevel: 1, score: 1, groupScore: 0 },
+      { wallet: '0xBobWallet', amount: 792, userId: bob.id, onLevel: 7, score: 0, groupScore: 2 },
+      { wallet: '0xJohnWallet', amount: 360, userId: john.id, onLevel: 2, score: 1, groupScore: 0 },
+      { wallet: '0xCumulativeWallet', amount: 984 },
+    ])
+    expect(result.promotions).toEqual([{ userId: john.id, oldLevel: 1, newLevel: 2 }])
+  })
+
+  it('supports multiple promotions in one turn, return single promoting object per user', async () => {
+    const app = await createApp()
+    const company = await createTestCompany(app)
+    await createTestSetting(app, company.id, {
+      1: { percent: 20, personal: 3, general: 3, confirm: 0 },
+      2: { percent: 30, personal: 3, general: 6, confirm: 2 },
+      3: { percent: 38, personal: 3, general: 10, confirm: 2 },
+      7: { percent: 58, personal: 0, general: 750, confirm: 7 },
+    })
+
+    const bob = await createTestUser(app, company.id, { level: 7, wallet: '0xBobWallet' })
+    const john = await createTestUser(app, company.id, { level: 1, parentId: bob.id, wallet: '0xJohnWallet' })
+    const mary = await createTestUser(app, company.id, { level: 1, parentId: john.id, wallet: '0xMaryWallet' })
+
+    const payment = await createTestPayment(app, mary.id, company.id, { amount: 6000 }, { quantity: 5 })
+    await createTestWage(app, john.id, company.id, { paymentId: payment.id, onLevel: 1, score: 2 })
+
+    const result = await app.admin.calculateSplit(payment)
+
+    expect(result.wages).toEqual([
+      { wallet: '0xServiceWallet', amount: 60 },
+      { wallet: '0xJohnWallet', amount: 240, userId: john.id, onLevel: 1, score: 1, groupScore: 0 },
+      { wallet: '0xBobWallet', amount: 1704, userId: bob.id, onLevel: 7, score: 0, groupScore: 5 },
+      { wallet: '0xJohnWallet', amount: 1080, userId: john.id, onLevel: 2, score: 3, groupScore: 0 },
+      { wallet: '0xJohnWallet', amount: 456, userId: john.id, onLevel: 3, score: 1, groupScore: 0 },
+      { wallet: '0xCumulativeWallet', amount: 2460 },
+    ])
+    expect(result.promotions).toEqual([{ userId: john.id, oldLevel: 1, newLevel: 3 }])
+  })
+
+  it('does not promote when missing level information', async () => {
+    const app = await createApp()
+    const company = await createTestCompany(app)
+    await createTestSetting(app, company.id, {
+      1: { percent: 20, personal: 3, general: 3, confirm: 0 },
+      7: { percent: 58, personal: 0, general: 750, confirm: 7 },
+    })
+
+    const bob = await createTestUser(app, company.id, { level: 7, wallet: '0xBobWallet' })
+    const john = await createTestUser(app, company.id, { level: 1, parentId: bob.id, wallet: '0xJohnWallet' })
+    const mary = await createTestUser(app, company.id, { level: 1, parentId: john.id, wallet: '0xMaryWallet' })
+
+    const payment = await createTestPayment(app, mary.id, company.id, { amount: 2400 }, { quantity: 2 })
+    await createTestWage(app, john.id, company.id, { paymentId: payment.id, onLevel: 1, score: 2 })
+
+    const result = await app.admin.calculateSplit(payment)
+
+    expect(result.wages).toEqual([
+      { wallet: '0xServiceWallet', amount: 24 },
+      { wallet: '0xJohnWallet', amount: 480, userId: john.id, onLevel: 1, score: 2, groupScore: 0 },
+      { wallet: '0xBobWallet', amount: 912, userId: bob.id, onLevel: 7, score: 0, groupScore: 2 },
+      { wallet: '0xCumulativeWallet', amount: 984 },
+    ])
+    expect(result.promotions).toEqual([])
   })
 })

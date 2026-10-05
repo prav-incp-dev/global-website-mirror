@@ -274,6 +274,27 @@ export default fp(async (fastify) => {
       return ancestors
     },
 
+    personalLevelWages: async (user) => {
+      // Total personal level score — sum of scores since reaching current level
+      const resultAgg = await fastify.prisma.wage.aggregate({
+        where: {
+          userId: user.id,
+          onLevel: user.level,
+        },
+        _sum: { score: true },
+      })
+      return resultAgg._sum.score ?? 0
+    },
+
+    generalWages: async (user) => {
+      // Total general score — sum of all scores + group scores ever
+      const resultAgg = await fastify.prisma.wage.aggregate({
+        where: { userId: user.id },
+        _sum: { score: true, groupScore: true },
+      })
+      return (resultAgg._sum.score ?? 0) + (resultAgg._sum.groupScore ?? 0)
+    },
+
     exportClients: async (
       user,
       fromDate,
@@ -344,46 +365,99 @@ export default fp(async (fastify) => {
       const setting = await fastify.prisma.setting.findUnique({
         where: { companyId: company.id },
       })
+      const levels = setting.levels ?? {}
 
       const amount = Number(payment.amount)
-      let distributedAmount = 0
+      const unitAmount = order.quantity > 0 ? payment.amount / order.quantity : payment.amount
 
+      let distributedAmount = 0
       const result = []
+      const promotions = []
+
       const splitToCompany = (wallet, value) => {
         const rounded = Number(value.toFixed(2))
         result.push({ wallet: wallet, amount: rounded })
         return rounded
       }
 
-      const splitToUser = (user, value, score, groupScore) => {
+      const splitToUser = (user, value, level, owner) => {
         if (!user.wallet) return 0
         const rounded = Number(value.toFixed(2))
-        result.push({ wallet: user.wallet, amount: rounded, userId: user.id, score: score, groupScore: groupScore })
+        result.push({
+          wallet: user.wallet,
+          amount: rounded,
+          userId: user.id,
+          onLevel: level,
+          score: owner ? 1 : 0,
+          groupScore: owner ? 0 : 1,
+        })
         return rounded
+      }
+
+      const groupResult = () => {
+        return Object.values(
+          result.reduce((acc, wage) => {
+            const key = `${wage.wallet}-${wage.onLevel ?? 0}`
+
+            if (!acc[key]) acc[key] = { ...wage }
+            else {
+              acc[key].amount += wage.amount
+              if (wage.score !== undefined) acc[key].score += wage.score
+              if (wage.groupScore !== undefined) acc[key].groupScore += wage.groupScore
+            }
+
+            return acc
+          }, {}),
+        )
       }
 
       distributedAmount += splitToCompany(company.serviceWallet, amount / 100)
       const ancestors = await fastify.admin.getAncestors(user)
 
-      let prevPercent = 0
-      let currentUser = user
-      while (currentUser.parentId && order.quantity > 0) {
-        const parent = ancestors.find((user) => user.id == currentUser.parentId)
-        const owner = parent.id == user.parentId
-        const levelPercent = Number(setting?.levels?.[parent.level]?.percent) ?? 0
-        const percent = levelPercent - prevPercent
-        distributedAmount += splitToUser(
-          parent,
-          percent > 0 ? (amount * percent) / 100 : 0,
-          owner ? order.quantity : 0,
-          owner ? 0 : order.quantity,
-        )
-        prevPercent = levelPercent
-        currentUser = parent
+      const wages = {}
+
+      for (let i = 1; i <= order.quantity; i++) {
+        let prevPercent = 0
+        let currentUser = user
+        while (currentUser.parentId) {
+          const parent = ancestors.find((user) => user.id == currentUser.parentId)
+          const owner = parent.id == user.parentId
+
+          if (i === 1) {
+            wages[parent.id] = {
+              personal: await fastify.admin.personalLevelWages(parent),
+              general: await fastify.admin.generalWages(parent),
+              level: parent.level,
+            }
+          }
+          const level = wages[parent.id].level
+          const levelPercent = Number(levels?.[level]?.percent) ?? 0
+          const percent = levelPercent - prevPercent
+          const splitAmount = percent > 0 ? (unitAmount * percent) / 100 : 0
+
+          distributedAmount += splitToUser(parent, splitAmount, wages[parent.id].level, owner)
+          if (owner) wages[parent.id].personal += 1
+          wages[parent.id].general += 1
+
+          const threshold = levels[level]
+          if (wages[parent.id].personal >= threshold.personal && wages[parent.id].general >= threshold.general) {
+            const nextLevel = level + 1
+            if (levels[nextLevel]) {
+              const promotion = promotions.find((promo) => promo.userId === parent.id)
+              if (promotion) promotion.newLevel = nextLevel
+              else promotions.push({ userId: parent.id, oldLevel: level, newLevel: nextLevel })
+              wages[parent.id].personal = 0
+              wages[parent.id].level = nextLevel
+            }
+          }
+
+          prevPercent = levelPercent
+          currentUser = parent
+        }
       }
 
       result.push({ wallet: company.cumulativeWallet, amount: amount - distributedAmount })
-      return result
+      return { wages: groupResult(), promotions: promotions }
     },
   })
 })
