@@ -206,6 +206,9 @@ export default async (fastify) => {
           { key: 'levelDate', header: 'Дата получения уровня' },
           { key: 'wageScore', header: 'Личные единицы за период' },
           { key: 'wageGroupScore', header: 'Групповые единицы за период' },
+          { key: 'totalScore', header: 'Общие единицы за период' },
+          { key: 'parentName', header: 'Родитель' },
+          { key: 'parentEmail', header: 'Почта родителя' },
         ],
         bom: true,
       })

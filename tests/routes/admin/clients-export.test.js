@@ -24,6 +24,9 @@ const mockClients = [
     levelDate: '10.05.2025',
     wageScore: 15,
     wageGroupScore: 35,
+    totalScore: 50,
+    parentName: 'John Smith',
+    parentEmail: 'john@test.com',
   },
   {
     name: 'Bob Jones',
@@ -33,6 +36,9 @@ const mockClients = [
     levelDate: '',
     wageScore: 0,
     wageGroupScore: 0,
+    totalScore: 0,
+    parentName: '-',
+    parentEmail: '-',
   },
 ]
 
@@ -84,10 +90,10 @@ describe('GET /api/admin/clients/export', () => {
 
     const lines = body.replace('\uFEFF', '').split('\n')
     expect(lines[0]).toBe(
-      'Имя,Почта,Номер пайщика,Уровень,Дата получения уровня,Личные единицы за период,Групповые единицы за период',
+      'Имя,Почта,Номер пайщика,Уровень,Дата получения уровня,Личные единицы за период,Групповые единицы за период,Общие единицы за период,Родитель,Почта родителя',
     )
-    expect(lines[1]).toBe('Alice Smith,alice@test.com,M-001,2,10.05.2025,15,35')
-    expect(lines[2]).toBe('Bob Jones,bob@test.com,M-002,1,,0,0')
+    expect(lines[1]).toBe('Alice Smith,alice@test.com,M-001,2,10.05.2025,15,35,50,John Smith,john@test.com')
+    expect(lines[2]).toBe('Bob Jones,bob@test.com,M-002,1,,0,0,0,-,-')
     expect(lines[3]).toBe('')
   })
 
@@ -132,7 +138,7 @@ describe('GET /api/admin/clients/export', () => {
 
     const lines = body.replace('\uFEFF', '').split('\n')
     expect(lines[0]).toBe(
-      'Имя,Почта,Номер пайщика,Уровень,Дата получения уровня,Личные единицы за период,Групповые единицы за период',
+      'Имя,Почта,Номер пайщика,Уровень,Дата получения уровня,Личные единицы за период,Групповые единицы за период,Общие единицы за период,Родитель,Почта родителя',
     )
     expect(lines[1]).toBe('')
   })
