@@ -331,7 +331,10 @@ export default fp(async (fastify) => {
           u."id", u."firstName", u."lastName", u."level", u."email", u."memberId",
           MAX(lh."createdAt") AS "levelDate",
           COALESCE(SUM(w."score"), 0)::int AS "wageScore",
-          COALESCE(SUM(w."groupScore"), 0)::int AS "wageGroupScore"
+          COALESCE(SUM(w."groupScore"), 0)::int AS "wageGroupScore",
+          MAX(p."firstName") AS "parentFirstName",
+          MAX(p."lastName") AS "parentLastName",
+          MAX(p."email") AS "parentEmail"
         FROM "User" u
         LEFT JOIN "LevelHistory" lh
           ON lh."userId" = u."id" AND lh."newLevel" = u."level"
@@ -339,6 +342,8 @@ export default fp(async (fastify) => {
           ON w."userId" = u."id"
           AND w."createdAt" >= $4::date
           AND w."createdAt" < ($5::date + INTERVAL '1 day')
+        LEFT JOIN "User" p
+          ON p."id" = u."parentId"
         WHERE ${whereSql}
         GROUP BY u."id"
         ORDER BY ${orderBy}
@@ -356,6 +361,11 @@ export default fp(async (fastify) => {
         levelDate: row.levelDate ? new Date(row.levelDate).toLocaleDateString('ru-RU') : '',
         wageScore: row.wageScore,
         wageGroupScore: row.wageGroupScore,
+        totalScore: row.wageScore + row.wageGroupScore,
+        parentName: row.parentFirstName
+          ? `${row.parentFirstName} ${row.parentLastName || ''}`.trim()
+          : '-',
+        parentEmail: row.parentEmail || '-',
       }))
     },
 
