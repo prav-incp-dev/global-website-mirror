@@ -93,7 +93,7 @@ const PaymentModal = ({ onClose }) => {
           'Content-Type': 'application/json',
           'x-csrf-token': csrfToken,
         },
-        body: JSON.stringify({ splits: calcResult.split }),
+        body: JSON.stringify({ split: calcResult.split }),
       })
       const confirmResult = await confirmRes.json()
       if (!confirmRes.ok) throw new Error(confirmResult.error)

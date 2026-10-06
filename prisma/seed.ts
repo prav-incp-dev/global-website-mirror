@@ -7,7 +7,6 @@ import { OrderStatus } from '../src/generated/prisma/enums'
 import { PaymentStatus } from '../src/generated/prisma/enums'
 import { HOURS24_IN_MINUTES } from '../src/lib/constants.js'
 
-
 const connectionString = process.env.DATABASE_URL
 const passwordHashRounds = 12
 

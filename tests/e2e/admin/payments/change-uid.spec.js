@@ -92,9 +92,9 @@ test.describe('admin payments change uid', () => {
     const updated = await prisma.payment.findUnique({ where: { id: secondOrder.payment.id } })
     expect(updated.uid).toBe('ON-1234-03')
 
-    await page.getByTitle("Клиенты").click()
-    await page.waitForLoadState("networkidle")
-    await page.getByTitle("Платежи").click()
+    await page.getByTitle('Клиенты').click()
+    await page.waitForLoadState('networkidle')
+    await page.getByTitle('Платежи').click()
     await expect(page.getByText('ON-1234-03')).toBeVisible()
   })
 })

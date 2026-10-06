@@ -301,4 +301,165 @@ test.describe('admin payments split', () => {
     const unchanged = await prisma.payment.findUnique({ where: { id: payment.id } })
     expect(unchanged.status).toBe('Completed')
   })
+
+  test('«Зачесть распределение платежа» respects promotion-based split recalculation', async ({ loginAs, page }) => {
+    const prisma = getPrisma()
+
+    // Garry Tomson — consultant at level 1 with an existing wage (score=2, onLevel=1)
+    const garry = await createTestUser(
+      { firstName: 'Garry', lastName: 'Tomson', role: 'Consultant', companyId: company.id, level: 1 },
+      2, // score
+      0, // groupScore (creates a Wage with score=2)
+    )
+    // Set onLevel on the wage
+    await prisma.wage.updateMany({ where: { userId: garry.id }, data: { onLevel: 1 } })
+
+    // Mary Black — candidate, parent is Garry
+    const mary = await createTestUser({
+      firstName: 'Mary',
+      lastName: 'Black',
+      role: 'Candidate',
+      companyId: company.id,
+      parentId: garry.id,
+      level: 0,
+    })
+
+    // Create a completed + verified payment from Mary for quantity=2, amount=2400
+    const order = await prisma.order.create({
+      data: {
+        userId: mary.id,
+        quantity: 2,
+        totalAmount: 2400,
+        status: 'Paid',
+        payment: {
+          create: {
+            userId: mary.id,
+            companyId: company.id,
+            amount: 2400,
+            tokenSymbol: 'USDT',
+            tokenContract: '0x337610d27c682E347C9cD60BD4b3b107C9d34dDd',
+            tokenDecimals: 18,
+            chainId: 97,
+            txHash: '0xPAYMENTHASH',
+            fromWallet: mary.wallet,
+            toWallet: company.wallet,
+            status: 'Completed',
+            finalized: true,
+            uid: 'ON-2400-01',
+          },
+        },
+      },
+      include: { payment: true },
+    })
+    const payment = order.payment
+
+    await loginAs(admin.id)
+    await openPaymentsTab(page)
+
+    const rows = page.locator('table tbody tr')
+    const modalTitle = page.getByRole('heading', { name: 'Информация о платеже' })
+
+    // Open payment modal
+    const paymentRow = rows.filter({ hasText: '2400' })
+    await paymentRow.locator('[class*="infoIcon"]').click()
+    await expect(modalTitle).toBeVisible()
+
+    // Click "Распределить платеж" to open the SplitPaymentModal with the calculated split
+    const splitButton = page.getByRole('button', { name: 'Распределить платеж' })
+    await expect(splitButton).toBeVisible()
+    await splitButton.click()
+
+    // The SplitPaymentModal opens with the list of addresses
+    const splitModalTitle = page.getByRole('heading', { name: 'Распределение платежа' })
+    await expect(splitModalTitle).toBeVisible()
+
+    // The modal shows the split amounts header
+    await expect(page.getByText('Платеж будет распределен по следующим адресам:')).toBeVisible()
+
+    // Verify the three split rows (grouped by wallet)
+    const splitRows = page.locator('[class*="splitRow"]')
+
+    // 24.00 USDT → company serviceWallet
+    const serviceRow = splitRows.filter({ hasText: '24.00 USDT' })
+    await expect(serviceRow).toContainText(walletPreview(MOCK_SERVICE_WALLET))
+
+    // 600.00 USDT → Garry's wallet (combined: 240 from unit 1 + 360 from unit 2)
+    const garryRow = splitRows.filter({ hasText: '600.00 USDT' })
+    await expect(garryRow).toContainText(walletPreview(garry.wallet))
+
+    // 1776.00 USDT → company cumulativeWallet
+    const cumulativeRow = splitRows.filter({ hasText: '1776.00 USDT' })
+    await expect(cumulativeRow).toContainText(walletPreview(MOCK_CUMULATIVE_WALLET))
+
+    // Close the SplitPaymentModal
+    const closeButtons = page.getByRole('button', { name: 'Закрыть' })
+    const splitCloseButton = closeButtons.last()
+    await splitCloseButton.click()
+    await expect(splitModalTitle).not.toBeVisible()
+
+    // Now click "Зачесть распределение платежа" to confirm the split
+    const confirmSplitButton = page.getByRole('button', { name: 'Зачесть распределение платежа' })
+    await expect(confirmSplitButton).toBeVisible()
+
+    // Accept the confirmation dialog
+    page.once('dialog', (dialog) => {
+      expect(dialog.message()).toBe(
+        'Вы подтверждаете, что платеж действительно был распределен по корпоративным счетам и структуре?',
+      )
+      dialog.accept()
+    })
+    await confirmSplitButton.click()
+
+    // Accept the success dialog
+    page.once('dialog', (dialog) => {
+      expect(dialog.message()).toBe('Распределение платежа успешно зачтено!')
+      dialog.accept()
+    })
+
+    // Payment status changed to «Распределен» in the modal
+    await expect(page.locator('[class*="infoTable"]').getByText('Распределен')).toBeVisible({ timeout: 10000 })
+    await expect(confirmSplitButton).not.toBeVisible()
+    await expect(splitButton).not.toBeVisible()
+
+    // The table row reflects the new status
+    await expect(rows.filter({ hasText: '2400' })).toContainText('Распределен')
+
+    // Verify database state
+    const updatedPayment = await prisma.payment.findUnique({ where: { id: payment.id } })
+    expect(updatedPayment.status).toBe('Splitted')
+
+    // Wage records should have been created with correct onLevel values
+    const wages = await prisma.wage.findMany({
+      where: { paymentId: payment.id },
+      orderBy: { id: 'asc' },
+    })
+    expect(wages.length).toBeGreaterThanOrEqual(4)
+
+    // Service wallet wage
+    const serviceWage = wages.find((w) => w.toWallet === MOCK_SERVICE_WALLET)
+    expect(serviceWage).toBeTruthy()
+    expect(Number(serviceWage.amount)).toBe(24)
+    expect(serviceWage.onLevel).toBe(0)
+
+    // Garry's wage from unit 1 (onLevel=1)
+    const garryWage1 = wages.find((w) => w.userId === garry.id && w.onLevel === 1)
+    expect(garryWage1).toBeTruthy()
+    expect(Number(garryWage1.amount)).toBe(240)
+
+    // Garry's wage from unit 2 (onLevel=2 after promotion)
+    const garryWage2 = wages.find((w) => w.userId === garry.id && w.onLevel === 2)
+    expect(garryWage2).toBeTruthy()
+    expect(Number(garryWage2.amount)).toBe(360)
+
+    // Cumulative wallet wage
+    const cumulativeWage = wages.find((w) => w.toWallet === MOCK_CUMULATIVE_WALLET)
+    expect(cumulativeWage).toBeTruthy()
+    expect(Number(cumulativeWage.amount)).toBe(1776)
+    expect(cumulativeWage.onLevel).toBe(0)
+
+    // Garry should have been promoted to level 2
+    const updatedGarry = await prisma.user.findUnique({ where: { id: garry.id } })
+    expect(updatedGarry.level).toBe(2)
+    expect(updatedGarry.isLocked).toBe(true)
+  })
 })
