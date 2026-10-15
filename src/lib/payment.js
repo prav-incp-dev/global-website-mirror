@@ -23,7 +23,13 @@ const transferEventAbi = {
 
 const verifyPaymentOnChain = async (payment) => {
   const publicClient = getPublicClient()
-  const receipt = await publicClient.getTransactionReceipt({ hash: payment.txHash })
+
+  let receipt
+  try {
+    receipt = await publicClient.getTransactionReceipt({ hash: payment.txHash })
+  } catch {
+    throw new Error('Transaction not confirmed on chain')
+  }
 
   if (!receipt) {
     throw new Error('Transaction not confirmed on chain')
