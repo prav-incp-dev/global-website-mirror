@@ -24,16 +24,17 @@ const transferEventAbi = {
 const verifyPaymentOnChain = async (payment) => {
   const publicClient = getPublicClient()
   const receipt = await publicClient.getTransactionReceipt({ hash: payment.txHash })
-  if (!receipt || receipt.status !== 'success') {
+
+  if (!receipt) {
     throw new Error('Transaction not confirmed on chain')
+  }
+
+  if (receipt.status !== 'success') {
+    throw new Error('Transaction reverted')
   }
 
   if (getAddress(receipt.to) !== getAddress(payment.tokenContract)) {
     throw new Error('Token contract mismatch')
-  }
-
-  if (getAddress(receipt.from) !== getAddress(payment.fromWallet)) {
-    throw new Error('Sender mismatch')
   }
 
   const expectedAmount = parseUnits(payment.amount.toString(), payment.tokenDecimals)
@@ -50,6 +51,10 @@ const verifyPaymentOnChain = async (payment) => {
 
   if (!transferLog) {
     throw new Error('Transfer details do not match expected payment parameters')
+  }
+
+  if (getAddress(transferLog.args.from) !== getAddress(payment.fromWallet)) {
+    throw new Error('Sender mismatch')
   }
 
   return receipt

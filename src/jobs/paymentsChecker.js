@@ -20,6 +20,13 @@ async function cancelPayments(prisma, payments = []) {
   ])
 }
 
+const DEFINITIVE_VERIFICATION_ERRORS = [
+  'Transaction reverted',
+  'Token contract mismatch',
+  'Sender mismatch',
+  'Transfer details do not match expected payment parameters',
+]
+
 async function verifyPayments(prisma, payments = []) {
   if (payments.length === 0) return
 
@@ -38,11 +45,15 @@ async function verifyPayments(prisma, payments = []) {
           data: { status: OrderStatus.Paid },
         }),
       ])
-    } catch {
-      await prisma.payment.update({
-        where: { id: payment.id },
-        data: { status: PaymentStatus.Failed },
-      })
+    } catch (err) {
+      // Транзиентные ошибки (например, транзакция ещё не подтверждена)
+      // не переводим в Failed — платёж остаётся Pending для повторной проверки.
+      if (DEFINITIVE_VERIFICATION_ERRORS.includes(err.message)) {
+        await prisma.payment.update({
+          where: { id: payment.id },
+          data: { status: PaymentStatus.Failed },
+        })
+      }
     }
   }
 }
@@ -99,6 +110,7 @@ export async function checkPayments(prisma, log = console) {
     where: {
       status: PaymentStatus.Pending,
       txHash: null,
+      createdAt: { lt: new Date(Date.now() - HOURS24) },
     },
     select: {
       id: true,

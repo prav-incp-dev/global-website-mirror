@@ -185,20 +185,26 @@ export default async (fastify) => {
 
         return reply.send(serializePayment(updatedPayment))
       } catch (err) {
-        const verificationErrors = [
-          'Transaction not confirmed on chain',
+        const DEFINITIVE_ERRORS = [
+          'Transaction reverted',
           'Token contract mismatch',
           'Sender mismatch',
           'Transfer details do not match expected payment parameters',
         ]
 
-        if (verificationErrors.includes(err.message)) {
+        const TRANSIENT_ERRORS = ['Transaction not confirmed on chain']
+
+        if (TRANSIENT_ERRORS.includes(err.message)) {
+          return reply.code(409).send({ error: 'Транзакция ещё не подтверждена сетью, попробуйте позже' })
+        }
+
+        if (DEFINITIVE_ERRORS.includes(err.message)) {
           await fastify.prisma.payment.update({
             where: { id: payment.id },
             data: { status: PaymentStatus.Failed },
           })
 
-          return reply.code(409).send({ error: 'Транзакция не была подтверждена сетью' })
+          return reply.code(409).send({ error: 'Транзакция не соответствует ожидаемым параметрам платежа' })
         }
 
         return reply.code(500).send({ error: 'Ошибка верификации платежа' })
