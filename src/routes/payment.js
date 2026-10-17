@@ -314,4 +314,156 @@ export default async (fastify) => {
       })
     },
   })
+
+  fastify.post('/api/payments/:id/user-cancel', {
+    schema: {
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'integer', minimum: 1 },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role === UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      const payment = await fastify.prisma.payment.findUnique({
+        where: { id: req.params.id },
+        include: { order: true },
+      })
+
+      if (!payment || payment.userId !== user.id) {
+        return reply.code(404).send({ error: 'Платеж не найден' })
+      }
+
+      if (payment.status !== PaymentStatus.Unconfirmed && payment.status !== PaymentStatus.Pending) {
+        return reply.code(409).send({ error: 'Платёж нельзя отменить в текущем статусе' })
+      }
+
+      const [updatedPayment] = await fastify.prisma.$transaction([
+        fastify.prisma.payment.update({
+          where: { id: payment.id },
+          data: {
+            status: PaymentStatus.Canceled,
+            userDecision: 'cancel',
+            userDecisionAt: new Date(),
+          },
+          include: { order: true },
+        }),
+        fastify.prisma.order.update({
+          where: { id: payment.orderId },
+          data: { status: OrderStatus.Canceled },
+        }),
+        fastify.prisma.paymentEvent.create({
+          data: {
+            paymentId: payment.id,
+            action: 'user_cancel',
+            actorUserId: user.id,
+          },
+        }),
+      ])
+
+      return reply.send({ success: true, payment: serializePayment(updatedPayment) })
+    },
+  })
+
+  fastify.post('/api/payments/:id/retry', {
+    schema: {
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'integer', minimum: 1 },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role === UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      const payment = await fastify.prisma.payment.findUnique({
+        where: { id: req.params.id },
+        include: { order: true },
+      })
+
+      if (!payment || payment.userId !== user.id) {
+        return reply.code(404).send({ error: 'Платеж не найден' })
+      }
+
+      if (payment.status !== PaymentStatus.Unconfirmed && payment.status !== PaymentStatus.Pending) {
+        return reply.code(409).send({ error: 'Повторная оплата доступна только для не подтверждённых платежей' })
+      }
+
+      if (!user.company?.wallet) {
+        return reply.code(409).send({ error: 'У компании не указан кошелек для приема платежей' })
+      }
+
+      const quantity = payment.order.quantity
+      const amountUsd = Number(payment.amount)
+
+      try {
+        const createdOrder = await fastify.prisma.order.create({
+          data: {
+            userId: user.id,
+            quantity,
+            totalAmount: amountUsd,
+            status: OrderStatus.Pending,
+            payment: {
+              create: {
+                userId: user.id,
+                companyId: user.company.id,
+                amount: amountUsd,
+                tokenSymbol: 'USDT',
+                tokenContract: usdtAddress,
+                tokenDecimals: usdtDecimals,
+                chainId,
+                toWallet: user.company.wallet,
+                status: PaymentStatus.Pending,
+              },
+            },
+          },
+          include: {
+            payment: true,
+          },
+        })
+
+        await fastify.prisma.$transaction([
+          fastify.prisma.payment.update({
+            where: { id: payment.id },
+            data: {
+              status: PaymentStatus.Canceled,
+              userDecision: 'retry',
+              userDecisionAt: new Date(),
+            },
+          }),
+          fastify.prisma.order.update({
+            where: { id: payment.orderId },
+            data: { status: OrderStatus.Canceled },
+          }),
+          fastify.prisma.paymentEvent.create({
+            data: {
+              paymentId: payment.id,
+              action: 'user_retry',
+              actorUserId: user.id,
+            },
+          }),
+        ])
+
+        return reply.send({
+          paymentId: createdOrder.payment.id,
+          orderId: createdOrder.id,
+          amountUsd,
+          quantity,
+        })
+      } catch {
+        return reply.code(500).send({ error: 'Ошибка создания повторного платежа' })
+      }
+    },
+  })
 }

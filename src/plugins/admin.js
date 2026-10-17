@@ -60,6 +60,25 @@ export default fp(async (fastify) => {
       })
     },
 
+    getUnconfirmedCount: async (user, query = '') => {
+      return fastify.prisma.payment.count({
+        where: {
+          companyId: user.company.id,
+          status: PaymentStatus.Unconfirmed,
+          ...(query
+            ? {
+                OR: [
+                  { txHash: { contains: query, mode: 'insensitive' } },
+                  { uid: { contains: query, mode: 'insensitive' } },
+                  { user: { firstName: { contains: query, mode: 'insensitive' } } },
+                  { user: { lastName: { contains: query, mode: 'insensitive' } } },
+                ],
+              }
+            : {}),
+        },
+      })
+    },
+
     setScores: async (user, { score, groupScore }) => {
       if (user.isLocked) {
         return { error: 'У пользователя уже есть продажи' }
@@ -181,7 +200,7 @@ export default fp(async (fastify) => {
       }
     },
 
-    getPayments: async (user, page = 1, limit = PAGE_LIMIT, query = '', toRefundOnly = false, sortBy = 'id') => {
+    getPayments: async (user, page = 1, limit = PAGE_LIMIT, query = '', toRefundOnly = false, sortBy = 'id', unconfirmedOnly = false) => {
       const skip = (page - 1) * limit
 
       const orderByMap = {
@@ -193,7 +212,11 @@ export default fp(async (fastify) => {
 
       const where = {
         companyId: user.company.id,
-        status: toRefundOnly ? PaymentStatus.ToRefund : { not: PaymentStatus.Canceled },
+        status: unconfirmedOnly
+          ? PaymentStatus.Unconfirmed
+          : toRefundOnly
+            ? PaymentStatus.ToRefund
+            : { not: PaymentStatus.Canceled },
         ...(query
           ? {
               OR: [

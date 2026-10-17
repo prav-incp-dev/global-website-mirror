@@ -162,3 +162,32 @@ export const sendContactRequestEmail = async ({ user, message, adminEmails, atta
 
   return info
 }
+
+/**
+ * Notifies the user that a payment was not found on-chain and asks
+ * to retry or cancel the purchase.
+ */
+export const sendPaymentUnconfirmedEmail = async (user, payment) => {
+  const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@ourhouse.app'
+  const transport = createTransport()
+  const link = `${process.env.BASE_URL}/home`
+
+  const amount = Number(payment.amount)
+  const date = new Date(payment.createdAt).toLocaleString('ru-RU')
+
+  const info = await transport.sendMail({
+    from: `"INCP PK ND" <${fromEmail}>`,
+    to: user.email,
+    subject: 'Поступление по оплате не обнаружено',
+    text: `Здравствуйте ${user.firstName || user.nick || 'уважаемый пользователь'}!\n\nПо вашему платежу на сумму ${amount} USDT от ${date} поступление в сети не обнаружено.\n\nВы можете оплатить повторно или отменить покупку в личном кабинете:\n${link}\n\nЕсли вы уже отправили средства, убедитесь, что транзакция подтверждена сетью, и свяжитесь с поддержкой.\n\n— INCP`,
+    html: `<p>Здравствуйте ${user.firstName || user.nick || 'уважаемый пользователь'}!</p>
+           <p>По вашему платежу на сумму <strong>${amount} USDT</strong> от ${date} поступление в сети не обнаружено.</p>
+           <p>Вы можете <a href="${link}">оплатить повторно или отменить покупку</a> в личном кабинете.</p>
+           <p>Если вы уже отправили средства, убедитесь, что транзакция подтверждена сетью, и свяжитесь с поддержкой.</p>
+           <p>— INCP</p>`,
+  })
+
+  processMailResult(info, user)
+
+  return info
+}

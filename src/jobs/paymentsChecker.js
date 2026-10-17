@@ -1,6 +1,7 @@
 import { OrderStatus, PaymentStatus, UserRole } from '../generated/prisma/client'
 import { HOURS24, MINUTES15 } from '../lib/constants.js'
 import { verifyPaymentOnChain } from '../lib/payment.js'
+import { sendPaymentUnconfirmedEmail } from '../services/emailService.js'
 
 async function cancelPayments(prisma, payments = []) {
   if (payments.length === 0) return
@@ -105,6 +106,44 @@ async function finalizePayments(prisma, payments = [], log = console) {
   }
 }
 
+async function notifyUnconfirmedPayments(prisma, log = console) {
+  const cutoff = new Date(Date.now() - HOURS24)
+
+  const payments = await prisma.payment.findMany({
+    where: {
+      status: PaymentStatus.Pending,
+      txHash: { not: null },
+      notifiedAt: null,
+      createdAt: { lt: cutoff },
+    },
+    include: { user: true },
+  })
+
+  for (const payment of payments) {
+    try {
+      await prisma.$transaction([
+        prisma.payment.update({
+          where: { id: payment.id },
+          data: { status: PaymentStatus.Unconfirmed, notifiedAt: new Date() },
+        }),
+        prisma.paymentEvent.create({
+          data: {
+            paymentId: payment.id,
+            action: 'admin_notify',
+            note: 'Автоматическое уведомление по таймауту 24 часа',
+          },
+        }),
+      ])
+
+      await sendPaymentUnconfirmedEmail(payment.user, payment)
+    } catch (err) {
+      log.info(`Failed to notify unconfirmed payment ${payment.id}: ${err.message}`)
+    }
+  }
+
+  return payments.length
+}
+
 export async function checkPayments(prisma, log = console) {
   const paymentsToCancel = await prisma.payment.findMany({
     where: {
@@ -179,7 +218,9 @@ export async function checkPayments(prisma, log = console) {
 
   await finalizePayments(prisma, paymentsToFinalize, log)
 
+  const notifiedCount = await notifyUnconfirmedPayments(prisma, log)
+
   log.info(
-    `${paymentsToCancel.length} payments canceled, ${paymentsToVerify.length} payments verified, ${paymentsToFinalize.length} payments finalized`,
+    `${paymentsToCancel.length} payments canceled, ${paymentsToVerify.length} payments verified, ${paymentsToFinalize.length} payments finalized, ${notifiedCount} unconfirmed notified`,
   )
 }

@@ -18,16 +18,16 @@ import { usePaymentsContext } from '../PaymentsContext'
 const TX_HASH_REGEXP = /^0x[a-fA-F0-9]{64}$/
 const WALLET_REGEXP = /^0x[a-fA-F0-9]{40}$/
 
-const PurchaseModal = ({ onClose }) => {
+const PurchaseModal = ({ onClose, retryPayment = null }) => {
   const { csrfToken, addPayment, profile = {}, prices = {} } = usePaymentsContext()
-  const [quantity, setQuantity] = useState(0)
+  const [quantity, setQuantity] = useState(retryPayment?.quantity ?? 0)
   const [isPaying, setIsPaying] = useState(false)
   const [payError, setPayError] = useState('')
   const [loaderText, setLoaderText] = useState('')
 
   // QR payment state
-  const [mode, setMode] = useState('wallet')
-  const [qrPaymentId, setQrPaymentId] = useState(null)
+  const [mode, setMode] = useState(retryPayment ? 'qr' : 'wallet')
+  const [qrPaymentId, setQrPaymentId] = useState(retryPayment?.paymentId ?? null)
   const [txHash, setTxHash] = useState('')
   const [fromWallet, setFromWallet] = useState('')
   const [qrError, setQrError] = useState('')
@@ -36,7 +36,7 @@ const PurchaseModal = ({ onClose }) => {
   const priceKeys = Object.keys(prices).map(Number)
   const minQuantity = priceKeys.length > 0 ? Math.min(...priceKeys) : 0
   const maxQuantity = Math.max(0, ...priceKeys)
-  const price = prices[quantity] ?? 0
+  const price = retryPayment ? retryPayment.amountUsd : (prices[quantity] ?? 0)
 
   const companyWallet = profile?.companyWallet || ''
 

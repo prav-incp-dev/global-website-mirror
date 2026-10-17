@@ -16,6 +16,7 @@ export const PaymentsProvider = ({
   refundFee,
   profile = {},
   prices = {},
+  onRetry,
   children,
 }) => {
   const [payments, setPayments] = useState(initialPayments)
@@ -30,7 +31,7 @@ export const PaymentsProvider = ({
 
   return (
     <PaymentsContext.Provider
-      value={{ payments, setPayments, addPayment, updatePayment, csrfToken, refundFee, profile, prices }}
+      value={{ payments, setPayments, addPayment, updatePayment, csrfToken, refundFee, profile, prices, onRetry }}
     >
       {children}
     </PaymentsContext.Provider>

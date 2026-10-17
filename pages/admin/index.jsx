@@ -26,11 +26,12 @@ export const getData = async ({ server, req, reply }) => {
   const company = await server.admin.getCompany(user)
   const setting = await server.admin.getSetting(user)
   const { refundFee } = setting.general
-  const [clientsData, orphansCount, paymentsData, toRefundCount] = await Promise.all([
+  const [clientsData, orphansCount, paymentsData, toRefundCount, unconfirmedCount] = await Promise.all([
     server.admin.getClients(user),
     server.admin.getOrphansCount(user),
     server.admin.getPayments(user),
     server.admin.getToRefundCount(user),
+    server.admin.getUnconfirmedCount(user),
   ])
   return {
     profile: {
@@ -43,6 +44,7 @@ export const getData = async ({ server, req, reply }) => {
     orphansCount,
     payments: paymentsData,
     toRefundCount,
+    unconfirmedCount,
     refundFee,
     csrfToken,
   }
@@ -64,6 +66,7 @@ const Admin = () => {
     orphansCount = 0,
     payments = {},
     toRefundCount = 0,
+    unconfirmedCount = 0,
     refundFee = 5,
     csrfToken = '',
   } = data
@@ -161,6 +164,7 @@ const Admin = () => {
               totalPages: payments.totalPages,
             }}
             initialToRefundCount={toRefundCount}
+            initialUnconfirmedCount={unconfirmedCount}
             refundFee={refundFee}
             csrfToken={csrfToken}
             companyWallet={company?.wallet}

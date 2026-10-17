@@ -9,6 +9,7 @@ const Payments = ({ profile, initialPayments = [], csrfToken, refundFee, prices 
   const hasTokenConfig = Boolean(usdtAddress)
 
   const [modalOpen, setModalOpen] = useState(false)
+  const [retryPayment, setRetryPayment] = useState(null)
   const hasWallet = Boolean(profile?.wallet)
   const hasCompanyWallet = Boolean(profile?.companyWallet)
 
@@ -26,6 +27,7 @@ const Payments = ({ profile, initialPayments = [], csrfToken, refundFee, prices 
       refundFee={refundFee}
       profile={profile}
       prices={prices}
+      onRetry={setRetryPayment}
     >
       <div className={styles.container}>
         <button className={styles.buyButton} disabled={!!buyDisabledReason} onClick={() => setModalOpen(true)}>
@@ -36,6 +38,7 @@ const Payments = ({ profile, initialPayments = [], csrfToken, refundFee, prices 
         <PaymentsList />
 
         {modalOpen && <PurchaseModal onClose={() => setModalOpen(false)} />}
+        {retryPayment && <PurchaseModal retryPayment={retryPayment} onClose={() => setRetryPayment(null)} />}
       </div>
     </PaymentsProvider>
   )

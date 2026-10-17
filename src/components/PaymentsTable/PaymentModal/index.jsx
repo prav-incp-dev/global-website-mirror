@@ -24,12 +24,18 @@ const PaymentModal = ({ onClose }) => {
   const [showChangeUID, setShowChangeUID] = useState(false)
   const [showRefund, setShowRefund] = useState(false)
   const [showSplit, setShowSplit] = useState(false)
+  const [verifyResult, setVerifyResult] = useState(null)
+  const [showCancel, setShowCancel] = useState(false)
+  const [cancelNote, setCancelNote] = useState('')
 
   if (!selectedPayment) return null
 
   const isCompleted = selectedPayment.status === PaymentStatus.Completed
   const isFailed = selectedPayment.status === 'Failed'
   const isToRefund = selectedPayment.status === 'ToRefund'
+  const isUnconfirmed = selectedPayment.status === 'Unconfirmed'
+  const isPending = selectedPayment.status === 'Pending'
+  const canVerify = isPending || isUnconfirmed
 
   const handleComplete = async () => {
     setLoading(true)
@@ -106,6 +112,84 @@ const PaymentModal = ({ onClose }) => {
     }
   }
 
+  const handleVerify = async () => {
+    setLoading(true)
+    setError('')
+    setVerifyResult(null)
+
+    try {
+      const res = await fetch(`/api/admin/payments/${selectedPayment.id}/verify`, {
+        method: 'POST',
+        headers: {
+          'x-csrf-token': csrfToken,
+        },
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error)
+
+      setVerifyResult(result.result)
+    } catch (err) {
+      setError(err.message || 'Ошибка проверки поступления')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleNotify = async () => {
+    setLoading(true)
+    setError('')
+
+    try {
+      const res = await fetch(`/api/admin/payments/${selectedPayment.id}/notify`, {
+        method: 'POST',
+        headers: {
+          'x-csrf-token': csrfToken,
+        },
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error)
+
+      updateSelectedPayment({ id: selectedPayment.id, status: 'Unconfirmed' })
+      setVerifyResult('not_found')
+    } catch (err) {
+      setError(err.message || 'Ошибка уведомления пользователя')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAdminCancel = async () => {
+    if (!cancelNote.trim()) {
+      setError('Укажите причину отмены')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      const res = await fetch(`/api/admin/payments/${selectedPayment.id}/cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
+        body: JSON.stringify({ note: cancelNote.trim() }),
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error)
+
+      updateSelectedPayment({ id: selectedPayment.id, status: 'Canceled' })
+      setShowCancel(false)
+      setCancelNote('')
+      await fetchPayments()
+    } catch (err) {
+      setError(err.message || 'Ошибка принудительной отмены')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <Modal title="Информация о платеже" onClose={onClose}>
       {showChangeUID && <ChangeUIDModal onClose={() => setShowChangeUID(false)} />}
@@ -142,7 +226,7 @@ const PaymentModal = ({ onClose }) => {
         </div>
       </div>
 
-      {(isCompleted || isFailed || isToRefund || selectedPayment.uid) && (
+      {(isCompleted || isFailed || isToRefund || selectedPayment.uid || canVerify) && (
         <div className={styles.actions}>
           {isCompleted && selectedPayment.finalized && (
             <button className={styles.actionButton} onClick={() => setShowSplit(true)}>
@@ -192,7 +276,60 @@ const PaymentModal = ({ onClose }) => {
               Изменить номер платежа
             </button>
           )}
+          {canVerify && (
+            <>
+              <button className={styles.actionButton} onClick={handleVerify} disabled={loading}>
+                {loading ? 'Проверка…' : 'Проверить поступление'}
+              </button>
+              {verifyResult === 'found' && (
+                <button
+                  className={styles.actionButton}
+                  onClick={async () => {
+                    if (window.confirm(COMPLETE_CONFIRMATION_TEXT)) await handleComplete()
+                  }}
+                  disabled={loading}
+                >
+                  Зачесть платеж
+                </button>
+              )}
+              {(verifyResult === 'not_found' || isUnconfirmed) && (
+                <button className={styles.actionButton} onClick={handleNotify} disabled={loading}>
+                  Уведомить пользователя
+                </button>
+              )}
+              {(verifyResult === 'not_found' || verifyResult === 'mismatch' || isUnconfirmed) && (
+                <button className={styles.actionButton} onClick={() => setShowCancel(true)} disabled={loading}>
+                  Отменить принудительно
+                </button>
+              )}
+              {verifyResult === 'not_found' && <span className={styles.error}>Поступление не обнаружено</span>}
+              {verifyResult === 'mismatch' && (
+                <span className={styles.error}>Транзакция не соответствует параметрам платежа</span>
+              )}
+            </>
+          )}
           {error && <span className={styles.error}>{error}</span>}
+        </div>
+      )}
+
+      {showCancel && (
+        <div className={styles.cancelForm}>
+          <label className={styles.cancelLabel}>Причина отмены (обязательно)</label>
+          <textarea
+            className={styles.cancelInput}
+            value={cancelNote}
+            onChange={(event) => setCancelNote(event.target.value)}
+            rows={3}
+            maxLength={500}
+          />
+          <div className={styles.cancelActions}>
+            <button className={styles.actionButton} onClick={handleAdminCancel} disabled={loading}>
+              {loading ? 'Отмена…' : 'Подтвердить отмену'}
+            </button>
+            <button className={styles.actionButton} onClick={() => setShowCancel(false)} disabled={loading}>
+              Закрыть
+            </button>
+          </div>
         </div>
       )}
     </Modal>

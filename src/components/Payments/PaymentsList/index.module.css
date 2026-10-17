@@ -183,3 +183,47 @@
   font-size: 0.8125rem;
   line-height: 1.45;
 }
+
+.unconfirmedBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-top: 4px;
+  background: rgba(255, 196, 0, 0.06);
+  border: 1px solid rgba(255, 196, 0, 0.2);
+  border-radius: 8px;
+}
+
+.unconfirmedText {
+  color: #f0d060;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.unconfirmedActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.retryButton {
+  background: rgba(91, 155, 213, 0.12);
+  color: #5b9bd5;
+  border: 1px solid rgba(91, 155, 213, 0.4);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.retryButton:hover {
+  background: rgba(91, 155, 213, 0.2);
+}
+
+.retryButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -1,6 +1,7 @@
 import { stringify } from 'csv-stringify/sync'
 import { OrderStatus, PaymentStatus, UserRole } from '../generated/prisma/client'
-import { serializePayment } from '../lib/payment'
+import { serializePayment, verifyPaymentOnChain } from '../lib/payment'
+import { sendPaymentUnconfirmedEmail } from '../services/emailService.js'
 import { PAGE_LIMIT, MIN_LEVEL, MAX_LEVEL, CLIENT_WAGES_LIMIT } from '../lib/constants.js'
 import { userName } from '../../src/lib/user'
 import { uniqConstraintLabel } from '../lib/prismaHelpers.js'
@@ -305,6 +306,7 @@ export default async (fastify) => {
           limit: { type: 'integer', minimum: 1, maximum: 100, default: PAGE_LIMIT },
           query: { type: 'string' },
           toRefundOnly: { type: 'boolean', default: false },
+          unconfirmedOnly: { type: 'boolean', default: false },
           sortBy: { type: 'string', enum: ['id', 'amount', 'status'], default: 'id' },
         },
       },
@@ -315,12 +317,20 @@ export default async (fastify) => {
         return reply.code(403).send({ error: 'Доступ запрещен' })
       }
 
-      const { page = 1, limit = PAGE_LIMIT, query = '', toRefundOnly = false, sortBy = 'id' } = req.query
-      const [result, toRefundCount] = await Promise.all([
-        fastify.admin.getPayments(user, page, limit, query, toRefundOnly, sortBy),
+      const {
+        page = 1,
+        limit = PAGE_LIMIT,
+        query = '',
+        toRefundOnly = false,
+        sortBy = 'id',
+        unconfirmedOnly = false,
+      } = req.query
+      const [result, toRefundCount, unconfirmedCount] = await Promise.all([
+        fastify.admin.getPayments(user, page, limit, query, toRefundOnly, sortBy, unconfirmedOnly),
         fastify.admin.getToRefundCount(user, query),
+        fastify.admin.getUnconfirmedCount(user, query),
       ])
-      return reply.send({ ...result, toRefundCount })
+      return reply.send({ ...result, toRefundCount, unconfirmedCount })
     },
   })
 
@@ -354,8 +364,11 @@ export default async (fastify) => {
           return reply.code(403).send({ error: 'Доступ запрещен' })
         }
 
-        if (payment.status !== PaymentStatus.Failed) {
-          return reply.code(409).send({ error: 'Зачесть можно только платеж со статусом «Ошибка»' })
+        const completable = [PaymentStatus.Pending, PaymentStatus.Unconfirmed, PaymentStatus.Failed]
+        if (!completable.includes(payment.status)) {
+          return reply
+            .code(409)
+            .send({ error: 'Зачесть можно только платёж в статусе «В обработке», «Не подтверждён» или «Ошибка»' })
         }
 
         const [updatedPayment] = await fastify.prisma.$transaction([
@@ -672,6 +685,188 @@ export default async (fastify) => {
         }
 
         return reply.code(500).send({ error: 'Ошибка обновления номера платежа' })
+      }
+    },
+  })
+
+  fastify.post('/api/admin/payments/:id/verify', {
+    schema: {
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'integer', minimum: 1 },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      const payment = await fastify.prisma.payment.findUnique({
+        where: { id: req.params.id },
+        include: { order: true },
+      })
+
+      if (!payment) {
+        return reply.code(404).send({ error: 'Платеж не найден' })
+      }
+
+      if (payment.companyId !== user.company.id) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      if (payment.status !== PaymentStatus.Pending && payment.status !== PaymentStatus.Unconfirmed) {
+        return reply.code(409).send({ error: 'Проверить можно только платёж в статусе «В обработке» или «Не подтверждён»' })
+      }
+
+      if (!payment.txHash) {
+        return reply.code(409).send({ error: 'У платежа не указан хеш транзакции' })
+      }
+
+      try {
+        await verifyPaymentOnChain(payment)
+        return reply.send({ success: true, result: 'found' })
+      } catch (err) {
+        const notFound = err.message === 'Transaction not confirmed on chain'
+        return reply.send({ success: false, result: notFound ? 'not_found' : 'mismatch', error: err.message })
+      }
+    },
+  })
+
+  fastify.post('/api/admin/payments/:id/notify', {
+    schema: {
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'integer', minimum: 1 },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      try {
+        const payment = await fastify.prisma.payment.findUnique({
+          where: { id: req.params.id },
+          include: { order: true, user: true },
+        })
+
+        if (!payment) {
+          return reply.code(404).send({ error: 'Платеж не найден' })
+        }
+
+        if (payment.companyId !== user.company.id) {
+          return reply.code(403).send({ error: 'Доступ запрещен' })
+        }
+
+        if (payment.status !== PaymentStatus.Pending && payment.status !== PaymentStatus.Unconfirmed) {
+          return reply.code(409).send({ error: 'Уведомить можно только платёж в статусе «В обработке» или «Не подтверждён»' })
+        }
+
+        const updatedPayment = await fastify.prisma.payment.update({
+          where: { id: payment.id },
+          data: { status: PaymentStatus.Unconfirmed, notifiedAt: new Date() },
+          include: { order: true },
+        })
+
+        await fastify.prisma.paymentEvent.create({
+          data: {
+            paymentId: payment.id,
+            action: 'admin_notify',
+            actorUserId: user.id,
+          },
+        })
+
+        await sendPaymentUnconfirmedEmail(payment.user, updatedPayment)
+
+        return reply.send({ success: true, payment: serializePayment(updatedPayment) })
+      } catch {
+        return reply.code(500).send({ error: 'Ошибка уведомления пользователя' })
+      }
+    },
+  })
+
+  fastify.post('/api/admin/payments/:id/cancel', {
+    schema: {
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'integer', minimum: 1 },
+        },
+      },
+      body: {
+        type: 'object',
+        required: ['note'],
+        properties: {
+          note: { type: 'string', minLength: 1, maxLength: 500 },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      try {
+        const payment = await fastify.prisma.payment.findUnique({
+          where: { id: req.params.id },
+          include: { order: true },
+        })
+
+        if (!payment) {
+          return reply.code(404).send({ error: 'Платеж не найден' })
+        }
+
+        if (payment.companyId !== user.company.id) {
+          return reply.code(403).send({ error: 'Доступ запрещен' })
+        }
+
+        const cancellable = [PaymentStatus.Pending, PaymentStatus.Unconfirmed, PaymentStatus.Failed]
+        if (!cancellable.includes(payment.status)) {
+          return reply
+            .code(409)
+            .send({ error: 'Принудительно отменить можно только платёж в статусе «В обработке», «Не подтверждён» или «Ошибка»' })
+        }
+
+        const note = req.body.note.trim()
+
+        const [updatedPayment] = await fastify.prisma.$transaction([
+          fastify.prisma.payment.update({
+            where: { id: payment.id },
+            data: {
+              status: PaymentStatus.Canceled,
+              adminCanceledAt: new Date(),
+              adminCanceledBy: user.id,
+              adminCancelNote: note,
+            },
+            include: { order: true },
+          }),
+          fastify.prisma.order.update({
+            where: { id: payment.orderId },
+            data: { status: OrderStatus.Canceled },
+          }),
+          fastify.prisma.paymentEvent.create({
+            data: {
+              paymentId: payment.id,
+              action: 'admin_cancel',
+              actorUserId: user.id,
+              note,
+            },
+          }),
+        ])
+
+        return reply.send({ success: true, payment: serializePayment(updatedPayment) })
+      } catch {
+        return reply.code(500).send({ error: 'Ошибка принудительной отмены платежа' })
       }
     },
   })

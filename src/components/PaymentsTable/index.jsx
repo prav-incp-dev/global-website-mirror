@@ -18,6 +18,7 @@ const PaymentsTable = () => {
     payments,
     pagination,
     toRefundCount,
+    unconfirmedCount,
     loading,
     selectedPayment,
     setSelectedPayment,
@@ -26,6 +27,8 @@ const PaymentsTable = () => {
     setQuery,
     toRefundOnly,
     setToRefundOnly,
+    unconfirmedOnly,
+    setUnconfirmedOnly,
     sortBy,
     setSortBy,
   } = usePaymentsContext()
@@ -40,24 +43,32 @@ const PaymentsTable = () => {
     }
 
     debounceRef.current = setTimeout(() => {
-      fetchPayments(1, value, toRefundOnly, sortBy)
+      fetchPayments(1, value, toRefundOnly, sortBy, unconfirmedOnly)
     }, 300)
   }
 
   const handlePageChange = async (newPage) => {
     if (newPage < 1 || newPage > pagination.totalPages) return
-    await fetchPayments(newPage, query, toRefundOnly, sortBy)
+    await fetchPayments(newPage, query, toRefundOnly, sortBy, unconfirmedOnly)
   }
 
   const handleToRefundToggle = () => {
     const next = !toRefundOnly
     setToRefundOnly(next)
-    fetchPayments(1, query, next, sortBy)
+    if (next) setUnconfirmedOnly(false)
+    fetchPayments(1, query, next, sortBy, next ? false : unconfirmedOnly)
+  }
+
+  const handleUnconfirmedToggle = () => {
+    const next = !unconfirmedOnly
+    setUnconfirmedOnly(next)
+    if (next) setToRefundOnly(false)
+    fetchPayments(1, query, next ? false : toRefundOnly, sortBy, next)
   }
 
   const handleSortChange = (value) => {
     setSortBy(value)
-    fetchPayments(1, query, toRefundOnly, value)
+    fetchPayments(1, query, toRefundOnly, value, unconfirmedOnly)
   }
 
   useEffect(() => {
@@ -104,6 +115,13 @@ const PaymentsTable = () => {
           disabled={!toRefundCount && !toRefundOnly}
         >
           Отмена ({toRefundCount})
+        </button>
+        <button
+          className={classNames(styles.refundToggle, { [styles.refundToggleActive]: unconfirmedOnly })}
+          onClick={handleUnconfirmedToggle}
+          disabled={!unconfirmedCount && !unconfirmedOnly}
+        >
+          Не подтверждённые ({unconfirmedCount})
         </button>
         <Sorter sortBy={sortBy} onSortChange={handleSortChange} options={SORT_OPTIONS} />
         <input

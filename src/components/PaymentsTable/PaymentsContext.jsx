@@ -14,6 +14,7 @@ export const PaymentsProvider = ({
   initialPayments,
   initialPagination,
   initialToRefundCount = 0,
+  initialUnconfirmedCount = 0,
   refundFee = 5,
   csrfToken,
   companyWallet,
@@ -22,9 +23,11 @@ export const PaymentsProvider = ({
   const [payments, setPayments] = useState(initialPayments)
   const [pagination, setPagination] = useState(initialPagination)
   const [toRefundCount, setToRefundCount] = useState(initialToRefundCount)
+  const [unconfirmedCount, setUnconfirmedCount] = useState(initialUnconfirmedCount)
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [query, setQuery] = useState('')
   const [toRefundOnly, setToRefundOnly] = useState(false)
+  const [unconfirmedOnly, setUnconfirmedOnly] = useState(false)
   const [sortBy, setSortBy] = useState('id')
   const [loading, setLoading] = useState(false)
 
@@ -34,12 +37,19 @@ export const PaymentsProvider = ({
   }, [])
 
   const fetchPayments = useCallback(
-    async (page = pagination.page, searchQuery = query, filterToRefundOnly = toRefundOnly, sortField = sortBy) => {
+    async (
+      page = pagination.page,
+      searchQuery = query,
+      filterToRefundOnly = toRefundOnly,
+      sortField = sortBy,
+      filterUnconfirmedOnly = unconfirmedOnly,
+    ) => {
       setLoading(true)
       try {
         const params = new URLSearchParams({ page, limit: pagination.limit })
         if (searchQuery) params.set('query', searchQuery)
         if (filterToRefundOnly) params.set('toRefundOnly', 'true')
+        if (filterUnconfirmedOnly) params.set('unconfirmedOnly', 'true')
         if (sortField) params.set('sortBy', sortField)
 
         const res = await fetch(`/api/admin/payments?${params}`, {
@@ -59,12 +69,15 @@ export const PaymentsProvider = ({
           if (result.toRefundCount != null) {
             setToRefundCount(result.toRefundCount)
           }
+          if (result.unconfirmedCount != null) {
+            setUnconfirmedCount(result.unconfirmedCount)
+          }
         }
       } finally {
         setLoading(false)
       }
     },
-    [csrfToken, pagination.limit, pagination.page, query, toRefundOnly, sortBy],
+    [csrfToken, pagination.limit, pagination.page, query, toRefundOnly, unconfirmedOnly, sortBy],
   )
 
   return (
@@ -76,6 +89,8 @@ export const PaymentsProvider = ({
         setPagination,
         toRefundCount,
         setToRefundCount,
+        unconfirmedCount,
+        setUnconfirmedCount,
         loading,
         setLoading,
         refundFee,
@@ -89,6 +104,8 @@ export const PaymentsProvider = ({
         setQuery,
         toRefundOnly,
         setToRefundOnly,
+        unconfirmedOnly,
+        setUnconfirmedOnly,
         sortBy,
         setSortBy,
       }}

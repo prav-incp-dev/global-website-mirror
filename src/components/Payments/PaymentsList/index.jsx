@@ -9,9 +9,11 @@ import { PAYMENT_STATUSES } from '@/lib/payment'
 const getConfirmationText = (fee) => `Вы уверены, что хотите отменить платеж? При отмене взимается комиссия ${fee}%`
 
 const PaymentsList = () => {
-  const { payments, csrfToken, refundFee = 5, updatePayment } = usePaymentsContext()
+  const { payments, csrfToken, refundFee = 5, updatePayment, onRetry } = usePaymentsContext()
   const [cancelError, setCancelError] = useState('')
+  const [actionError, setActionError] = useState('')
   const [cancelingPaymentId, setCancelingPaymentId] = useState()
+  const [actionPaymentId, setActionPaymentId] = useState()
   const [expandedPaymentIds, setExpandedPaymentIds] = useState([])
 
   const handleCancel = async (paymentId) => {
@@ -43,6 +45,65 @@ const PaymentsList = () => {
     setExpandedPaymentIds((current) =>
       current.includes(paymentId) ? current.filter((id) => id !== paymentId) : current.concat(paymentId),
     )
+  }
+
+  const handleRetry = async (payment) => {
+    setActionError('')
+    setActionPaymentId(payment.id)
+
+    try {
+      const response = await fetch(`/api/payments/${payment.id}/retry`, {
+        method: 'POST',
+        headers: {
+          'x-csrf-token': csrfToken,
+        },
+      })
+
+      const result = await response.json()
+      if (!response.ok) {
+        throw new Error(result.error || 'Ошибка повторной оплаты')
+      }
+
+      updatePayment({ id: payment.id, status: 'Canceled' })
+
+      if (onRetry) {
+        onRetry({
+          paymentId: result.paymentId,
+          orderId: result.orderId,
+          amountUsd: result.amountUsd,
+          quantity: result.quantity,
+        })
+      }
+    } catch (err) {
+      setActionError(err.message || 'Ошибка повторной оплаты')
+    } finally {
+      setActionPaymentId(null)
+    }
+  }
+
+  const handleUserCancel = async (payment) => {
+    setActionError('')
+    setActionPaymentId(payment.id)
+
+    try {
+      const response = await fetch(`/api/payments/${payment.id}/user-cancel`, {
+        method: 'POST',
+        headers: {
+          'x-csrf-token': csrfToken,
+        },
+      })
+
+      const result = await response.json()
+      if (!response.ok) {
+        throw new Error(result.error || 'Ошибка отмены покупки')
+      }
+
+      if (result.payment) updatePayment(result.payment)
+    } catch (err) {
+      setActionError(err.message || 'Ошибка отмены покупки')
+    } finally {
+      setActionPaymentId(null)
+    }
   }
 
   return (
@@ -81,6 +142,29 @@ const PaymentsList = () => {
                   <div className={styles.details}>
                     <span className={styles.dateValue}>{new Date(payment.createdAt).toLocaleString('ru-RU')}</span>
                     <span className={styles.hashValue}>{payment.txHash || '-'}</span>
+                    {payment.status === 'Unconfirmed' && (
+                      <div className={styles.unconfirmedBlock}>
+                        <span className={styles.unconfirmedText}>
+                          Поступление не обнаружено. Оплатите повторно или отмените покупку.
+                        </span>
+                        <div className={styles.unconfirmedActions}>
+                          <button
+                            className={styles.retryButton}
+                            onClick={() => handleRetry(payment)}
+                            disabled={actionPaymentId === payment.id}
+                          >
+                            {actionPaymentId === payment.id ? 'Отправка...' : 'Оплатить повторно'}
+                          </button>
+                          <button
+                            className={styles.cancelButton}
+                            onClick={() => handleUserCancel(payment)}
+                            disabled={actionPaymentId === payment.id}
+                          >
+                            Отменить покупку
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     {canCancel ? (
                       <button
                         className={styles.cancelButton}
@@ -103,6 +187,7 @@ const PaymentsList = () => {
       )}
 
       {cancelError && <p className={styles.errorText}>{cancelError}</p>}
+      {actionError && <p className={styles.errorText}>{actionError}</p>}
     </div>
   )
 }
