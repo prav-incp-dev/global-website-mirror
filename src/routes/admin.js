@@ -1,12 +1,16 @@
 import { stringify } from 'csv-stringify/sync'
+import bcrypt from 'bcryptjs'
 import { OrderStatus, PaymentStatus, UserRole } from '../generated/prisma/client'
 import { serializePayment, verifyPaymentOnChain } from '../lib/payment'
-import { sendPaymentUnconfirmedEmail } from '../services/emailService.js'
+import { encryptSecret, decryptSecret } from '../lib/crypto.js'
+import { sendPaymentUnconfirmedEmail, sendTestEmail, setEmailSettings } from '../services/emailService.js'
 import { PAGE_LIMIT, MIN_LEVEL, MAX_LEVEL, CLIENT_WAGES_LIMIT } from '../lib/constants.js'
 import { userName } from '../../src/lib/user'
 import { uniqConstraintLabel } from '../lib/prismaHelpers.js'
 
 export default async (fastify) => {
+  const emailTestRateLimit = new Map()
+
   fastify.put('/api/admin/profile', {
     schema: {
       body: {
@@ -1123,6 +1127,179 @@ export default async (fastify) => {
         return reply.send({ success: true, setting })
       } catch {
         return reply.code(500).send({ error: 'Ошибка сохранения настроек' })
+      }
+    },
+  })
+
+  fastify.put('/api/admin/email-settings', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['fromEmail', 'fromName', 'smtpHost', 'smtpPort', 'smtpUser', 'smtpTls'],
+        properties: {
+          fromEmail: { type: 'string', pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$' },
+          fromName: { type: 'string', minLength: 1, maxLength: 120 },
+          smtpHost: { type: 'string', minLength: 1, maxLength: 255 },
+          smtpPort: { type: 'integer', minimum: 1, maximum: 65535 },
+          smtpUser: { type: 'string', minLength: 1, maxLength: 255 },
+          smtpPass: { type: 'string', minLength: 1, maxLength: 255 },
+          smtpTls: { type: 'boolean' },
+          adminPassword: { type: 'string' },
+          reason: { type: 'string', maxLength: 500 },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      try {
+        const setting = await fastify.prisma.setting.findUnique({
+          where: { companyId: user.company.id },
+        })
+
+        const general = setting?.general ?? {}
+        const existingEmail = general.email ?? {}
+
+        const {
+          fromEmail,
+          fromName,
+          smtpHost,
+          smtpPort,
+          smtpUser,
+          smtpPass,
+          smtpTls,
+          adminPassword,
+          reason,
+        } = req.body
+
+        const currentTls =
+          typeof existingEmail.smtpTls === 'boolean' ? existingEmail.smtpTls : process.env.SMTP_TLS === 'true'
+        const currentHost = existingEmail.smtpHost ?? process.env.SMTP_HOST
+        const currentPort = existingEmail.smtpPort ?? (parseInt(process.env.SMTP_PORT, 10) || 587)
+        const currentUser = existingEmail.smtpUser ?? process.env.SMTP_USER
+
+        const smtpChanged =
+          smtpHost !== currentHost ||
+          smtpPort !== currentPort ||
+          smtpUser !== currentUser ||
+          smtpTls !== currentTls ||
+          Boolean(smtpPass)
+
+        if (smtpChanged) {
+          if (!adminPassword) {
+            return reply.code(400).send({ error: 'Для изменения SMTP-настроек требуется пароль администратора' })
+          }
+
+          const validPassword = await bcrypt.compare(adminPassword, user.password)
+          if (!validPassword) {
+            return reply.code(403).send({ error: 'Неверный пароль администратора' })
+          }
+        }
+
+        const email = {
+          ...existingEmail,
+          fromEmail,
+          fromName,
+          smtpHost,
+          smtpPort,
+          smtpUser,
+          smtpTls,
+        }
+
+        if (smtpPass) {
+          email.smtpPassEncrypted = encryptSecret(smtpPass)
+        }
+
+        const updatedGeneral = { ...general, email }
+
+        await fastify.prisma.setting.upsert({
+          where: { companyId: user.company.id },
+          update: { general: updatedGeneral },
+          create: {
+            companyId: user.company.id,
+            general: updatedGeneral,
+            levels: {},
+            prices: {},
+          },
+        })
+
+        setEmailSettings({
+          fromEmail: email.fromEmail,
+          fromName: email.fromName,
+          smtpHost: email.smtpHost,
+          smtpPort: email.smtpPort,
+          smtpUser: email.smtpUser,
+          smtpPass: email.smtpPassEncrypted ? decryptSecret(email.smtpPassEncrypted) : process.env.SMTP_PASS,
+          smtpTls: email.smtpTls,
+        })
+
+        await fastify.prisma.adminEvent.create({
+          data: {
+            actorUserId: user.id,
+            action: 'email_settings_update',
+            target: 'email',
+            note: JSON.stringify({
+              fromEmail,
+              fromName,
+              smtpHost,
+              smtpPort,
+              smtpUser,
+              smtpTls,
+              passwordChanged: Boolean(smtpPass),
+              reason: reason || null,
+            }),
+          },
+        })
+
+        return reply.send({ success: true })
+      } catch {
+        return reply.code(500).send({ error: 'Ошибка сохранения настроек почты' })
+      }
+    },
+  })
+
+  fastify.post('/api/admin/email/test', {
+    schema: {
+      body: {
+        type: 'object',
+        properties: {
+          to: { type: 'string', pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$' },
+        },
+      },
+    },
+    handler: async (req, reply) => {
+      const user = await fastify.auth.getUser(req)
+      if (!user || user.role !== UserRole.Admin) {
+        return reply.code(403).send({ error: 'Доступ запрещен' })
+      }
+
+      const now = Date.now()
+      const lastSentAt = emailTestRateLimit.get(user.id) || 0
+      if (now - lastSentAt < 30000) {
+        return reply.code(429).send({ error: 'Слишком часто. Повторите через 30 секунд.' })
+      }
+      emailTestRateLimit.set(user.id, now)
+
+      const settings = await fastify.admin.getEmailSettings(user)
+      const to = req.body?.to || settings?.fromEmail
+
+      try {
+        await sendTestEmail(to)
+
+        await fastify.prisma.adminEvent.create({
+          data: {
+            actorUserId: user.id,
+            action: 'email_test_sent',
+            target: to,
+          },
+        })
+
+        return reply.send({ success: true })
+      } catch (err) {
+        return reply.code(500).send({ error: err.message || 'Ошибка отправки тестового письма' })
       }
     },
   })

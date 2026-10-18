@@ -4,6 +4,7 @@ import { useRouteContext } from '@fastify/react/client'
 import { useNavigate } from 'react-router'
 import { UserRole } from '@/generated/prisma/enums'
 import GeneralSettings from '@/components/Settings/GeneralSettings'
+import EmailSettings from '@/components/Settings/EmailSettings'
 import LevelSettings from '@/components/Settings/LevelSettings'
 import PriceSettings from '@/components/Settings/PriceSettings'
 import { HOURS24_IN_MINUTES } from '@/lib/constants'
@@ -22,13 +23,14 @@ export const getData = async ({ server, req, reply }) => {
 
   const csrfToken = reply.generateCsrf()
   const setting = await server.admin.getSetting(user)
+  const emailSettings = await server.admin.getEmailSettings(user)
 
-  return { setting, csrfToken }
+  return { setting, emailSettings, csrfToken }
 }
 
 const AdminSettings = () => {
   const { data } = useRouteContext()
-  const { setting = null, csrfToken = '' } = data
+  const { setting = null, csrfToken = '', emailSettings = null } = data
   const navigate = useNavigate()
 
   const [activeScreen, setActiveScreen] = useState('general')
@@ -161,6 +163,10 @@ const AdminSettings = () => {
             {saving ? 'Сохранение...' : 'Сохранить'}
           </button>
         </form>
+
+        {activeScreen === 'general' && (
+          <EmailSettings initial={emailSettings ?? {}} csrfToken={csrfToken} onFlash={showFlash} />
+        )}
       </div>
     </div>
   )

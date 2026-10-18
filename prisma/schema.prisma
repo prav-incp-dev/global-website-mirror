@@ -84,6 +84,7 @@ model User {
   targetedInteractions  Interaction[] @relation("TargetInteractions")
   adminCanceledPayments Payment[]     @relation("AdminCanceledPayments")
   paymentEvents         PaymentEvent[] @relation("PaymentEventActor")
+  adminEvents           AdminEvent[]  @relation("AdminEventActor")
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
 }
@@ -219,5 +220,18 @@ model PaymentEvent {
   createdAt   DateTime @default(now())
 
   @@index([paymentId])
+  @@index([createdAt])
+}
+
+model AdminEvent {
+  id          Int      @id @default(autoincrement())
+  actorUserId Int?
+  actor       User?    @relation("AdminEventActor", fields: [actorUserId], references: [id])
+  action      String
+  target      String?
+  note        String?
+  createdAt   DateTime @default(now())
+
+  @@index([actorUserId])
   @@index([createdAt])
 }

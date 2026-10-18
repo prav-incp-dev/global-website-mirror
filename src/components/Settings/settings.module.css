@@ -124,3 +124,100 @@
     width: 100px;
   }
 }
+
+.emailSection {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.emailTitle {
+  color: #d4af37;
+  font-size: 1.05rem;
+  margin: 0 0 6px;
+}
+
+.emailHint {
+  color: #999;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  margin: 0 0 18px;
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #bbb;
+  font-size: 0.875rem;
+}
+
+.emailError {
+  margin: 0;
+  color: #ff8b8b;
+  font-size: 0.8125rem;
+}
+
+.emailSuccess {
+  margin: 0;
+  color: #7ed957;
+  font-size: 0.8125rem;
+}
+
+.emailActions {
+  display: flex;
+  gap: 10px;
+}
+
+.emailSaveButton {
+  padding: 12px 20px;
+  background: #d4af37;
+  color: #1a1a1a;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.emailSaveButton:hover {
+  background: #f0d060;
+}
+
+.emailSaveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.emailTestBlock {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.emailTestRow {
+  display: flex;
+  gap: 10px;
+}
+
+.emailTestButton {
+  padding: 0 18px;
+  background: transparent;
+  color: #d4af37;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.emailTestButton:hover {
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.emailTestButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

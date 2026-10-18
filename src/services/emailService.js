@@ -6,6 +6,34 @@ import { userName } from '../lib/user.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
+const DEFAULT_FROM_EMAIL = 'support@in-cp.com'
+const DEFAULT_FROM_NAME = 'INCP PK ND'
+
+let cachedEmailSettings = null
+
+export const setEmailSettings = (settings) => {
+  cachedEmailSettings = settings
+}
+
+export const getEmailSettings = () => {
+  if (cachedEmailSettings) return cachedEmailSettings
+
+  return {
+    fromEmail: process.env.FROM_EMAIL || process.env.SMTP_USER || DEFAULT_FROM_EMAIL,
+    fromName: DEFAULT_FROM_NAME,
+    smtpHost: process.env.SMTP_HOST || 'smtp.gmail.com',
+    smtpPort: parseInt(process.env.SMTP_PORT, 10) || 587,
+    smtpUser: process.env.SMTP_USER,
+    smtpPass: process.env.SMTP_PASS,
+    smtpTls: process.env.SMTP_TLS === 'true',
+  }
+}
+
+const getFrom = () => {
+  const settings = getEmailSettings()
+  return `"${settings.fromName || DEFAULT_FROM_NAME}" <${settings.fromEmail || DEFAULT_FROM_EMAIL}>`
+}
+
 /**
  * Creates a nodemailer transport.
  * In test environment, uses jsonTransport so emails are captured
@@ -14,15 +42,17 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const createTransport = () => {
   if (process.env.NODE_ENV === 'test') return nodemailer.createTransport({ jsonTransport: true })
 
+  const settings = getEmailSettings()
+
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT, 10) || 587,
+    host: settings.smtpHost,
+    port: settings.smtpPort,
     secure: false,
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      user: settings.smtpUser,
+      pass: settings.smtpPass,
     },
-    requireTLS: process.env.SMTP_TLS === 'true' ? true : false,
+    requireTLS: settings.smtpTls,
   })
 }
 
@@ -48,12 +78,11 @@ const processMailResult = (info, user) => {
  * Sends a 2FA confirmation code email to the user.
  */
 export const sendTwoFactorCode = async (user, code) => {
-  const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@ourhouse.app'
 
   const transport = createTransport()
 
   const info = await transport.sendMail({
-    from: `"INCP PK ND" <${fromEmail}>`,
+    from: getFrom(),
     to: user.email,
     subject: 'Код подтверждения для входа в систему',
     text: `Здравствуйте ${user.firstName || user.nick || 'уважаемый пользователь'},\n\nВот ваш 6-значный код подтверждения:\n\n${code}\n\nЭтот код действителен в течение 10 минут. Если вы не запрашивали этот код, просто проигнорируйте это письмо.\n\n— INCP`,
@@ -68,12 +97,11 @@ export const sendTwoFactorCode = async (user, code) => {
  * Sends a password reset email with a link containing the JWT token.
  */
 export const sendPasswordResetEmail = async (user, token) => {
-  const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@ourhouse.app'
   const transport = createTransport()
   const link = `${process.env.BASE_URL}/reset?token=${token}`
 
   const info = await transport.sendMail({
-    from: `"INCP PK ND" <${fromEmail}>`,
+    from: getFrom(),
     to: user.email,
     subject: 'Сброс пароля',
     text: `Здравствуйте ${user.firstName || 'уважаемый пользователь'}!\n\nВы запросили сброс пароля. Для установки нового пароля перейдите по ссылке:\n${link}\n\nСсылка действительна в течение 1 часа. Если вы не запрашивали сброс пароля, просто проигнорируйте это письмо.\n\n— INCP`,
@@ -92,12 +120,11 @@ export const sendPasswordResetEmail = async (user, token) => {
  * Sends a registration confirmation email to the user.
  */
 export const sendRegistrationConfirmation = async (user) => {
-  const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@ourhouse.app'
   const transport = createTransport()
   const link = `${process.env.BASE_URL}/auth`
 
   const info = await transport.sendMail({
-    from: `"INCP PK ND" <${fromEmail}>`,
+    from: getFrom(),
     to: user.email,
     subject: 'Добро пожаловать в Международный клуб участников!',
     text: `Здравствуйте ${user.firstName || 'уважаемый пользователь'}!\n\nБлагодарим вас за регистрацию в системе "INCP".\n\nДля входа в систему, пожалуйста, перейдите по следующей ссылке:\n${link}\n\nС уважением,\nКоманда "INCP"`,
@@ -116,11 +143,10 @@ export const sendRegistrationConfirmation = async (user) => {
  * Sends a reminder email about a scheduled interaction.
  */
 export const sendInteractionReminder = async (initiator, targetName) => {
-  const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@ourhouse.app'
   const transport = createTransport()
 
   const info = await transport.sendMail({
-    from: `"INCP PK ND" <${fromEmail}>`,
+    from: getFrom(),
     to: initiator.email,
     subject: 'Напоминание о взаимодействии',
     text: `Здравствуйте ${initiator.firstName || initiator.nick || 'уважаемый пользователь'}!\n\nНапоминаем, что у вас запланировано взаимодействие с ${targetName}\n\n— INCP`,
@@ -136,11 +162,10 @@ export const sendInteractionReminder = async (initiator, targetName) => {
  * `attachment` is optional and, when present, is attached to the email.
  */
 export const sendContactRequestEmail = async ({ user, message, adminEmails, attachment }) => {
-  const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@ourhouse.app'
   const transport = createTransport()
 
   const mailOptions = {
-    from: `"INCP PK ND" <${fromEmail}>`,
+    from: getFrom(),
     to: Array.isArray(adminEmails) ? adminEmails.join(', ') : adminEmails,
     subject: 'Запрос от пользователя',
     text: `Пользователь ${userName(user)} <${user.email}> отправил запрос:\n\n"${message}"`,
@@ -168,7 +193,6 @@ export const sendContactRequestEmail = async ({ user, message, adminEmails, atta
  * to retry or cancel the purchase.
  */
 export const sendPaymentUnconfirmedEmail = async (user, payment) => {
-  const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@ourhouse.app'
   const transport = createTransport()
   const link = `${process.env.BASE_URL}/home`
 
@@ -176,7 +200,7 @@ export const sendPaymentUnconfirmedEmail = async (user, payment) => {
   const date = new Date(payment.createdAt).toLocaleString('ru-RU')
 
   const info = await transport.sendMail({
-    from: `"INCP PK ND" <${fromEmail}>`,
+    from: getFrom(),
     to: user.email,
     subject: 'Поступление по оплате не обнаружено',
     text: `Здравствуйте ${user.firstName || user.nick || 'уважаемый пользователь'}!\n\nПо вашему платежу на сумму ${amount} USDT от ${date} поступление в сети не обнаружено.\n\nВы можете оплатить повторно или отменить покупку в личном кабинете:\n${link}\n\nЕсли вы уже отправили средства, убедитесь, что транзакция подтверждена сетью, и свяжитесь с поддержкой.\n\n— INCP`,
@@ -190,4 +214,19 @@ export const sendPaymentUnconfirmedEmail = async (user, payment) => {
   processMailResult(info, user)
 
   return info
+}
+
+/**
+ * Sends a test email using the currently configured SMTP settings.
+ */
+export const sendTestEmail = async (to) => {
+  const transport = createTransport()
+
+  return await transport.sendMail({
+    from: getFrom(),
+    to,
+    subject: 'Тестовое письмо INCP',
+    text: 'Это тестовое письмо. Настройки почты работают корректно.\n\n— INCP',
+    html: '<p>Это тестовое письмо. Настройки почты работают корректно.</p><p>— INCP</p>',
+  })
 }

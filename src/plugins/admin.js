@@ -21,6 +21,26 @@ export default fp(async (fastify) => {
       })
     },
 
+    getEmailSettings: async (user) => {
+      if (!user?.company?.id) return null
+
+      const setting = await fastify.prisma.setting.findUnique({
+        where: { companyId: user.company.id },
+      })
+
+      const email = setting?.general?.email ?? {}
+
+      return {
+        fromEmail: email.fromEmail || process.env.FROM_EMAIL || process.env.SMTP_USER || 'support@in-cp.com',
+        fromName: email.fromName || 'INCP PK ND',
+        smtpHost: email.smtpHost || process.env.SMTP_HOST || 'smtp.protonmail.ch',
+        smtpPort: email.smtpPort || parseInt(process.env.SMTP_PORT, 10) || 587,
+        smtpUser: email.smtpUser || process.env.SMTP_USER || '',
+        smtpTls: typeof email.smtpTls === 'boolean' ? email.smtpTls : process.env.SMTP_TLS === 'true',
+        hasPassword: Boolean(email.smtpPassEncrypted || process.env.SMTP_PASS),
+      }
+    },
+
     getOrphansCount: async (user, query = '', fromLevel = MIN_LEVEL, toLevel = MAX_LEVEL) => {
       return fastify.prisma.user.count({
         where: {
