@@ -1193,7 +1193,12 @@ export default async (fastify) => {
             return reply.code(400).send({ error: 'Для изменения SMTP-настроек требуется пароль администратора' })
           }
 
-          const validPassword = await bcrypt.compare(adminPassword, user.password)
+          const adminRecord = await fastify.prisma.user.findUnique({
+            where: { id: user.id },
+            select: { password: true },
+          })
+
+          const validPassword = await bcrypt.compare(adminPassword, adminRecord?.password || '')
           if (!validPassword) {
             return reply.code(403).send({ error: 'Неверный пароль администратора' })
           }
