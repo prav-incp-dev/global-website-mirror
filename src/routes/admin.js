@@ -1113,12 +1113,22 @@ export default async (fastify) => {
       const { type, data } = req.body
 
       try {
+        let payload = { [type]: data }
+
+        if (type === 'general') {
+          const existing = await fastify.prisma.setting.findUnique({
+            where: { companyId: user.company.id },
+          })
+
+          payload = { general: { ...(existing?.general ?? {}), ...data } }
+        }
+
         const setting = await fastify.prisma.setting.upsert({
           where: { companyId: user.company.id },
-          update: { [type]: data },
+          update: payload,
           create: {
             companyId: user.company.id,
-            general: type === 'general' ? data : {},
+            general: type === 'general' ? payload.general : {},
             levels: type === 'levels' ? data : {},
             prices: type === 'prices' ? data : {},
           },

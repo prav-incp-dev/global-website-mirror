@@ -16,9 +16,15 @@ export default fp(async (fastify) => {
     getSetting: async (user) => {
       if (!user?.company?.id) return null
 
-      return fastify.prisma.setting.findUnique({
+      const setting = await fastify.prisma.setting.findUnique({
         where: { companyId: user.company.id },
       })
+
+      if (!setting) return setting
+
+      const { email: _email, ...general } = setting.general ?? {}
+
+      return { ...setting, general }
     },
 
     getEmailSettings: async (user) => {
